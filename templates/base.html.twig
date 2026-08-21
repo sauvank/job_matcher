@@ -4,7 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}Job Matcher{% endblock %}</title>
-        <link rel="stylesheet" href="{{ asset('styles/app.scss') }}">
+        <link rel="stylesheet" href="{{ asset('styles/app.scss') }}" data-turbo-track="reload">
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
     </head>
     <body>
         <header class="site-header">
@@ -23,11 +24,13 @@
             </div>
         </header>
         <main class="container main-content">
-            {% for type, messages in app.flashes %}
-                {% for message in messages %}
-                    <div class="flash flash-{{ type }}">{{ message|trans }}</div>
+            <div id="flash-messages">
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="flash flash-{{ type }}">{{ message|trans }}</div>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
+            </div>
             {% block body %}{% endblock %}
         </main>
         <footer class="site-footer"><span>Job Matcher</span><span>Analyse locale et privée</span></footer>

@@ -50,7 +50,7 @@
                 <span>{{ match.semanticAnalysisStatus.value == 'QUEUED' ? 'Analyse en attente…' : 'Analyse du texte complet et du CV…' }}</span>
                 <progress max="100">Analyse en cours</progress>
             </div>
-            <script>window.setTimeout(() => window.location.reload(), 2500);</script>
+            <script>window.setTimeout(() => window.Turbo ? window.Turbo.visit(window.location.href, {action: 'replace'}) : window.location.reload(), 2500);</script>
         {% elseif match.semanticAnalysisStatus.value == 'FAILED' %}
             <p class="text-error">{{ match.semanticError|trans }}</p>
         {% elseif semanticAnalysis %}

@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\UX\Turbo\TurboBundle;
 
 final class JobSourceController extends AbstractController
 {
@@ -71,7 +73,7 @@ final class JobSourceController extends AbstractController
     }
 
     #[Route('/sources/{id<\d+>}/delete', name: 'app_job_source_delete', methods: ['POST'])]
-    public function delete(JobSource $source, Request $request, EntityManagerInterface $entityManager): Response
+    public function delete(JobSource $source, Request $request, EntityManagerInterface $entityManager, TranslatorInterface $translator): Response
     {
         if (!$this->isCsrfTokenValid('delete-source-'.$source->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
@@ -82,8 +84,17 @@ final class JobSourceController extends AbstractController
             return $this->redirectToRoute('app_job_sources');
         }
 
+        $sourceId = $source->getId();
         $entityManager->remove($source);
         $entityManager->flush();
+        if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+            $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+            return $this->render('job/source/delete.stream.html.twig', [
+                'message' => $translator->trans(JobMessage::SOURCE_DELETED),
+                'sourceId' => $sourceId,
+            ]);
+        }
         $this->addFlash('success', JobMessage::SOURCE_DELETED);
 
         return $this->redirectToRoute('app_job_sources');

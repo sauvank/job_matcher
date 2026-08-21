@@ -36,7 +36,7 @@
                     <thead><tr><th>Nom</th><th>Fournisseur</th><th>Dernier succès</th><th>État</th><th></th></tr></thead>
                     <tbody>
                     {% for source in sources %}
-                        <tr>
+                        <tr id="job-source-{{ source.id }}">
                             <td><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></td>
                             <td>{{ source.provider.value }}</td>
                             <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</td>
@@ -68,7 +68,7 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token('sync-source-' ~ source.id) }}">
                                         <button type="submit" class="button secondary">Synchroniser</button>
                                     </form>
-                                    <form method="post" action="{{ path('app_job_source_delete', {id: source.id}) }}" onsubmit="return window.confirm('Supprimer cette recherche et toutes ses offres importées ?')">
+                                    <form method="post" action="{{ path('app_job_source_delete', {id: source.id}) }}" data-turbo-confirm="Supprimer cette recherche et toutes ses offres importées ?">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete-source-' ~ source.id) }}">
                                         <button type="submit" class="button danger" {{ source.syncPending ? 'disabled' : '' }}>Supprimer</button>
                                     </form>
@@ -89,7 +89,11 @@
                 const isEditing = searchForm?.contains(document.activeElement) || searchInput?.value.trim();
 
                 if (!isEditing) {
-                    window.location.reload();
+                    if (window.Turbo) {
+                        window.Turbo.visit(window.location.href, {action: 'replace'});
+                    } else {
+                        window.location.reload();
+                    }
                 }
             }, 2000);
         </script>

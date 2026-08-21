@@ -31,7 +31,7 @@
             <p>Le worker extrait le texte et prépare l'analyse. Rechargez cette page dans quelques instants.</p>
             <a class="button" href="{{ path('app_cv_show', {id: document.id}) }}">Actualiser</a>
         </section>
-        <script>window.setTimeout(() => window.location.reload(), 2000);</script>
+        <script>window.setTimeout(() => window.Turbo ? window.Turbo.visit(window.location.href, {action: 'replace'}) : window.location.reload(), 2000);</script>
     {% elseif document.status.value == 'FAILED' %}
         <section class="card error-card">
             <h2>Analyse impossible</h2>

@@ -46,9 +46,14 @@ final class JobPagesControllerTest extends WebTestCase
 
         $crawler = $client->request('GET', '/sources');
         $form = $crawler->filter(sprintf('form[action="/sources/%d/delete"]', $sourceId))->form();
-        $client->submit($form);
+        $client->submit($form, [], ['HTTP_ACCEPT' => 'text/vnd.turbo-stream.html']);
 
-        self::assertResponseRedirects('/sources');
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('content-type', 'text/vnd.turbo-stream.html; charset=UTF-8');
+        $responseContent = $client->getResponse()->getContent();
+        self::assertIsString($responseContent);
+        self::assertStringContainsString(sprintf('target="job-source-%d"', $sourceId), $responseContent);
+        self::assertStringContainsString('supprimées', $responseContent);
         $entityManager->clear();
         $repository = self::getContainer()->get(JobSourceRepository::class);
         self::assertInstanceOf(JobSourceRepository::class, $repository);
