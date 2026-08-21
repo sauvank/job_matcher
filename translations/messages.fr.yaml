@@ -58,6 +58,8 @@ job:
     search_title_required: "Ajoutez un intitulé de poste ou des mots-clés."
     search_added: "La nouvelle recherche a été ajoutée et son import a été mis en attente."
     not_found: "La source d’offres est introuvable."
+    deleted: "La recherche et ses offres importées ont été supprimées."
+    delete_sync_pending: "Cette recherche ne peut pas être supprimée pendant sa synchronisation."
     sync_already_running: "Cette source est déjà en cours de synchronisation."
     sync_failed: "La synchronisation de cette source a échoué. Consultez les logs du worker."
   provider:

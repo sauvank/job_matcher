@@ -69,4 +69,23 @@ final class JobSourceController extends AbstractController
 
         return $this->redirectToRoute('app_job_sources');
     }
+
+    #[Route('/sources/{id<\d+>}/delete', name: 'app_job_source_delete', methods: ['POST'])]
+    public function delete(JobSource $source, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('delete-source-'.$source->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        if ($source->isSyncPending()) {
+            $this->addFlash('error', JobMessage::SOURCE_DELETE_SYNC_PENDING);
+
+            return $this->redirectToRoute('app_job_sources');
+        }
+
+        $entityManager->remove($source);
+        $entityManager->flush();
+        $this->addFlash('success', JobMessage::SOURCE_DELETED);
+
+        return $this->redirectToRoute('app_job_sources');
+    }
 }

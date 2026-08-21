@@ -63,10 +63,16 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <form method="post" action="{{ path('app_job_source_sync', {id: source.id}) }}">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('sync-source-' ~ source.id) }}">
-                                    <button type="submit" class="button secondary">Synchroniser</button>
-                                </form>
+                                <div class="table-actions">
+                                    <form method="post" action="{{ path('app_job_source_sync', {id: source.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('sync-source-' ~ source.id) }}">
+                                        <button type="submit" class="button secondary">Synchroniser</button>
+                                    </form>
+                                    <form method="post" action="{{ path('app_job_source_delete', {id: source.id}) }}" onsubmit="return window.confirm('Supprimer cette recherche et toutes ses offres importées ?')">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete-source-' ~ source.id) }}">
+                                        <button type="submit" class="button danger" {{ source.syncPending ? 'disabled' : '' }}>Supprimer</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

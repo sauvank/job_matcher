@@ -32,7 +32,9 @@ final readonly class AnalyzeJobMatchMessageHandler
     {
         $match = $this->repository->get($message->jobMatchId);
         if ($match === null) {
-            throw new UnrecoverableMessageHandlingException(MatchingMessage::MATCH_NOT_FOUND);
+            $this->logger->info(MatchingMessage::MATCH_NOT_FOUND, ['jobMatchId' => $message->jobMatchId]);
+
+            return;
         }
         if (!in_array($match->getSemanticAnalysisStatus(), [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)) {
             return;

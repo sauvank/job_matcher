@@ -18,7 +18,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsMessageHandler]
@@ -41,7 +40,9 @@ final readonly class ImportJobSourceMessageHandler
     {
         $source = $this->sourceRepository->get($message->jobSourceId);
         if ($source === null) {
-            throw new UnrecoverableMessageHandlingException(JobMessage::SOURCE_NOT_FOUND);
+            $this->logger->info(JobMessage::SOURCE_NOT_FOUND, ['jobSourceId' => $message->jobSourceId]);
+
+            return;
         }
 
         if (!$source->isEnabled()) {
