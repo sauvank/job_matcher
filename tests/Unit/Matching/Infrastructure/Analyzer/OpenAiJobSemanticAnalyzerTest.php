@@ -50,6 +50,7 @@ final class OpenAiJobSemanticAnalyzerTest extends TestCase
         self::assertStringContainsString('CV complet', $requestBody['input']);
         self::assertStringContainsString('certification REQUIRED sans preuve explicite', $requestBody['instructions']);
         self::assertStringContainsString('plafonne le score global à 69', $requestBody['instructions']);
+        self::assertStringContainsString('Ne compte jamais séparément un diplôme et son titre RNCP', $requestBody['instructions']);
         self::assertContains('CERTIFICATION', $requestBody['text']['format']['schema']['properties']['requirements']['items']['properties']['category']['enum']);
     }
 
