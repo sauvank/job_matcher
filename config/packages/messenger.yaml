@@ -1,0 +1,26 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+                    max_delay: 30000
+                    jitter: 0.1
+            failed: 'doctrine://default?queue_name=failed&auto_setup=1'
+
+        routing:
+            # Route your messages to the transports
+            # 'App\Message\YourMessage': async
+
+when@test:
+    framework:
+        messenger:
+            failure_transport: failed
+            transports:
+                async: 'in-memory://'
+                failed: 'in-memory://'

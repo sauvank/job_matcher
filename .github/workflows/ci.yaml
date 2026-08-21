@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build application image
+        run: docker compose build php
+      - name: Start dependencies
+        run: docker compose up -d database redis
+      - name: Validate Composer metadata
+        run: docker compose run --rm php composer validate --strict
+      - name: Run quality checks
+        run: docker compose run --rm -e APP_ENV=test php composer qa

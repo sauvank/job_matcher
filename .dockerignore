@@ -1,0 +1,8 @@
+.git
+.github
+.idea
+.phpunit.cache
+.php-cs-fixer.cache
+PROJECT_CONTEXT.local.md
+var
+vendor
