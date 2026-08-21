@@ -8,8 +8,13 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     app.cv_storage_directory: '%kernel.project_dir%/var/cv'
+    app.hellowork.max_offers: 10
 
 services:
+    _instanceof:
+        App\Job\Provider\JobProviderInterface:
+            tags: ['app.job_provider']
+
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
@@ -44,6 +49,14 @@ services:
         arguments:
             $apiKey: '%env(OPENAI_API_KEY)%'
             $model: '%env(OPENAI_MODEL)%'
+
+    App\Job\Provider\JobProviderRegistry:
+        arguments:
+            $providers: !tagged_iterator app.job_provider
+
+    App\Job\Provider\HelloWorkJobProvider:
+        arguments:
+            $maxOffers: '%app.hellowork.max_offers%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
