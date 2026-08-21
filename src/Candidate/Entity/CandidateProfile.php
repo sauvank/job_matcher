@@ -171,4 +171,12 @@ final class CandidateProfile
             $this->cvDocuments->add($document);
         }
     }
+
+    public function forgetRawCvTextIfMatches(?string $rawCvText): void
+    {
+        if ($rawCvText !== null && $this->rawCvText === $rawCvText) {
+            $this->rawCvText = null;
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
 }

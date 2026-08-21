@@ -25,6 +25,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Symfony\UX\Turbo\TurboBundle;
 
 final class CvController extends AbstractController
 {
@@ -150,5 +152,44 @@ final class CvController extends AbstractController
         }
 
         return $this->redirectToRoute('app_cv_show', ['id' => $document->getId()]);
+    }
+
+    #[Route('/cv/{id<\d+>}/delete', name: 'app_cv_delete', methods: ['POST'])]
+    public function delete(
+        CvDocument $document,
+        Request $request,
+        CvStorageInterface $storage,
+        EntityManagerInterface $entityManager,
+        TranslatorInterface $translator,
+    ): Response {
+        if (!$this->isCsrfTokenValid('delete-cv-'.$document->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (in_array($document->getStatus(), [CvStatus::UPLOADED, CvStatus::EXTRACTING, CvStatus::ANALYZING], true)) {
+            $this->addFlash('error', CandidateMessage::DOCUMENT_DELETE_PROCESSING);
+
+            return $this->redirectToRoute('app_cv_upload');
+        }
+
+        $documentId = $document->getId();
+        $storedFilename = $document->getStoredFilename();
+        $document->getCandidateProfile()->forgetRawCvTextIfMatches($document->getExtractedText());
+        $entityManager->remove($document);
+        $entityManager->flush();
+        $storage->delete($storedFilename);
+
+        if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+            $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+            return $this->render('cv/delete.stream.html.twig', [
+                'documentId' => $documentId,
+                'message' => $translator->trans(CandidateMessage::DOCUMENT_DELETED),
+            ]);
+        }
+
+        $this->addFlash('success', CandidateMessage::DOCUMENT_DELETED);
+
+        return $this->redirectToRoute('app_cv_upload');
     }
 }

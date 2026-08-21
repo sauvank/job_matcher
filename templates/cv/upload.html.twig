@@ -50,10 +50,17 @@
             <h2>Historique des CV</h2>
             <div class="document-list">
                 {% for document in profile.cvDocuments %}
-                    <a class="document-row" href="{{ path('app_cv_show', {id: document.id}) }}">
-                        <span>{{ document.originalFilename }}</span>
-                        <span class="badge">{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
-                    </a>
+                    {% set isProcessing = document.status.value in ['UPLOADED', 'EXTRACTING', 'ANALYZING'] %}
+                    <div class="document-row" id="cv-document-{{ document.id }}">
+                        <a class="document-row-link" href="{{ path('app_cv_show', {id: document.id}) }}">
+                            <span>{{ document.originalFilename }}</span>
+                            <span class="badge">{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
+                        </a>
+                        <form method="post" action="{{ path('app_cv_delete', {id: document.id}) }}" data-turbo-confirm="Supprimer ce CV et son analyse ?">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete-cv-' ~ document.id) }}">
+                            <button class="button danger button-compact" type="submit" {{ isProcessing ? 'disabled' : '' }} title="{{ isProcessing ? 'Suppression disponible après la fin de l’analyse' : 'Supprimer ce CV' }}">Supprimer</button>
+                        </form>
+                    </div>
                 {% endfor %}
             </div>
         </section>

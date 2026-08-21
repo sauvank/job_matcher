@@ -38,6 +38,8 @@ candidate:
       pdf_failed: "Impossible d’extraire le texte du PDF."
       docx_failed: "Impossible d’extraire le texte du DOCX."
     document_not_found: "Le CV demandé est introuvable."
+    deleted: "Le CV, son texte extrait et son analyse ont été supprimés. Les informations déjà validées dans le profil sont conservées."
+    delete_processing: "Ce CV pourra être supprimé dès que son analyse sera terminée."
     process:
       already_running: "L’analyse du CV est déjà en cours."
       completed: "L’analyse du CV est terminée."

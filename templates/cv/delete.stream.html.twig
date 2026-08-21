@@ -1,0 +1,4 @@
+<turbo-stream action="remove" target="cv-document-{{ documentId }}"></turbo-stream>
+<turbo-stream action="prepend" target="flash-messages">
+    <template><div class="flash flash-success" role="status">{{ message }}</div></template>
+</turbo-stream>
