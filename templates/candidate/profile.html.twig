@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil · Job Matcher{% endblock %}
+
+{% block body %}
+    <div class="page-heading">
+        <p class="eyebrow">Candidat</p>
+        <h1>Mon profil</h1>
+    </div>
+
+    {% if profile %}
+        <section class="profile-grid">
+            <div class="card"><span>Titre</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>
+            <div class="card"><span>Localisation</span><strong>{{ profile.location ?? 'À renseigner' }}</strong></div>
+            <div class="card"><span>Expérience</span><strong>{{ profile.yearsOfExperience is not null ? profile.yearsOfExperience ~ ' ans' : 'À renseigner' }}</strong></div>
+        </section>
+
+        <section class="section">
+            <h2>Compétences validées</h2>
+            {% if profile.candidateSkills|length > 0 %}
+                <div class="skill-list">
+                    {% for candidateSkill in profile.candidateSkills %}
+                        <span class="skill {{ candidateSkill.coreSkill ? 'skill-core' : '' }}">{{ candidateSkill.skill.name }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>Aucune compétence validée pour le moment.</p>
+            {% endif %}
+        </section>
+    {% else %}
+        <section class="card">
+            <p>Votre profil sera créé lors du premier dépôt de CV.</p>
+            <a class="button" href="{{ path('app_cv_upload') }}">Déposer mon CV</a>
+        </section>
+    {% endif %}
+{% endblock %}

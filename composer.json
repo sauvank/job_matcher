@@ -16,15 +16,24 @@
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
         "symfony/console": "7.4.*",
+        "symfony/doctrine-messenger": "^7.4",
         "symfony/dotenv": "7.4.*",
         "symfony/flex": "^2",
+        "symfony/form": "7.4.*",
         "symfony/framework-bundle": "7.4.*",
+        "symfony/http-client": "7.4.*",
         "symfony/lock": "7.4.*",
         "symfony/messenger": "7.4.*",
+        "symfony/mime": "7.4.*",
         "symfony/monolog-bundle": "^4.0",
+        "symfony/process": "7.4.*",
         "symfony/redis-messenger": "7.4.*",
         "symfony/runtime": "7.4.*",
+        "symfony/security-csrf": "7.4.*",
+        "symfony/translation": "7.4.*",
         "symfony/twig-bundle": "7.4.*",
+        "symfony/uid": "7.4.*",
+        "symfony/validator": "7.4.*",
         "symfony/yaml": "7.4.*"
     },
     "config": {
@@ -97,6 +106,7 @@
         }
     },
     "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "^4.3",
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpstan/phpstan": "^2.2",
         "phpstan/phpstan-doctrine": "^2.0",

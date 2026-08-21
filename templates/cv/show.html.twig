@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Analyse du CV · Job Matcher{% endblock %}
+
+{% block body %}
+    <div class="page-heading">
+        <p class="eyebrow">Analyse du CV</p>
+        <h1>{{ document.originalFilename }}</h1>
+        <p>
+            Statut : <span class="badge">{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
+            {% if document.analyzer %}· {{ document.analyzer }}{% endif %}
+        </p>
+        {% if document.status.value in ['READY', 'APPLIED', 'FAILED'] %}
+            <form method="post" action="{{ path('app_cv_reanalyze', {id: document.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('reanalyze-cv-' ~ document.id) }}">
+                <button class="button secondary" type="submit">Relancer l’analyse</button>
+            </form>
+        {% endif %}
+    </div>
+
+    {% if document.status.value in ['UPLOADED', 'EXTRACTING', 'ANALYZING'] %}
+        <section class="card">
+            <h2>Traitement en cours</h2>
+            <p>Le worker extrait le texte et prépare l'analyse. Rechargez cette page dans quelques instants.</p>
+            <a class="button" href="{{ path('app_cv_show', {id: document.id}) }}">Actualiser</a>
+        </section>
+    {% elseif document.status.value == 'FAILED' %}
+        <section class="card error-card">
+            <h2>Analyse impossible</h2>
+            <p>{{ document.errorMessage|trans }}</p>
+            <a href="{{ path('app_cv_upload') }}">Déposer un autre CV</a>
+        </section>
+    {% elseif analysis %}
+        <section class="card">
+            <h2>Résumé proposé</h2>
+            <p>{{ analysis.summary }}</p>
+            {% if analysis.warnings %}
+                <ul>{% for warning in analysis.warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+            {% endif %}
+        </section>
+
+        {% if reviewForm %}
+            <section class="card form-card">
+                <h2>Vérifiez avant d'appliquer</h2>
+                <p>Corrigez les informations et décochez les compétences mal interprétées.</p>
+                {{ form_start(reviewForm) }}
+                    {{ form_row(reviewForm.title) }}
+                    {{ form_row(reviewForm.location) }}
+                    {{ form_row(reviewForm.yearsOfExperience) }}
+                    {{ form_row(reviewForm.selectedSkills) }}
+                    {{ form_row(reviewForm.apply) }}
+                {{ form_end(reviewForm) }}
+            </section>
+        {% else %}
+            <section class="card"><p>Cette analyse a déjà été appliquée au profil.</p></section>
+        {% endif %}
+    {% endif %}
+{% endblock %}

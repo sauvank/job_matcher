@@ -14,8 +14,7 @@ framework:
             failed: 'doctrine://default?queue_name=failed&auto_setup=1'
 
         routing:
-            # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            App\Candidate\Application\Message\ProcessCvMessage: async
 
 when@test:
     framework:

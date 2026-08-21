@@ -8,8 +8,19 @@
     </head>
     <body>
         <header class="site-header">
-            <a href="{{ path('app_home') }}">Job Matcher</a>
+            <a class="brand" href="{{ path('app_home') }}">Job Matcher</a>
+            <nav>
+                <a href="{{ path('app_cv_upload') }}">Mon CV</a>
+                <a href="{{ path('app_candidate_profile') }}">Mon profil</a>
+            </nav>
         </header>
-        <main class="container">{% block body %}{% endblock %}</main>
+        <main class="container">
+            {% for type, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ type }}">{{ message|trans }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% block body %}{% endblock %}
+        </main>
     </body>
 </html>

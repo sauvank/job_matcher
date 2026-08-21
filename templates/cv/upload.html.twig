@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Déposer mon CV · Job Matcher{% endblock %}
+
+{% block body %}
+    <div class="page-heading">
+        <p class="eyebrow">Profil candidat</p>
+        <h1>Déposer un CV</h1>
+        <p>Le texte est extrait localement, puis analysé en arrière-plan. Rien ne sera appliqué au profil sans votre validation.</p>
+    </div>
+
+    <section class="card form-card">
+        {{ form_start(form) }}
+            {{ form_row(form.file) }}
+            {{ form_row(form.submit) }}
+        {{ form_end(form) }}
+    </section>
+
+    {% if profile and profile.cvDocuments|length > 0 %}
+        <section class="section">
+            <h2>Historique des CV</h2>
+            <div class="document-list">
+                {% for document in profile.cvDocuments %}
+                    <a class="document-row" href="{{ path('app_cv_show', {id: document.id}) }}">
+                        <span>{{ document.originalFilename }}</span>
+                        <span class="badge">{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
