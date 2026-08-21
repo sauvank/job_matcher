@@ -9,6 +9,14 @@
 parameters:
     app.cv_storage_directory: '%kernel.project_dir%/var/cv'
     app.hellowork.max_offers: 10
+    app.matching.weights:
+        stack: 35
+        experience: 15
+        salary: 15
+        location: 10
+        contract: 10
+        backend: 10
+        remote: 5
 
 services:
     _instanceof:
@@ -63,6 +71,10 @@ services:
     App\Job\Provider\HelloWorkJobProvider:
         arguments:
             $maxOffers: '%app.hellowork.max_offers%'
+
+    App\Matching\Service\DeterministicJobScorer:
+        arguments:
+            $weights: '%app.matching.weights%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
