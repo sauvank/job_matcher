@@ -18,6 +18,7 @@ use App\Job\Provider\JobProviderRegistry;
 use App\Job\Service\TechnicalRequirementExtractor;
 use App\Matching\Application\Repository\JobMatchRepositoryInterface;
 use App\Matching\Entity\JobMatch;
+use App\Matching\Message\AnalyzeJobMatchMessage;
 use App\Matching\Service\DeterministicJobScorer;
 use App\Matching\Service\MatchJobOfferService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,6 +26,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Lock\Store\InMemoryStore;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 final class ImportJobSourceMessageHandlerTest extends TestCase
 {
@@ -94,8 +97,14 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
 
                 if ($entity instanceof JobMatch) {
                     $matchRepository->match = $entity;
+                    (new \ReflectionProperty(JobMatch::class, 'id'))->setValue($entity, 24);
                 }
             });
+        $messageBus = $this->createMock(MessageBusInterface::class);
+        $messageBus->expects(self::once())
+            ->method('dispatch')
+            ->with(self::callback(static fn (object $message): bool => $message instanceof AnalyzeJobMatchMessage && $message->jobMatchId === 24))
+            ->willReturnCallback(static fn (object $message): Envelope => new Envelope($message));
         $matchService = new MatchJobOfferService(
             $matchRepository,
             new DeterministicJobScorer(
@@ -119,6 +128,7 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             $profileRepository,
             $matchService,
             $entityManager,
+            $messageBus,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
         );

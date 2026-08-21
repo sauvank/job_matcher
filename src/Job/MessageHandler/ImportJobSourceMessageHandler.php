@@ -11,12 +11,15 @@ use App\Job\Entity\JobOffer;
 use App\Job\Message\ImportJobSourceMessage;
 use App\Job\Provider\JobProviderRegistry;
 use App\Job\Translation\JobMessage;
+use App\Matching\Enum\SemanticAnalysisStatus;
+use App\Matching\Message\AnalyzeJobMatchMessage;
 use App\Matching\Service\MatchJobOfferService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 #[AsMessageHandler]
 final readonly class ImportJobSourceMessageHandler
@@ -28,6 +31,7 @@ final readonly class ImportJobSourceMessageHandler
         private CandidateProfileRepositoryInterface $profileRepository,
         private MatchJobOfferService $matchService,
         private EntityManagerInterface $entityManager,
+        private MessageBusInterface $messageBus,
         private LockFactory $lockFactory,
         private LoggerInterface $logger,
     ) {
@@ -61,6 +65,7 @@ final readonly class ImportJobSourceMessageHandler
 
             foreach ($provider->fetch($source) as $normalizedOffer) {
                 $offer = $this->offerRepository->findOneBySourceAndExternalId($source, $normalizedOffer->externalId);
+                $contentChanged = $offer === null || !$offer->hasSameContentAs($normalizedOffer);
                 if ($offer === null) {
                     $offer = new JobOffer($source, $normalizedOffer);
                     $this->entityManager->persist($offer);
@@ -68,13 +73,26 @@ final readonly class ImportJobSourceMessageHandler
                     $offer->updateFrom($normalizedOffer);
                 }
 
-                if ($profile !== null) {
-                    $this->matchService->match($profile, $offer);
+                $match = $profile === null ? null : $this->matchService->match($profile, $offer);
+                $analysisStatus = $match?->getSemanticAnalysisStatus();
+                $shouldQueueAnalysis = $match !== null
+                    && !in_array($analysisStatus, [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)
+                    && ($contentChanged || in_array($analysisStatus, [SemanticAnalysisStatus::NOT_REQUESTED, SemanticAnalysisStatus::FAILED], true));
+                if ($shouldQueueAnalysis) {
+                    $match->queueSemanticAnalysis();
                 }
 
                 ++$importedCount;
                 $source->recordProcessedOffer();
                 $this->entityManager->flush();
+
+                if ($shouldQueueAnalysis) {
+                    $matchId = $match->getId();
+                    if ($matchId === null) {
+                        throw new \LogicException('A persisted job match must have an identifier.');
+                    }
+                    $this->messageBus->dispatch(new AnalyzeJobMatchMessage($matchId));
+                }
             }
 
             $source->completeSync();

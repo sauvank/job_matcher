@@ -169,6 +169,11 @@ final class JobOffer
         return $this->rawPayload;
     }
 
+    public function hasSameContentAs(NormalizedJobOffer $offer): bool
+    {
+        return $this->contentHash === $offer->contentHash();
+    }
+
     public function updateFrom(NormalizedJobOffer $offer): void
     {
         $this->url = $offer->url;
