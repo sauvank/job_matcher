@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Candidate\Infrastructure\Persistence\CandidateProfileRepository;
+use App\Form\JobSearchType;
+use App\Job\Application\Service\ConfigureCandidateJobSearchService;
+use App\Job\DTO\JobSearchData;
 use App\Job\Entity\JobSource;
 use App\Job\Message\ImportJobSourceMessage;
 use App\Job\Repository\JobSourceRepository;
@@ -17,14 +21,32 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class JobSourceController extends AbstractController
 {
-    #[Route('/sources', name: 'app_job_sources', methods: ['GET'])]
-    public function index(JobSourceRepository $repository): Response
-    {
+    #[Route('/sources', name: 'app_job_sources', methods: ['GET', 'POST'])]
+    public function index(
+        Request $request,
+        JobSourceRepository $repository,
+        CandidateProfileRepository $profileRepository,
+        ConfigureCandidateJobSearchService $searchService,
+    ): Response {
+        $profile = $profileRepository->findDefault();
+        $searchData = new JobSearchData();
+        $form = $this->createForm(JobSearchType::class, $searchData);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid() && $profile !== null && $profile->getLocation() !== null) {
+            $searchService->configureTitle($searchData->title, $profile->getLocation());
+            $this->addFlash('success', JobMessage::SEARCH_ADDED);
+
+            return $this->redirectToRoute('app_job_sources');
+        }
+
         $sources = $repository->findBy([], ['createdAt' => 'DESC']);
 
         return $this->render('job/source/index.html.twig', [
             'sources' => $sources,
             'hasActiveSync' => array_any($sources, static fn (JobSource $source): bool => $source->isSyncPending()),
+            'searchForm' => $form,
+            'profileLocation' => $profile?->getLocation(),
         ]);
     }
 

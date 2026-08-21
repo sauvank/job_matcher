@@ -48,7 +48,7 @@ Les messages asynchrones utilisent Redis. Après trois échecs avec délai expon
 
 ## Import HelloWork
 
-La page `/sources` permet de coller une URL complète de recherche HelloWork, par exemple une recherche contenant les paramètres `k` (mots-clés) et `l` (localisation). Après validation du domaine et du chemin, un message Messenger est envoyé au worker.
+La page `/sources` permet d’ajouter plusieurs intitulés ou groupes de mots-clés, par exemple `Développeur PHP backend`, `Symfony` et `PHP`. Chaque intitulé crée une recherche HelloWork séparée en utilisant la localisation du profil, puis un message Messenger est envoyé au worker. Une URL identique réutilise la source existante au lieu de créer un doublon.
 
 Le connecteur récupère la première page de résultats, limite chaque synchronisation à dix fiches et lit les données structurées `JobPosting` de chaque offre. Les offres sont normalisées puis mises à jour de façon idempotente à partir de l'identifiant HelloWork.
 

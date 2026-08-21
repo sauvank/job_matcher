@@ -55,6 +55,8 @@ job:
     invalid_url: "Cette URL de recherche HelloWork est invalide."
     unsupported_provider: "Cette plateforme d’offres n’est pas encore prise en charge."
     search_criteria_required: "Un intitulé de poste et une localisation sont nécessaires pour rechercher des offres."
+    search_title_required: "Ajoutez un intitulé de poste ou des mots-clés."
+    search_added: "La nouvelle recherche a été ajoutée et son import a été mis en attente."
     not_found: "La source d’offres est introuvable."
     sync_already_running: "Cette source est déjà en cours de synchronisation."
     sync_failed: "La synchronisation de cette source a échoué. Consultez les logs du worker."

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Job\Application\Service;
 
 use App\Candidate\Entity\CandidateProfile;
-use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
@@ -19,7 +18,6 @@ final readonly class ConfigureCandidateJobSearchService
 {
     public function __construct(
         private JobSourceRepositoryInterface $sourceRepository,
-        private JobOfferRepositoryInterface $offerRepository,
         private HelloWorkSearchUrlBuilder $urlBuilder,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -35,16 +33,24 @@ final readonly class ConfigureCandidateJobSearchService
             throw new \DomainException(JobMessage::SEARCH_CRITERIA_REQUIRED);
         }
 
+        return $this->configureTitle($title, $location);
+    }
+
+    public function configureTitle(string $title, string $location): JobSource
+    {
+        $title = trim($title);
+        $location = trim($location);
+        if ($title === '' || $location === '') {
+            throw new \DomainException(JobMessage::SEARCH_CRITERIA_REQUIRED);
+        }
+
         $url = $this->urlBuilder->build($title, $location);
         $name = mb_substr(sprintf('HelloWork — %s — %s', $title, $location), 0, 120);
-        $source = $this->sourceRepository->findOneByProvider(JobProviderType::HELLOWORK);
+        $source = $this->sourceRepository->findOneByUrl($url);
 
         if ($source === null) {
             $source = new JobSource($name, $url, JobProviderType::HELLOWORK);
             $this->entityManager->persist($source);
-        } elseif ($source->getUrl() !== $url) {
-            $this->offerRepository->deleteBySource($source);
-            $source->updateSearch($name, $url);
         }
 
         $source->queueSync();

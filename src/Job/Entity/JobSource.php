@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: JobSourceRepository::class)]
 #[ORM\Table(name: 'job_source')]
+#[ORM\UniqueConstraint(name: 'uniq_job_source_url', columns: ['url'])]
 final class JobSource
 {
     #[ORM\Id]

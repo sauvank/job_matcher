@@ -40,9 +40,9 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
                 return $id === 12 ? $this->source : null;
             }
 
-            public function findOneByProvider(JobProviderType $provider): ?JobSource
+            public function findOneByUrl(string $url): ?JobSource
             {
-                return $this->source->getProvider() === $provider ? $this->source : null;
+                return $this->source->getUrl() === $url ? $this->source : null;
             }
         };
         $offerRepository = new class implements JobOfferRepositoryInterface {

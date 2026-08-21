@@ -9,6 +9,19 @@
         <p>La recherche HelloWork est générée automatiquement à partir du titre et de la localisation validés depuis votre CV.</p>
     </div>
 
+    <section class="card form-card">
+        <h2>Ajouter une recherche</h2>
+        {% if profileLocation %}
+            <p>Chaque intitulé lance une recherche séparée autour de {{ profileLocation }}.</p>
+            {{ form_start(searchForm) }}
+                {{ form_row(searchForm.title) }}
+                {{ form_row(searchForm.add) }}
+            {{ form_end(searchForm) }}
+        {% else %}
+            <p>Validez d’abord la localisation de votre profil depuis un CV.</p>
+        {% endif %}
+    </section>
+
     <section class="card">
         <div class="section-heading">
             <h2>Sources configurées</h2>
