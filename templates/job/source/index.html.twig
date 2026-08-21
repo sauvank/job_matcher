@@ -76,6 +76,16 @@
         {% endif %}
     </section>
     {% if hasActiveSync %}
-        <script>window.setTimeout(() => window.location.reload(), 2000);</script>
+        <script>
+            window.setTimeout(() => {
+                const searchForm = document.querySelector('form[name="job_search"]');
+                const searchInput = searchForm?.querySelector('input[type="text"]');
+                const isEditing = searchForm?.contains(document.activeElement) || searchInput?.value.trim();
+
+                if (!isEditing) {
+                    window.location.reload();
+                }
+            }, 2000);
+        </script>
     {% endif %}
 {% endblock %}
