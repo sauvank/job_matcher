@@ -60,6 +60,18 @@ th, td { padding: .85rem; border-bottom: 1px solid #30363d; text-align: left; ve
 th { color: #8b949e; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
 td a, .section-heading a, .card a { color: #58a6ff; }
 .text-error { color: #ff7b72; }
+.score { display: inline-block; min-width: 4.2rem; padding: .4rem .6rem; border-radius: 999px; text-align: center; font-weight: 800; }
+.score-good { color: #7ee787; background: #132a1b; }
+.score-medium { color: #e3b341; background: #2d260f; }
+.score-low { color: #ff7b72; background: #321c1e; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .8rem; }
+.score-grid div { padding: 1rem; border: 1px solid #30363d; border-radius: .7rem; background: #0d1117; }
+.score-grid span, .score-grid strong { display: block; }
+.score-grid span { margin-bottom: .4rem; color: #8b949e; font-size: .85rem; }
+.score-grid strong { font-size: 1.35rem; }
+.explanation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+.explanation-grid .card + .card { margin-top: 0; }
+.explanation-grid li { margin-bottom: .6rem; line-height: 1.45; }
 
 @media (max-width: 720px) {
     .site-header { align-items: flex-start; gap: 1rem; }

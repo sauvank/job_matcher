@@ -22,7 +22,7 @@ final readonly class MatchJobOfferService
     public function match(CandidateProfile $profile, JobOffer $offer): JobMatch
     {
         $score = $this->scorer->score($profile, $offer);
-        $match = $this->repository->findOneFor($profile, $offer);
+        $match = $offer->getId() === null ? null : $this->repository->findOneFor($profile, $offer);
 
         if ($match === null) {
             $match = new JobMatch($profile, $offer, $score);

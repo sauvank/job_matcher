@@ -83,6 +83,7 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             ->willReturnCallback(static function (object $entity) use ($offerRepository, $matchRepository): void {
                 if ($entity instanceof JobOffer) {
                     $offerRepository->offer = $entity;
+                    (new \ReflectionProperty(JobOffer::class, 'id'))->setValue($entity, 42);
                 }
 
                 if ($entity instanceof JobMatch) {

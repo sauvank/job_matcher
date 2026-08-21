@@ -52,7 +52,13 @@ La page `/sources` permet de coller une URL complète de recherche HelloWork, pa
 
 Le connecteur récupère la première page de résultats, limite chaque synchronisation à dix fiches et lit les données structurées `JobPosting` de chaque offre. Les offres sont normalisées puis mises à jour de façon idempotente à partir de l'identifiant HelloWork.
 
-Les résultats sont visibles sur `/jobs`. La vérification de disponibilité, le classement par rapport au CV et l'analyse IA des offres feront l'objet des incréments suivants.
+Les résultats classés sont visibles sur `/jobs`. Chaque fiche détaille le score et les raisons qui l’expliquent. Pour calculer les scores d’offres importées avant l’ajout du moteur :
+
+```bash
+docker compose exec -T php php bin/console app:matches:refresh
+```
+
+La vérification de disponibilité et l’analyse IA des offres feront l’objet des incréments suivants.
 
 ## Analyse réelle du CV avec OpenAI
 
@@ -72,12 +78,11 @@ Le fichier `.env.local` est ignoré par Git et ne doit jamais être commité. Su
 
 Le texte extrait du CV est envoyé à l'API Responses avec `store: false`. La réponse est contrainte par un schéma JSON strict puis présentée à l'utilisateur pour vérification ; elle n'est jamais appliquée automatiquement au profil.
 
-## Scoring prévu
+## Scoring
 
-Le score global combinera :
+Le score actuel est déterministe et pondère les compétences (35), l’expérience (15), le salaire (15), la localisation (10), le contrat (10), l’orientation backend (10) et le télétravail (5). Les poids sont configurés dans `config/services.yaml`, pas figés dans le service métier.
 
-1. des règles déterministes configurables : compétences, expérience, salaire, localisation, contrat et télétravail ;
-2. des classifications sémantiques structurées : orientation backend, importance réelle d'une technologie et proximité entre compétences.
+Une information absente reçoit une valeur neutre de 50 et apparaît dans les informations à vérifier. Chaque import crée ou met à jour un unique résultat par couple profil/offre. Le futur score sémantique restera séparé du score déterministe et fournira des observations JSON structurées.
 
 Les critères bloquants pourront appliquer des malus ou plafonner le score. Les données inconnues resteront neutres et seront signalées.
 
@@ -94,13 +99,12 @@ Les critères bloquants pourront appliquer des malus ou plafonner le score. Les 
 - Les PDF contenant du texte et les DOCX sont pris en charge. Un PDF constitué uniquement d'images nécessite encore un module OCR.
 - L'analyse OpenAI implique l'envoi du texte du CV à un fournisseur externe et génère un coût d'API.
 - Seule la première page d'une recherche HelloWork est importée, avec un maximum de dix fiches par synchronisation.
-- Le moteur de scoring des offres n'est pas encore implémenté.
+- Le scoring sémantique des offres par IA n’est pas encore implémenté ; l’orientation backend repose actuellement sur des mots-clés explicites.
 - L'application n'intègre pas encore d'authentification et doit rester accessible en local.
 
 ## Roadmap
 
-1. moteur de scoring déterministe ;
-2. analyse sémantique des offres en JSON strict ;
-3. contrôle de disponibilité ;
-4. filtres et détails du dashboard Twig ;
-5. pagination des sources et planification quotidienne.
+1. analyse sémantique des offres en JSON strict ;
+2. contrôle de disponibilité ;
+3. filtres du dashboard Twig ;
+4. pagination des sources et planification quotidienne.

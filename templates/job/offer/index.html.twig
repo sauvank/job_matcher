@@ -6,20 +6,22 @@
     <div class="page-heading">
         <p class="eyebrow">Collecte</p>
         <h1>Offres importées</h1>
-        <p>{{ offers|length }} offre(s) enregistrée(s). Le score de compatibilité sera ajouté au prochain incrément.</p>
+        <p>{{ matches|length }} offre(s) classée(s) selon leur compatibilité avec votre CV.</p>
     </div>
 
     <section class="card">
-        {% if offers is empty %}
+        {% if matches is empty %}
             <p>Aucune offre importée. <a href="{{ path('app_cv_upload') }}">Déposez un CV</a> pour générer une recherche HelloWork.</p>
         {% else %}
             <div class="table-wrapper">
                 <table>
-                    <thead><tr><th>Titre</th><th>Entreprise</th><th>Localisation</th><th>Contrat</th><th>Salaire</th><th>Publication</th></tr></thead>
+                    <thead><tr><th>Score</th><th>Titre</th><th>Entreprise</th><th>Localisation</th><th>Contrat</th><th>Salaire</th><th>Statut</th><th>Analyse</th></tr></thead>
                     <tbody>
-                    {% for offer in offers %}
+                    {% for match in matches %}
+                        {% set offer = match.jobOffer %}
                         <tr>
-                            <td><a href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">{{ offer.title }}</a></td>
+                            <td><span class="score score-{{ match.globalScore >= 75 ? 'good' : (match.globalScore >= 50 ? 'medium' : 'low') }}">{{ match.globalScore }} %</span></td>
+                            <td><a href="{{ path('app_job_offer_show', {id: match.id}) }}">{{ offer.title }}</a></td>
                             <td>{{ offer.company ?? 'Non renseignée' }}</td>
                             <td>{{ offer.location ?? 'Non renseignée' }}</td>
                             <td>{{ offer.contractType ?? 'Non renseigné' }}</td>
@@ -29,7 +31,8 @@
                                     – {{ offer.maximumSalary ? offer.maximumSalary|number_format(0, ',', ' ') : '?' }} €
                                 {% else %}Non renseigné{% endif %}
                             </td>
-                            <td>{{ offer.publishedAt ? offer.publishedAt|date('d/m/Y') : 'Inconnue' }}</td>
+                            <td><span class="badge">{{ offer.status.value }}</span></td>
+                            <td>{{ match.analyzedAt|date('d/m/Y H:i') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
