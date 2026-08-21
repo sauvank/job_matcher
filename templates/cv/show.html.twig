@@ -41,8 +41,8 @@
 
         {% if reviewForm %}
             <section class="card form-card">
-                <h2>Vérifiez avant d'appliquer</h2>
-                <p>Corrigez les informations et décochez les compétences mal interprétées.</p>
+                <h2>{{ document.status.value == 'APPLIED' ? 'Réutiliser ce CV' : 'Vérifiez avant d’appliquer' }}</h2>
+                <p>Les informations et compétences sélectionnées remplaceront celles du profil actif.</p>
                 {{ form_start(reviewForm) }}
                     {{ form_row(reviewForm.title) }}
                     {{ form_row(reviewForm.location) }}
@@ -51,8 +51,6 @@
                     {{ form_row(reviewForm.apply) }}
                 {{ form_end(reviewForm) }}
             </section>
-        {% else %}
-            <section class="card"><p>Cette analyse a déjà été appliquée au profil.</p></section>
         {% endif %}
     {% endif %}
 {% endblock %}

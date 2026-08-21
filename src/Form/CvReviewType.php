@@ -33,7 +33,7 @@ final class CvReviewType extends AbstractType
                 'multiple' => true,
                 'expanded' => true,
             ])
-            ->add('apply', SubmitType::class, ['label' => 'Valider et appliquer au profil']);
+            ->add('apply', SubmitType::class, ['label' => 'Utiliser ce CV pour le profil actif']);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

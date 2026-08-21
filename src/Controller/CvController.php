@@ -98,7 +98,7 @@ final class CvController extends AbstractController
             $analysis = CvAnalysisResult::fromArray($document->getAnalysisResult());
         }
 
-        if ($document->getStatus() === CvStatus::READY && $analysis !== null) {
+        if (in_array($document->getStatus(), [CvStatus::READY, CvStatus::APPLIED], true) && $analysis !== null) {
             $reviewData = CvReviewData::fromAnalysis($analysis);
             $reviewForm = $this->createForm(CvReviewType::class, $reviewData, ['analysis' => $analysis]);
             $reviewForm->handleRequest($request);

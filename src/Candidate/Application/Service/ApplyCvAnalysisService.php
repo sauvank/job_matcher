@@ -31,13 +31,18 @@ final readonly class ApplyCvAnalysisService
         ?int $yearsOfExperience,
         array $selectedSkillNames,
     ): void {
-        if ($document->getStatus() !== CvStatus::READY || $document->getAnalysisResult() === null || $document->getExtractedText() === null) {
+        if (!in_array($document->getStatus(), [CvStatus::READY, CvStatus::APPLIED], true) || $document->getAnalysisResult() === null || $document->getExtractedText() === null) {
             throw new \DomainException(CandidateMessage::ANALYSIS_NOT_APPLICABLE);
         }
 
         $analysis = CvAnalysisResult::fromArray($document->getAnalysisResult());
         $profile = $document->getCandidateProfile();
         $profile->updateFromCv($title, $location, $yearsOfExperience, $document->getExtractedText());
+        $selectedNormalizedNames = array_values(array_unique(array_map(
+            fn (string $skillName): string => $this->normalizer->normalize($skillName),
+            $selectedSkillNames,
+        )));
+        $profile->retainCandidateSkills($selectedNormalizedNames);
 
         foreach ($analysis->skills as $analyzedSkill) {
             if (!in_array($analyzedSkill->name, $selectedSkillNames, true)) {

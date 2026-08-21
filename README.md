@@ -78,6 +78,8 @@ Le fichier `.env.local` est ignoré par Git et ne doit jamais être commité. Su
 
 Le texte extrait du CV est envoyé à l'API Responses avec `store: false`. La réponse est contrainte par un schéma JSON strict puis présentée à l'utilisateur pour vérification ; elle n'est jamais appliquée automatiquement au profil.
 
+La V1 utilise un seul profil candidat actif. Plusieurs CV peuvent être analysés et conservés dans l’historique, mais appliquer un CV remplace les informations et les compétences du profil actif. Une ancienne analyse peut être réutilisée depuis sa fiche sans appeler à nouveau l’IA.
+
 ## Scoring
 
 Le score actuel est déterministe et pondère les compétences (35), l’expérience (15), le salaire (15), la localisation (10), le contrat (10), l’orientation backend (10) et le télétravail (5). Les poids sont configurés dans `config/services.yaml`, pas figés dans le service métier.

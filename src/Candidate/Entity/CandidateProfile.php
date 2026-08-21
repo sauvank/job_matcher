@@ -154,6 +154,17 @@ final class CandidateProfile
         }
     }
 
+    /** @param list<string> $normalizedSkillNames */
+    public function retainCandidateSkills(array $normalizedSkillNames): void
+    {
+        foreach ($this->candidateSkills as $candidateSkill) {
+            if (!in_array($candidateSkill->getSkill()->getNormalizedName(), $normalizedSkillNames, true)) {
+                $this->candidateSkills->removeElement($candidateSkill);
+                $this->updatedAt = new \DateTimeImmutable();
+            }
+        }
+    }
+
     public function addCvDocument(CvDocument $document): void
     {
         if (!$this->cvDocuments->contains($document)) {
