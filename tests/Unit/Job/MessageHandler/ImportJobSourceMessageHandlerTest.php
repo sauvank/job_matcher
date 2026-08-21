@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Job\MessageHandler;
 
+use App\Candidate\Application\Repository\CandidateProfileRepositoryInterface;
+use App\Candidate\Entity\CandidateProfile;
 use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobOffer;
@@ -13,6 +15,10 @@ use App\Job\Message\ImportJobSourceMessage;
 use App\Job\MessageHandler\ImportJobSourceMessageHandler;
 use App\Job\Provider\FakeJobProvider;
 use App\Job\Provider\JobProviderRegistry;
+use App\Matching\Application\Repository\JobMatchRepositoryInterface;
+use App\Matching\Entity\JobMatch;
+use App\Matching\Service\DeterministicJobScorer;
+use App\Matching\Service\MatchJobOfferService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -51,18 +57,57 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
             }
         };
+        $profile = new CandidateProfile();
+        $profileRepository = new class($profile) implements CandidateProfileRepositoryInterface {
+            public function __construct(private readonly CandidateProfile $profile)
+            {
+            }
+
+            public function findDefault(): CandidateProfile
+            {
+                return $this->profile;
+            }
+        };
+        $matchRepository = new class implements JobMatchRepositoryInterface {
+            public ?JobMatch $match = null;
+
+            public function findOneFor(CandidateProfile $profile, JobOffer $offer): ?JobMatch
+            {
+                return $this->match;
+            }
+        };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(4))->method('flush');
-        $entityManager->expects(self::once())
+        $entityManager->expects(self::exactly(2))
             ->method('persist')
-            ->with(self::isInstanceOf(JobOffer::class))
-            ->willReturnCallback(static function (JobOffer $offer) use ($offerRepository): void {
-                $offerRepository->offer = $offer;
+            ->willReturnCallback(static function (object $entity) use ($offerRepository, $matchRepository): void {
+                if ($entity instanceof JobOffer) {
+                    $offerRepository->offer = $entity;
+                }
+
+                if ($entity instanceof JobMatch) {
+                    $matchRepository->match = $entity;
+                }
             });
+        $matchService = new MatchJobOfferService(
+            $matchRepository,
+            new DeterministicJobScorer([
+                'stack' => 35,
+                'experience' => 15,
+                'salary' => 15,
+                'location' => 10,
+                'contract' => 10,
+                'remote' => 5,
+                'backend' => 10,
+            ]),
+            $entityManager,
+        );
         $handler = new ImportJobSourceMessageHandler(
             $sourceRepository,
             $offerRepository,
             new JobProviderRegistry([new FakeJobProvider()]),
+            $profileRepository,
+            $matchService,
             $entityManager,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
@@ -72,6 +117,7 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
         $handler(new ImportJobSourceMessage(12));
 
         self::assertNotNull($offerRepository->offer);
+        self::assertNotNull($matchRepository->match);
         self::assertSame('fake-php-symfony', $offerRepository->offer->getExternalId());
         self::assertNotNull($source->getLastSuccessAt());
         self::assertNull($source->getLastError());

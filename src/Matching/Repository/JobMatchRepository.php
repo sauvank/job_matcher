@@ -6,12 +6,13 @@ namespace App\Matching\Repository;
 
 use App\Candidate\Entity\CandidateProfile;
 use App\Job\Entity\JobOffer;
+use App\Matching\Application\Repository\JobMatchRepositoryInterface;
 use App\Matching\Entity\JobMatch;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /** @extends ServiceEntityRepository<JobMatch> */
-final class JobMatchRepository extends ServiceEntityRepository
+final class JobMatchRepository extends ServiceEntityRepository implements JobMatchRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {

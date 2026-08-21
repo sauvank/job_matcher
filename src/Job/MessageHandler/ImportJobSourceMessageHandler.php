@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Job\MessageHandler;
 
+use App\Candidate\Application\Repository\CandidateProfileRepositoryInterface;
 use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobOffer;
 use App\Job\Message\ImportJobSourceMessage;
 use App\Job\Provider\JobProviderRegistry;
 use App\Job\Translation\JobMessage;
+use App\Matching\Service\MatchJobOfferService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Lock\LockFactory;
@@ -23,6 +25,8 @@ final readonly class ImportJobSourceMessageHandler
         private JobSourceRepositoryInterface $sourceRepository,
         private JobOfferRepositoryInterface $offerRepository,
         private JobProviderRegistry $providerRegistry,
+        private CandidateProfileRepositoryInterface $profileRepository,
+        private MatchJobOfferService $matchService,
         private EntityManagerInterface $entityManager,
         private LockFactory $lockFactory,
         private LoggerInterface $logger,
@@ -52,6 +56,7 @@ final readonly class ImportJobSourceMessageHandler
             $this->entityManager->flush();
 
             $provider = $this->providerRegistry->get($source->getProvider());
+            $profile = $this->profileRepository->findDefault();
             $importedCount = 0;
 
             foreach ($provider->fetch($source) as $normalizedOffer) {
@@ -61,6 +66,10 @@ final readonly class ImportJobSourceMessageHandler
                     $this->entityManager->persist($offer);
                 } else {
                     $offer->updateFrom($normalizedOffer);
+                }
+
+                if ($profile !== null) {
+                    $this->matchService->match($profile, $offer);
                 }
 
                 ++$importedCount;

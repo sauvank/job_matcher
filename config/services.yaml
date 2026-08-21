@@ -45,11 +45,17 @@ services:
     App\Candidate\Application\Repository\CvDocumentRepositoryInterface:
         alias: App\Candidate\Infrastructure\Persistence\CvDocumentRepository
 
+    App\Candidate\Application\Repository\CandidateProfileRepositoryInterface:
+        alias: App\Candidate\Infrastructure\Persistence\CandidateProfileRepository
+
     App\Job\Application\Repository\JobSourceRepositoryInterface:
         alias: App\Job\Repository\JobSourceRepository
 
     App\Job\Application\Repository\JobOfferRepositoryInterface:
         alias: App\Job\Repository\JobOfferRepository
+
+    App\Matching\Application\Repository\JobMatchRepositoryInterface:
+        alias: App\Matching\Repository\JobMatchRepository
 
     App\Candidate\Infrastructure\Storage\LocalPrivateCvStorage:
         arguments:
