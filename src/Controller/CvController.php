@@ -18,6 +18,7 @@ use App\Candidate\Infrastructure\Persistence\CvDocumentRepository;
 use App\Candidate\Translation\CandidateMessage;
 use App\Form\CvReviewType;
 use App\Form\CvUploadType;
+use App\Job\Application\Service\ConfigureCandidateJobSearchService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -88,6 +89,7 @@ final class CvController extends AbstractController
         CvDocument $document,
         Request $request,
         ApplyCvAnalysisService $applyService,
+        ConfigureCandidateJobSearchService $jobSearchService,
     ): Response {
         $analysis = null;
         $reviewForm = null;
@@ -109,6 +111,7 @@ final class CvController extends AbstractController
                     $reviewData->yearsOfExperience,
                     $reviewData->selectedSkills,
                 );
+                $jobSearchService->configure($document->getCandidateProfile());
                 $this->addFlash('success', CandidateMessage::ANALYSIS_APPLIED);
 
                 return $this->redirectToRoute('app_candidate_profile');

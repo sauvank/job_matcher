@@ -23,6 +23,16 @@ final class JobOfferRepository extends ServiceEntityRepository implements JobOff
         return $this->findOneBy(['source' => $source, 'externalId' => $externalId]);
     }
 
+    public function deleteBySource(JobSource $source): void
+    {
+        $this->createQueryBuilder('offer')
+            ->delete()
+            ->where('offer.source = :source')
+            ->setParameter('source', $source)
+            ->getQuery()
+            ->execute();
+    }
+
     /** @return list<JobOffer> */
     public function findRecent(int $limit = 100): array
     {

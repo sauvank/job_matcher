@@ -101,6 +101,16 @@ final class JobSource
         return $this->lastError;
     }
 
+    public function updateSearch(string $name, string $url): void
+    {
+        $this->name = $name;
+        $this->url = $url;
+        $this->lastSyncStartedAt = null;
+        $this->lastSuccessAt = null;
+        $this->lastError = null;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function markSyncStarted(): void
     {
         $this->lastSyncStartedAt = new \DateTimeImmutable();

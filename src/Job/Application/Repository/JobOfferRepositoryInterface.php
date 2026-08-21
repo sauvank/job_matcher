@@ -10,4 +10,6 @@ use App\Job\Entity\JobSource;
 interface JobOfferRepositoryInterface
 {
     public function findOneBySourceAndExternalId(JobSource $source, string $externalId): ?JobOffer;
+
+    public function deleteBySource(JobSource $source): void;
 }

@@ -6,17 +6,8 @@
     <div class="page-heading">
         <p class="eyebrow">Collecte</p>
         <h1>Sources d’offres</h1>
-        <p>Ajoutez une recherche HelloWork. Les dix premières fiches seront importées en arrière-plan.</p>
+        <p>La recherche HelloWork est générée automatiquement à partir du titre et de la localisation validés depuis votre CV.</p>
     </div>
-
-    <section class="card form-card">
-        <h2>Ajouter une source</h2>
-        {{ form_start(form) }}
-            {{ form_row(form.name) }}
-            {{ form_row(form.url) }}
-            {{ form_row(form.save) }}
-        {{ form_end(form) }}
-    </section>
 
     <section class="card">
         <div class="section-heading">
@@ -25,7 +16,7 @@
         </div>
 
         {% if sources is empty %}
-            <p>Aucune source configurée.</p>
+            <p>Aucune recherche configurée. Déposez un CV, puis validez son intitulé de poste et sa localisation.</p>
         {% else %}
             <div class="table-wrapper">
                 <table>

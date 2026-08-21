@@ -15,7 +15,8 @@ final class JobPagesControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Sources d’offres');
-        self::assertSelectorExists('form[name="job_source"]');
+        self::assertSelectorTextContains('.page-heading', 'générée automatiquement');
+        self::assertSelectorNotExists('form[name="job_source"]');
     }
 
     public function testJobOfferPageIsAvailable(): void

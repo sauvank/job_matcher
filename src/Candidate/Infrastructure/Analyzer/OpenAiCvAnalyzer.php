@@ -36,7 +36,7 @@ final readonly class OpenAiCvAnalyzer implements CvAnalyzerInterface
                 'json' => [
                     'model' => $this->model,
                     'store' => false,
-                    'instructions' => 'Analyse ce CV sans inventer. Extrais uniquement les informations explicitement présentes ou raisonnablement déductibles. Utilise null en cas de doute. Réponds en français et respecte strictement le schéma JSON.',
+                    'instructions' => 'Analyse ce CV sans inventer. Pour suggestedTitle, détermine l’intitulé professionnel principal ou le poste ciblé. Pour location, extrais la ville de résidence ou de recherche du candidat, et non la ville d’un ancien employeur. Extrais uniquement les informations explicitement présentes ou raisonnablement déductibles. Utilise null en cas de doute. Réponds en français et respecte strictement le schéma JSON.',
                     'input' => mb_substr($cvText, 0, 60000),
                     'text' => [
                         'format' => [

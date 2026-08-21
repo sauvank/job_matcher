@@ -6,6 +6,7 @@ namespace App\Job\Repository;
 
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobSource;
+use App\Job\Enum\JobProviderType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -20,5 +21,10 @@ final class JobSourceRepository extends ServiceEntityRepository implements JobSo
     public function get(int $id): ?JobSource
     {
         return $this->find($id);
+    }
+
+    public function findOneByProvider(JobProviderType $provider): ?JobSource
+    {
+        return $this->findOneBy(['provider' => $provider]);
     }
 }

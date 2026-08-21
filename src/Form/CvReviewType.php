@@ -24,8 +24,8 @@ final class CvReviewType extends AbstractType
         $skillNames = array_map(static fn (AnalyzedSkill $skill): string => $skill->name, $analysis->skills);
 
         $builder
-            ->add('title', TextType::class, ['label' => 'Titre professionnel', 'required' => false])
-            ->add('location', TextType::class, ['label' => 'Localisation', 'required' => false])
+            ->add('title', TextType::class, ['label' => 'Titre professionnel'])
+            ->add('location', TextType::class, ['label' => 'Localisation'])
             ->add('yearsOfExperience', IntegerType::class, ['label' => 'Années d\'expérience', 'required' => false])
             ->add('selectedSkills', ChoiceType::class, [
                 'label' => 'Compétences à conserver',

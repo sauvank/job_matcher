@@ -33,6 +33,11 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
                 return $id === 12 ? $this->source : null;
             }
+
+            public function findOneByProvider(JobProviderType $provider): ?JobSource
+            {
+                return $this->source->getProvider() === $provider ? $this->source : null;
+            }
         };
         $offerRepository = new class implements JobOfferRepositoryInterface {
             public ?JobOffer $offer = null;
@@ -40,6 +45,10 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             public function findOneBySourceAndExternalId(JobSource $source, string $externalId): ?JobOffer
             {
                 return $this->offer;
+            }
+
+            public function deleteBySource(JobSource $source): void
+            {
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
