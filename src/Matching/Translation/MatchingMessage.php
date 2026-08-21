@@ -6,6 +6,21 @@ namespace App\Matching\Translation;
 
 final class MatchingMessage
 {
+    public const MATCH_NOT_FOUND = 'matching.analysis.match_not_found';
+    public const SEMANTIC_ANALYSIS_QUEUED = 'matching.analysis.queued';
+    public const SEMANTIC_ANALYSIS_FAILED = 'matching.analysis.failed';
+    public const INVALID_SEMANTIC_ANALYSIS = 'matching.analysis.invalid';
+    public const UNKNOWN_SEMANTIC_ANALYZER = 'matching.analysis.unknown_analyzer';
+    public const MISSING_OPENAI_KEY = 'matching.analysis.missing_openai_key';
+    public const INVALID_OPENAI_JSON = 'matching.analysis.invalid_openai_json';
+    public const MISSING_OPENAI_OUTPUT = 'matching.analysis.missing_openai_output';
+    public const OPENAI_AUTHENTICATION_FAILED = 'matching.analysis.openai_authentication_failed';
+    public const OPENAI_QUOTA_EXCEEDED = 'matching.analysis.openai_quota_exceeded';
+    public const OPENAI_RATE_LIMITED = 'matching.analysis.openai_rate_limited';
+    public const OPENAI_UNAVAILABLE = 'matching.analysis.openai_unavailable';
+    public const OPENAI_REQUEST_FAILED = 'matching.analysis.openai_request_failed';
+    public const OPENAI_TIMEOUT = 'matching.analysis.openai_timeout';
+    public const OPENAI_CONNECTION_FAILED = 'matching.analysis.openai_connection_failed';
     public const SKILL_PRESENT = 'matching.reason.skill_present';
     public const SKILL_MISSING = 'matching.reason.skill_missing';
     public const SKILLS_UNKNOWN = 'matching.reason.skills_unknown';

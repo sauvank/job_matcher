@@ -163,11 +163,15 @@ final class HelloWorkJobPostingParser
 
         $qualificationText = $this->cleanHtml($qualifications);
         if ($qualificationText !== null) {
-            foreach (['~(\d+)\s+ans?\s+d[\'’]expérience~iu', '~expérience\s+(?:minimum\s+)?de\s+(\d+)\s+ans?~iu'] as $pattern) {
+            foreach (['~(\d+)\s+(?:ans?|années?)\s+d[\'’]expérience~iu', '~expérience\s+(?:minimum\s+)?de\s+(\d+)\s+(?:ans?|années?)~iu'] as $pattern) {
                 preg_match_all($pattern, $qualificationText, $matches);
                 foreach ($matches[1] as $textualYears) {
                     $years[] = (int) $textualYears;
                 }
+            }
+
+            if ($years !== [] && max($years) <= 1 && preg_match('/expérience\s+(?:significative|confirmée)|profil\s+expérimenté/iu', $qualificationText) === 1) {
+                return null;
             }
         }
 

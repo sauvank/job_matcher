@@ -7,6 +7,8 @@ namespace App\Matching\Entity;
 use App\Candidate\Entity\CandidateProfile;
 use App\Job\Entity\JobOffer;
 use App\Matching\DTO\MatchScore;
+use App\Matching\DTO\SemanticJobAnalysis;
+use App\Matching\Enum\SemanticAnalysisStatus;
 use App\Matching\Repository\JobMatchRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -37,6 +39,22 @@ final class JobMatch
 
     #[ORM\Column(nullable: true)]
     private ?int $semanticScore = null;
+
+    /** @var array<string, mixed>|null */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $semanticAnalysis = null;
+
+    #[ORM\Column(enumType: SemanticAnalysisStatus::class)]
+    private SemanticAnalysisStatus $semanticAnalysisStatus = SemanticAnalysisStatus::NOT_REQUESTED;
+
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $semanticAnalyzer = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $semanticError = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $semanticAnalyzedAt = null;
 
     #[ORM\Column]
     private int $stackScore;
@@ -83,6 +101,11 @@ final class JobMatch
         return $this->jobOffer;
     }
 
+    public function getCandidateProfile(): CandidateProfile
+    {
+        return $this->candidateProfile;
+    }
+
     public function getGlobalScore(): int
     {
         return $this->globalScore;
@@ -96,6 +119,32 @@ final class JobMatch
     public function getSemanticScore(): ?int
     {
         return $this->semanticScore;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getSemanticAnalysis(): ?array
+    {
+        return $this->semanticAnalysis;
+    }
+
+    public function getSemanticAnalysisStatus(): SemanticAnalysisStatus
+    {
+        return $this->semanticAnalysisStatus;
+    }
+
+    public function getSemanticAnalyzer(): ?string
+    {
+        return $this->semanticAnalyzer;
+    }
+
+    public function getSemanticError(): ?string
+    {
+        return $this->semanticError;
+    }
+
+    public function getSemanticAnalyzedAt(): ?\DateTimeImmutable
+    {
+        return $this->semanticAnalyzedAt;
     }
 
     public function getStackScore(): int
@@ -157,5 +206,33 @@ final class JobMatch
         $this->backendScore = $score->backendScore;
         $this->explanation = $score->explanation();
         $this->analyzedAt = new \DateTimeImmutable();
+    }
+
+    public function queueSemanticAnalysis(): void
+    {
+        $this->semanticAnalysisStatus = SemanticAnalysisStatus::QUEUED;
+        $this->semanticError = null;
+    }
+
+    public function startSemanticAnalysis(): void
+    {
+        $this->semanticAnalysisStatus = SemanticAnalysisStatus::RUNNING;
+        $this->semanticError = null;
+    }
+
+    public function completeSemanticAnalysis(SemanticJobAnalysis $analysis, string $analyzer): void
+    {
+        $this->semanticAnalysis = $analysis->toArray();
+        $this->semanticScore = $analysis->compatibilityScore;
+        $this->semanticAnalyzer = $analyzer;
+        $this->semanticAnalysisStatus = SemanticAnalysisStatus::COMPLETED;
+        $this->semanticError = null;
+        $this->semanticAnalyzedAt = new \DateTimeImmutable();
+    }
+
+    public function failSemanticAnalysis(string $error): void
+    {
+        $this->semanticAnalysisStatus = SemanticAnalysisStatus::FAILED;
+        $this->semanticError = $error;
     }
 }

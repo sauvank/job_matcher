@@ -64,6 +64,22 @@ job:
     invalid_response: "La plateforme a retourné une réponse inattendue."
     job_posting_not_found: "La fiche ne contient aucune offre structurée exploitable."
 matching:
+  analysis:
+    match_not_found: "La correspondance demandée est introuvable."
+    queued: "L’analyse complète de l’annonce a été mise en attente."
+    failed: "L’analyse complète de l’annonce a échoué."
+    invalid: "La réponse d’analyse de l’annonce est invalide."
+    unknown_analyzer: "L’analyseur d’offres configuré est inconnu."
+    missing_openai_key: "La clé OpenAI est absente."
+    invalid_openai_json: "OpenAI a retourné un JSON illisible pour l’annonce."
+    missing_openai_output: "La réponse OpenAI ne contient aucun résultat d’analyse."
+    openai_authentication_failed: "OpenAI a refusé l’authentification."
+    openai_quota_exceeded: "Le quota ou le crédit OpenAI est insuffisant."
+    openai_rate_limited: "OpenAI reçoit trop de requêtes ; l’analyse sera retentée."
+    openai_unavailable: "OpenAI est temporairement indisponible ; l’analyse sera retentée."
+    openai_request_failed: "OpenAI a refusé la demande d’analyse."
+    openai_timeout: "OpenAI n’a pas répondu à temps ; l’analyse sera retentée."
+    openai_connection_failed: "Impossible de joindre OpenAI ; l’analyse sera retentée."
   reason:
     skill_present: "%skill% est présent dans l’annonce et dans le CV."
     skill_missing: "%skill%, compétence importante du CV, n’est pas mentionné dans l’annonce."

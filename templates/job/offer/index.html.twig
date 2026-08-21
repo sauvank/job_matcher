@@ -20,7 +20,13 @@
                     {% for match in matches %}
                         {% set offer = match.jobOffer %}
                         <tr>
-                            <td><span class="score score-{{ match.globalScore >= 75 ? 'good' : (match.globalScore >= 50 ? 'medium' : 'low') }}">{{ match.globalScore }} %</span></td>
+                            <td>
+                                {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
+                                    <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}">{{ match.semanticScore }} %</span>
+                                {% else %}
+                                    <span class="badge">À analyser</span>
+                                {% endif %}
+                            </td>
                             <td><a href="{{ path('app_job_offer_show', {id: match.id}) }}">{{ offer.title }}</a></td>
                             <td>{{ offer.company ?? 'Non renseignée' }}</td>
                             <td>{{ offer.location ?? 'Non renseignée' }}</td>
@@ -32,7 +38,7 @@
                                 {% else %}Non renseigné{% endif %}
                             </td>
                             <td><span class="badge">{{ offer.status.value }}</span></td>
-                            <td>{{ match.analyzedAt|date('d/m/Y H:i') }}</td>
+                            <td>{{ match.semanticAnalyzedAt ? match.semanticAnalyzedAt|date('d/m/Y H:i') : 'Non analysée' }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

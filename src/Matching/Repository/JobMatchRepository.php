@@ -24,9 +24,21 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         return $this->findOneBy(['candidateProfile' => $profile, 'jobOffer' => $offer]);
     }
 
+    public function get(int $id): ?JobMatch
+    {
+        return $this->find($id);
+    }
+
     /** @return list<JobMatch> */
     public function findRanked(int $limit = 100): array
     {
-        return $this->findBy([], ['globalScore' => 'DESC', 'analyzedAt' => 'DESC'], $limit);
+        return $this->createQueryBuilder('jobMatch')
+            ->addSelect('CASE WHEN jobMatch.semanticScore IS NULL THEN 1 ELSE 0 END AS HIDDEN semanticScoreMissing')
+            ->orderBy('semanticScoreMissing', 'ASC')
+            ->addOrderBy('jobMatch.semanticScore', 'DESC')
+            ->addOrderBy('jobMatch.semanticAnalyzedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 }

@@ -15,6 +15,7 @@ use App\Job\Message\ImportJobSourceMessage;
 use App\Job\MessageHandler\ImportJobSourceMessageHandler;
 use App\Job\Provider\FakeJobProvider;
 use App\Job\Provider\JobProviderRegistry;
+use App\Job\Service\TechnicalRequirementExtractor;
 use App\Matching\Application\Repository\JobMatchRepositoryInterface;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Service\DeterministicJobScorer;
@@ -71,6 +72,11 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
         $matchRepository = new class implements JobMatchRepositoryInterface {
             public ?JobMatch $match = null;
 
+            public function get(int $id): ?JobMatch
+            {
+                return $this->match;
+            }
+
             public function findOneFor(CandidateProfile $profile, JobOffer $offer): ?JobMatch
             {
                 return $this->match;
@@ -92,15 +98,18 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             });
         $matchService = new MatchJobOfferService(
             $matchRepository,
-            new DeterministicJobScorer([
-                'stack' => 35,
-                'experience' => 15,
-                'salary' => 15,
-                'location' => 10,
-                'contract' => 10,
-                'remote' => 5,
-                'backend' => 10,
-            ]),
+            new DeterministicJobScorer(
+                [
+                    'stack' => 35,
+                    'experience' => 15,
+                    'salary' => 15,
+                    'location' => 10,
+                    'contract' => 10,
+                    'remote' => 5,
+                    'backend' => 10,
+                ],
+                new TechnicalRequirementExtractor(),
+            ),
             $entityManager,
         );
         $handler = new ImportJobSourceMessageHandler(

@@ -76,4 +76,42 @@ final class HelloWorkJobPostingParserTest extends TestCase
 
         self::assertSame(2, $offer->yearsOfExperience);
     }
+
+    public function testItDoesNotClaimOneYearIsEnoughForAnExplicitlyExperiencedProfile(): void
+    {
+        $jobPosting = [
+            '@type' => 'JobPosting',
+            'title' => 'Tech Lead PHP',
+            'description' => '<p>Pilotage de la roadmap technique.</p>',
+            'qualifications' => '<p>Expérience significative en tant que Tech Lead ou référent technique.</p>',
+            'experienceRequirements' => ['monthsOfExperience' => 12],
+        ];
+        $html = '<script type="application/ld+json">'.json_encode($jobPosting, JSON_THROW_ON_ERROR).'</script>';
+
+        $offer = (new HelloWorkJobPostingParser())->parseOffer(
+            $html,
+            'https://www.hellowork.com/fr-fr/emplois/79315367.html',
+        );
+
+        self::assertNull($offer->yearsOfExperience);
+    }
+
+    public function testItReadsAnExplicitRequirementWrittenInYears(): void
+    {
+        $jobPosting = [
+            '@type' => 'JobPosting',
+            'title' => 'Développeur Symfony Angular',
+            'description' => '<p>Développement full-stack.</p>',
+            'qualifications' => '<p>Vous disposez d’au moins 5 années d’expérience dans le développement PHP.</p>',
+            'experienceRequirements' => ['monthsOfExperience' => 12],
+        ];
+        $html = '<script type="application/ld+json">'.json_encode($jobPosting, JSON_THROW_ON_ERROR).'</script>';
+
+        $offer = (new HelloWorkJobPostingParser())->parseOffer(
+            $html,
+            'https://www.hellowork.com/fr-fr/emplois/79162910.html',
+        );
+
+        self::assertSame(5, $offer->yearsOfExperience);
+    }
 }

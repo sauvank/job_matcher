@@ -13,6 +13,7 @@ use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
+use App\Job\Service\TechnicalRequirementExtractor;
 use App\Matching\Service\DeterministicJobScorer;
 use PHPUnit\Framework\TestCase;
 
@@ -180,14 +181,17 @@ final class DeterministicJobScorerTest extends TestCase
 
     private function scorer(): DeterministicJobScorer
     {
-        return new DeterministicJobScorer([
-            'stack' => 35,
-            'experience' => 15,
-            'salary' => 15,
-            'location' => 10,
-            'contract' => 10,
-            'backend' => 10,
-            'remote' => 5,
-        ]);
+        return new DeterministicJobScorer(
+            [
+                'stack' => 35,
+                'experience' => 15,
+                'salary' => 15,
+                'location' => 10,
+                'contract' => 10,
+                'backend' => 10,
+                'remote' => 5,
+            ],
+            new TechnicalRequirementExtractor(),
+        );
     }
 }

@@ -57,6 +57,9 @@ services:
     App\Matching\Application\Repository\JobMatchRepositoryInterface:
         alias: App\Matching\Repository\JobMatchRepository
 
+    App\Matching\Application\Analyzer\JobSemanticAnalyzerInterface:
+        alias: App\Matching\Infrastructure\Analyzer\ConfiguredJobSemanticAnalyzer
+
     App\Candidate\Infrastructure\Storage\LocalPrivateCvStorage:
         arguments:
             $storageDirectory: '%app.cv_storage_directory%'
@@ -69,6 +72,15 @@ services:
         arguments:
             $apiKey: '%env(OPENAI_API_KEY)%'
             $model: '%env(OPENAI_MODEL)%'
+
+    App\Matching\Infrastructure\Analyzer\ConfiguredJobSemanticAnalyzer:
+        arguments:
+            $mode: '%env(CV_ANALYZER)%'
+
+    App\Matching\Infrastructure\Analyzer\OpenAiJobSemanticAnalyzer:
+        arguments:
+            $apiKey: '%env(OPENAI_API_KEY)%'
+            $model: '%env(JOB_OPENAI_MODEL)%'
 
     App\Job\Provider\JobProviderRegistry:
         arguments:

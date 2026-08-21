@@ -17,7 +17,7 @@ Le projet avance par incréments. La version actuelle contient le dépôt privé
 
 Le projet est un monolithe modulaire organisé autour de trois fonctionnalités : `Candidate`, `Job` et `Matching`. Les interfaces sont placées uniquement aux frontières changeantes, notamment les fournisseurs d'offres, les contrôles de disponibilité et le fournisseur LLM.
 
-Le LLM ne décidera pas seul d'un pourcentage. Il produira des observations JSON structurées, ensuite converties en impacts chiffrés par un moteur de règles configurable.
+L’analyse de compatibilité visible est produite par le LLM à partir du texte complet de l’annonce et du CV. Le pourcentage reste toujours accompagné d’exigences dédupliquées, de preuves textuelles et de verdicts structurés afin de pouvoir être contrôlé.
 
 ## Installation
 
@@ -58,7 +58,7 @@ Les résultats classés sont visibles sur `/jobs`. Chaque fiche détaille le sco
 docker compose exec -T php php bin/console app:matches:refresh
 ```
 
-La vérification de disponibilité et l’analyse IA des offres feront l’objet des incréments suivants.
+Une première extraction déterministe complète les champs HelloWork incomplets à partir des sections « Environnement technique » et « Stack technique ». La vérification de disponibilité fera l’objet d’un prochain incrément.
 
 ## Analyse réelle du CV avec OpenAI
 
@@ -80,13 +80,17 @@ Le texte extrait du CV est envoyé à l'API Responses avec `store: false`. La r�
 
 La V1 utilise un seul profil candidat actif. Plusieurs CV peuvent être analysés et conservés dans l’historique, mais appliquer un CV remplace les informations et les compétences du profil actif. Une ancienne analyse peut être réutilisée depuis sa fiche sans appeler à nouveau l’IA.
 
-## Scoring
+## Analyse complète des offres
 
-Le score actuel est déterministe et pondère les compétences (35), l’expérience (15), le salaire (15), la localisation (10), le contrat (10), l’orientation backend (10) et le télétravail (5). Les compétences exigées par l’annonce sont comparées à celles validées dans le CV ; les exigences absentes du profil sont affichées explicitement. Les poids sont configurés dans `config/services.yaml`, pas figés dans le service métier.
+Depuis une fiche d’offre, le bouton **Analyser toute l’annonce** envoie au worker le texte complet utile de l’annonce, ses données `JobPosting`, les compétences validées et le texte du CV. OpenAI retourne un JSON strict contenant un unique `compatibilityScore`, un résumé et toutes les exigences classées par catégorie, priorité et verdict. Chaque exigence doit citer une preuve issue de l’annonce et, lorsqu’elle existe, une preuve issue du CV.
 
-Une information absente reçoit une valeur neutre de 50 et apparaît dans les informations à vérifier. Chaque import crée ou met à jour un unique résultat par couple profil/offre. Le futur score sémantique restera séparé du score déterministe et fournira des observations JSON structurées.
+Le seul pourcentage affiché dans `/jobs` et sur la fiche est celui retourné par l’IA. Une offre sans analyse affiche **À analyser**. Les contrôles déterministes restent internes et servent à normaliser les informations du fournisseur, notamment une durée d’expérience incohérente ou une stack absente du champ `skills`.
 
-Les critères bloquants pourront appliquer des malus ou plafonner le score. Les données inconnues resteront neutres et seront signalées.
+Le modèle des offres est configurable séparément avec `JOB_OPENAI_MODEL`. La valeur par défaut est `gpt-5.6-luna`, choisie pour limiter le coût. L’analyse est déclenchée à la demande et n’est jamais lancée automatiquement sur tout le catalogue. Pour analyser uniquement certaines correspondances :
+
+```bash
+docker compose exec -T php php bin/console app:matches:analyze 18 26
+```
 
 ## Décisions
 
@@ -99,14 +103,13 @@ Les critères bloquants pourront appliquer des malus ou plafonner le score. Les 
 ## Limites actuelles
 
 - Les PDF contenant du texte et les DOCX sont pris en charge. Un PDF constitué uniquement d'images nécessite encore un module OCR.
-- L'analyse OpenAI implique l'envoi du texte du CV à un fournisseur externe et génère un coût d'API.
+- L'analyse OpenAI implique l'envoi du texte du CV et de l’annonce à un fournisseur externe et génère un coût d'API. Les requêtes utilisent `store: false`.
 - Seule la première page d'une recherche HelloWork est importée, avec un maximum de dix fiches par synchronisation.
-- Le scoring sémantique des offres par IA n’est pas encore implémenté ; l’orientation backend repose actuellement sur des mots-clés explicites.
+- Un score IA reste une aide à la décision : les preuves et les éléments `UNKNOWN` doivent être relus avant de candidater.
 - L'application n'intègre pas encore d'authentification et doit rester accessible en local.
 
 ## Roadmap
 
-1. analyse sémantique des offres en JSON strict ;
-2. contrôle de disponibilité ;
-3. filtres du dashboard Twig ;
-4. pagination des sources et planification quotidienne.
+1. contrôle de disponibilité ;
+2. filtres du dashboard Twig ;
+3. pagination des sources et planification quotidienne.

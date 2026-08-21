@@ -10,5 +10,7 @@ use App\Matching\Entity\JobMatch;
 
 interface JobMatchRepositoryInterface
 {
+    public function get(int $id): ?JobMatch;
+
     public function findOneFor(CandidateProfile $profile, JobOffer $offer): ?JobMatch;
 }

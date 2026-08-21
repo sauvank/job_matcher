@@ -7,6 +7,7 @@ namespace App\Matching\Service;
 use App\Candidate\Entity\CandidateProfile;
 use App\Candidate\Enum\RemotePolicy;
 use App\Job\Entity\JobOffer;
+use App\Job\Service\TechnicalRequirementExtractor;
 use App\Matching\DTO\MatchReason;
 use App\Matching\DTO\MatchScore;
 use App\Matching\Translation\MatchingMessage;
@@ -15,16 +16,11 @@ final readonly class DeterministicJobScorer
 {
     private const SCORE_UNKNOWN = 50;
 
-    /** @var array<string, list<string>> */
-    private const DETECTABLE_REQUIREMENTS = [
-        'React' => ['react'],
-        'Webhooks' => ['webhook', 'webhooks'],
-        'CI/CD' => ['ci/cd', 'ci cd'],
-    ];
-
     /** @param array{stack: int, experience: int, salary: int, location: int, contract: int, remote: int, backend: int} $weights */
-    public function __construct(private array $weights)
-    {
+    public function __construct(
+        private array $weights,
+        private TechnicalRequirementExtractor $requirementExtractor,
+    ) {
     }
 
     public function score(CandidateProfile $profile, JobOffer $offer): MatchScore
@@ -91,7 +87,7 @@ final readonly class DeterministicJobScorer
             return self::SCORE_UNKNOWN;
         }
 
-        $requiredSkills = $this->requiredSkills($offer);
+        $requiredSkills = $this->requirementExtractor->extract($offer);
         if ($requiredSkills === []) {
             $unknowns[] = new MatchReason(MatchingMessage::REQUIRED_SKILLS_UNKNOWN);
 
@@ -299,31 +295,6 @@ final readonly class DeterministicJobScorer
         }
 
         return array_any($aliases, fn (string $alias): bool => $this->contains($haystack, $alias));
-    }
-
-    /** @return list<string> */
-    private function requiredSkills(JobOffer $offer): array
-    {
-        $payload = $offer->getRawPayload();
-        $skills = [];
-        $structuredSkills = $payload['skills'] ?? [];
-        if (is_array($structuredSkills)) {
-            foreach ($structuredSkills as $skill) {
-                if (is_string($skill) && trim($skill) !== '') {
-                    $skills[$this->normalize($skill)] = trim($skill);
-                }
-            }
-        }
-
-        $qualifications = is_string($payload['qualifications'] ?? null) ? $payload['qualifications'] : '';
-        $requirementsText = $this->normalize($offer->getTitle().' '.$qualifications);
-        foreach (self::DETECTABLE_REQUIREMENTS as $label => $signals) {
-            if (array_any($signals, fn (string $signal): bool => $this->contains($requirementsText, $signal))) {
-                $skills[$this->normalize($label)] = $label;
-            }
-        }
-
-        return array_values($skills);
     }
 
     private function candidateHasSkill(CandidateProfile $profile, string $requiredSkill): bool

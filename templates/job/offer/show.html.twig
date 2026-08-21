@@ -4,65 +4,72 @@
 
 {% block body %}
     {% set offer = match.jobOffer %}
-    {% set explanation = match.explanation %}
 
     <div class="page-heading">
         <p class="eyebrow">Compatibilité</p>
-        <h1>{{ match.globalScore }} % — {{ match.globalScore >= 75 ? 'Bon match' : (match.globalScore >= 50 ? 'Match à vérifier' : 'Match faible') }}</h1>
+        {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
+            <h1>{{ match.semanticScore }} % — {{ match.semanticScore >= 75 ? 'Bon match' : (match.semanticScore >= 50 ? 'Match à vérifier' : 'Match faible') }}</h1>
+        {% else %}
+            <h1>Analyse IA requise</h1>
+        {% endif %}
         <p>{{ offer.title }}{% if offer.company %} chez {{ offer.company }}{% endif %}</p>
         <a class="button" href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">Voir l’annonce originale</a>
         <a class="button secondary" href="{{ path('app_job_offers') }}">Retour aux offres</a>
     </div>
 
     <section class="card">
-        <h2>Détail du score</h2>
-        <div class="score-grid">
-            <div><span>Compétences</span><strong>{{ match.stackScore }} %</strong></div>
-            <div><span>Expérience</span><strong>{{ match.experienceScore }} %</strong></div>
-            <div><span>Salaire</span><strong>{{ match.salaryScore }} %</strong></div>
-            <div><span>Localisation</span><strong>{{ match.locationScore }} %</strong></div>
-            <div><span>Contrat</span><strong>{{ match.contractScore }} %</strong></div>
-            <div><span>Télétravail</span><strong>{{ match.remoteScore }} %</strong></div>
-            <div><span>Orientation backend</span><strong>{{ match.backendScore }} %</strong></div>
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Analyse exhaustive</p>
+                <h2>Compatibilité sémantique par IA</h2>
+            </div>
+            {% if match.semanticAnalysisStatus.value not in ['QUEUED', 'RUNNING'] %}
+                <form method="post" action="{{ path('app_job_offer_analyze', {id: match.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('analyze-job-' ~ match.id) }}">
+                    <button type="submit" class="button secondary">{{ semanticAnalysis ? 'Relancer l’analyse' : 'Analyser toute l’annonce' }}</button>
+                </form>
+            {% endif %}
         </div>
-        <p class="help-text">Ce score est calculé avec des règles déterministes. L’analyse sémantique par IA sera ajoutée séparément.</p>
+
+        {% if match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
+            <div class="progress-block">
+                <span>{{ match.semanticAnalysisStatus.value == 'QUEUED' ? 'Analyse en attente…' : 'Analyse du texte complet et du CV…' }}</span>
+                <progress max="100">Analyse en cours</progress>
+            </div>
+            <script>window.setTimeout(() => window.location.reload(), 2500);</script>
+        {% elseif match.semanticAnalysisStatus.value == 'FAILED' %}
+            <p class="text-error">{{ match.semanticError|trans }}</p>
+        {% elseif semanticAnalysis %}
+            <div class="semantic-summary">
+                <p>{{ semanticAnalysis.summary }}</p>
+                <p class="help-text">{{ match.semanticAnalyzer }} · {{ match.semanticAnalyzedAt|date('d/m/Y H:i') }}</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>Exigence</th><th>Priorité</th><th>Preuve dans l’annonce</th><th>Verdict</th><th>Preuve dans le CV</th><th>Explication</th></tr></thead>
+                    <tbody>
+                    {% for requirement in semanticAnalysis.requirements %}
+                        <tr>
+                            <td><strong>{{ requirement.label }}</strong><br><span class="badge">{{ requirement.category.value }}</span></td>
+                            <td>{{ requirement.importance.value }}</td>
+                            <td>« {{ requirement.offerEvidence }} »</td>
+                            <td><span class="badge verdict-{{ requirement.assessment.value|lower }}">{{ requirement.assessment.value }}</span></td>
+                            <td>{{ requirement.cvEvidence ? '« ' ~ requirement.cvEvidence ~ ' »' : 'Non confirmée' }}</td>
+                            <td>{{ requirement.explanation }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="explanation-grid">
+                <div><h3>Forces</h3><ul>{% for item in semanticAnalysis.strengths %}<li>{{ item }}</li>{% else %}<li>Aucune force certaine.</li>{% endfor %}</ul></div>
+                <div><h3>Points de vigilance</h3><ul>{% for item in semanticAnalysis.concerns %}<li>{{ item }}</li>{% else %}<li>Aucun point de vigilance certain.</li>{% endfor %}</ul></div>
+                <div><h3>Questions à poser</h3><ul>{% for item in semanticAnalysis.questions %}<li>{{ item }}</li>{% else %}<li>Aucune question supplémentaire.</li>{% endfor %}</ul></div>
+            </div>
+        {% else %}
+            <p>L’analyse complète lit toutes les missions, exigences, responsabilités, qualités attendues et conditions de travail, puis les compare au texte du CV avec des preuves.</p>
+        {% endif %}
     </section>
-
-    <div class="explanation-grid">
-        <section class="card">
-            <h2>Points forts</h2>
-            {% if explanation.strengths is empty %}
-                <p>Aucun point fort confirmé avec les données disponibles.</p>
-            {% else %}
-                <ul>{% for reason in explanation.strengths %}<li>{{ reason.key|trans(reason.parameters) }}</li>{% endfor %}</ul>
-            {% endif %}
-        </section>
-
-        <section class="card">
-            <h2>Points faibles</h2>
-            {% if explanation.gaps is empty %}
-                <p>Aucun écart détecté.</p>
-            {% else %}
-                <ul>{% for reason in explanation.gaps %}<li>{{ reason.key|trans(reason.parameters) }}</li>{% endfor %}</ul>
-            {% endif %}
-        </section>
-
-        <section class="card">
-            <h2>Critères bloquants</h2>
-            {% if explanation.blockers is empty %}
-                <p>Aucun critère bloquant détecté.</p>
-            {% else %}
-                <ul>{% for reason in explanation.blockers %}<li>{{ reason.key|trans(reason.parameters) }}</li>{% endfor %}</ul>
-            {% endif %}
-        </section>
-
-        <section class="card">
-            <h2>Informations à vérifier</h2>
-            {% if explanation.unknowns is empty %}
-                <p>Aucune information manquante.</p>
-            {% else %}
-                <ul>{% for reason in explanation.unknowns %}<li>{{ reason.key|trans(reason.parameters) }}</li>{% endfor %}</ul>
-            {% endif %}
-        </section>
-    </div>
 {% endblock %}
