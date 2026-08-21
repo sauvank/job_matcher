@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup build up down restart logs shell worker install migrate migration-status migration-diff schema-validate fixtures test-db test phpstan cs-check qa ci
+.PHONY: help setup build up down restart logs shell worker install sass migrate migration-status migration-diff schema-validate fixtures test-db test phpstan cs-check qa ci
 
 help:
 	@echo "make setup             Install and start the application"
@@ -10,6 +10,7 @@ help:
 	@echo "make logs              Follow container logs"
 	@echo "make shell             Open a shell in the PHP container"
 	@echo "make install           Install Composer dependencies"
+	@echo "make sass              Compile SCSS assets"
 	@echo "make migrate           Apply pending database migrations"
 	@echo "make migration-status  Show database migration status"
 	@echo "make migration-diff    Generate a migration from entity changes"
@@ -19,7 +20,7 @@ help:
 	@echo "make test              Run PHPUnit"
 	@echo "make qa                Run coding style, PHPStan and tests"
 
-setup: build up install migrate
+setup: build up install migrate sass
 
 build:
 	docker compose build
@@ -44,6 +45,9 @@ worker:
 
 install:
 	docker compose exec -T php composer install --prefer-dist --no-interaction --no-progress
+
+sass:
+	docker compose exec -T php php bin/console sass:build
 
 migrate:
 	docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction

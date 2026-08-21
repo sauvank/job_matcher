@@ -25,7 +25,7 @@ final class JobPagesControllerTest extends WebTestCase
         $client->request('GET', '/jobs');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Offres importées');
-        self::assertSelectorTextContains('.page-heading', 'compatibilité avec votre CV');
+        self::assertSelectorTextContains('h1', 'Offres analysées');
+        self::assertSelectorTextContains('.page-heading', 'compatibilité calculée par l’IA');
     }
 }

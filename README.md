@@ -9,7 +9,7 @@ Le projet avance par incréments. La version actuelle contient le dépôt privé
 - PHP 8.4 et Symfony 7.4 LTS
 - Doctrine ORM et PostgreSQL 16
 - Symfony Messenger avec Redis
-- Twig et CSS simple
+- Twig et SCSS compilé par SassBundle et AssetMapper, sans chaîne Node
 - PHPUnit 12, PHPStan et PHP-CS-Fixer
 - Docker Compose et GitHub Actions
 
@@ -40,6 +40,7 @@ make migration-status  # afficher l'état des migrations
 make schema-validate   # comparer les entités et le schéma PostgreSQL
 make logs              # suivre les logs
 make shell             # ouvrir un shell dans le conteneur PHP
+make sass              # compiler les fichiers SCSS
 make test              # lancer PHPUnit
 make qa                # style, PHPStan et PHPUnit
 ```

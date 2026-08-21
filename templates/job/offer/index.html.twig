@@ -3,47 +3,53 @@
 {% block title %}Offres importées · Job Matcher{% endblock %}
 
 {% block body %}
-    <div class="page-heading">
-        <p class="eyebrow">Collecte</p>
-        <h1>Offres importées</h1>
-        <p>{{ matches|length }} offre(s) classée(s) selon leur compatibilité avec votre CV.</p>
+    <div class="page-heading page-heading-actions">
+        <div>
+            <p class="eyebrow">Vos opportunités</p>
+            <h1>Offres analysées</h1>
+            <p>{{ matches|length }} offre(s), classée(s) selon la compatibilité calculée par l’IA.</p>
+        </div>
+        <a class="button secondary" href="{{ path('app_job_sources') }}">Gérer les sources</a>
     </div>
 
-    <section class="card">
-        {% if matches is empty %}
+    {% if matches is empty %}
+        <section class="card empty-state">
+            <span class="empty-state-icon" aria-hidden="true">⌕</span>
             <p>Aucune offre importée. <a href="{{ path('app_cv_upload') }}">Déposez un CV</a> pour générer une recherche HelloWork.</p>
-        {% else %}
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>Score</th><th>Titre</th><th>Entreprise</th><th>Localisation</th><th>Contrat</th><th>Salaire</th><th>Statut</th><th>Analyse</th></tr></thead>
-                    <tbody>
-                    {% for match in matches %}
-                        {% set offer = match.jobOffer %}
-                        <tr>
-                            <td>
-                                {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
-                                    <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}">{{ match.semanticScore }} %</span>
-                                {% else %}
-                                    <span class="badge">À analyser</span>
-                                {% endif %}
-                            </td>
-                            <td><a href="{{ path('app_job_offer_show', {id: match.id}) }}">{{ offer.title }}</a></td>
-                            <td>{{ offer.company ?? 'Non renseignée' }}</td>
-                            <td>{{ offer.location ?? 'Non renseignée' }}</td>
-                            <td>{{ offer.contractType ?? 'Non renseigné' }}</td>
-                            <td>
-                                {% if offer.minimumSalary or offer.maximumSalary %}
-                                    {{ offer.minimumSalary ? offer.minimumSalary|number_format(0, ',', ' ') : '?' }}
-                                    – {{ offer.maximumSalary ? offer.maximumSalary|number_format(0, ',', ' ') : '?' }} €
-                                {% else %}Non renseigné{% endif %}
-                            </td>
-                            <td><span class="badge">{{ offer.status.value }}</span></td>
-                            <td>{{ match.semanticAnalyzedAt ? match.semanticAnalyzedAt|date('d/m/Y H:i') : 'Non analysée' }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endif %}
-    </section>
+        </section>
+    {% else %}
+        <section class="offer-list">
+            {% for match in matches %}
+                {% set offer = match.jobOffer %}
+                <article class="offer-card">
+                    <div class="offer-score">
+                        {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
+                            <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}"><strong>{{ match.semanticScore }}</strong><small>%</small></span>
+                        {% elseif match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
+                            <span class="score score-pending"><span class="spinner" aria-hidden="true"></span><small>Analyse</small></span>
+                        {% else %}
+                            <span class="score score-pending"><strong>—</strong><small>À analyser</small></span>
+                        {% endif %}
+                    </div>
+                    <div class="offer-card-content">
+                        <div class="offer-card-heading">
+                            <div>
+                                <p class="offer-company">{{ offer.company ?? 'Entreprise non renseignée' }}</p>
+                                <h2><a href="{{ path('app_job_offer_show', {id: match.id}) }}">{{ offer.title }}</a></h2>
+                            </div>
+                            <span class="arrow-link" aria-hidden="true">→</span>
+                        </div>
+                        <div class="offer-meta">
+                            {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
+                            {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
+                            {% if offer.minimumSalary or offer.maximumSalary %}
+                                <span>{{ offer.minimumSalary ? offer.minimumSalary|number_format(0, ',', ' ') : '?' }} – {{ offer.maximumSalary ? offer.maximumSalary|number_format(0, ',', ' ') : '?' }} €</span>
+                            {% endif %}
+                            <span>{{ match.semanticAnalyzedAt ? 'Analysée le ' ~ match.semanticAnalyzedAt|date('d/m/Y') : 'Analyse en cours' }}</span>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% endif %}
 {% endblock %}

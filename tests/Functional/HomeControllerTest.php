@@ -15,7 +15,7 @@ final class HomeControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'correspondent vraiment');
-        self::assertSelectorTextContains('.status', 'Application prête');
+        self::assertSelectorTextContains('.hero-preview', 'Analyse de compatibilité');
         self::assertSelectorExists('a[href="/cv"]');
     }
 }

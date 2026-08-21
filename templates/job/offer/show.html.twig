@@ -5,30 +5,44 @@
 {% block body %}
     {% set offer = match.jobOffer %}
 
-    <div class="page-heading">
-        <p class="eyebrow">Compatibilité</p>
-        {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
-            <h1>{{ match.semanticScore }} % — {{ match.semanticScore >= 75 ? 'Bon match' : (match.semanticScore >= 50 ? 'Match à vérifier' : 'Match faible') }}</h1>
-        {% else %}
-            <h1>Analyse IA requise</h1>
-        {% endif %}
-        <p>{{ offer.title }}{% if offer.company %} chez {{ offer.company }}{% endif %}</p>
-        <a class="button" href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">Voir l’annonce originale</a>
-        <a class="button secondary" href="{{ path('app_job_offers') }}">Retour aux offres</a>
-    </div>
+    <a class="back-link" href="{{ path('app_job_offers') }}">← Retour aux offres</a>
+    <section class="offer-hero card">
+        <div class="offer-hero-main">
+            <p class="eyebrow">{{ offer.company ?? 'Entreprise non renseignée' }}</p>
+            <h1>{{ offer.title }}</h1>
+            <div class="offer-meta">
+                {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
+                {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
+                {% if offer.yearsOfExperience is not null %}<span>{{ offer.yearsOfExperience }} ans d’expérience</span>{% endif %}
+            </div>
+            <div class="button-row">
+                <a class="button" href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">Voir l’annonce originale ↗</a>
+                {% if match.semanticAnalysisStatus.value not in ['QUEUED', 'RUNNING'] %}
+                    <form method="post" action="{{ path('app_job_offer_analyze', {id: match.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('analyze-job-' ~ match.id) }}">
+                        <button type="submit" class="button secondary">Relancer l’analyse</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-score-wrap">
+            {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
+                <span class="hero-score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}"><strong>{{ match.semanticScore }}</strong><small>%</small></span>
+                <span>{{ match.semanticScore >= 75 ? 'Bon match' : (match.semanticScore >= 50 ? 'À vérifier' : 'Match faible') }}</span>
+            {% else %}
+                <span class="hero-score score-pending"><span class="spinner" aria-hidden="true"></span></span>
+                <span>Analyse en cours</span>
+            {% endif %}
+        </div>
+    </section>
 
-    <section class="card">
+    <section class="card analysis-card">
         <div class="section-heading">
             <div>
-                <p class="eyebrow">Analyse exhaustive</p>
-                <h2>Compatibilité sémantique par IA</h2>
+                <p class="eyebrow">Rapport détaillé</p>
+                <h2>Pourquoi ce score ?</h2>
             </div>
-            {% if match.semanticAnalysisStatus.value not in ['QUEUED', 'RUNNING'] %}
-                <form method="post" action="{{ path('app_job_offer_analyze', {id: match.id}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('analyze-job-' ~ match.id) }}">
-                    <button type="submit" class="button secondary">{{ semanticAnalysis ? 'Relancer l’analyse' : 'Analyser toute l’annonce' }}</button>
-                </form>
-            {% endif %}
+            {% if match.semanticAnalyzedAt %}<span class="help-text">Mis à jour le {{ match.semanticAnalyzedAt|date('d/m/Y à H:i') }}</span>{% endif %}
         </div>
 
         {% if match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
@@ -40,33 +54,28 @@
         {% elseif match.semanticAnalysisStatus.value == 'FAILED' %}
             <p class="text-error">{{ match.semanticError|trans }}</p>
         {% elseif semanticAnalysis %}
-            <div class="semantic-summary">
-                <p>{{ semanticAnalysis.summary }}</p>
-                <p class="help-text">{{ match.semanticAnalyzer }} · {{ match.semanticAnalyzedAt|date('d/m/Y H:i') }}</p>
-            </div>
+            <div class="semantic-summary"><p>{{ semanticAnalysis.summary }}</p></div>
 
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>Exigence</th><th>Priorité</th><th>Preuve dans l’annonce</th><th>Verdict</th><th>Preuve dans le CV</th><th>Explication</th></tr></thead>
-                    <tbody>
-                    {% for requirement in semanticAnalysis.requirements %}
-                        <tr>
-                            <td><strong>{{ requirement.label }}</strong><br><span class="badge">{{ requirement.category.value }}</span></td>
-                            <td>{{ requirement.importance.value }}</td>
-                            <td>« {{ requirement.offerEvidence }} »</td>
-                            <td><span class="badge verdict-{{ requirement.assessment.value|lower }}">{{ requirement.assessment.value }}</span></td>
-                            <td>{{ requirement.cvEvidence ? '« ' ~ requirement.cvEvidence ~ ' »' : 'Non confirmée' }}</td>
-                            <td>{{ requirement.explanation }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <div class="requirement-list">
+                {% for requirement in semanticAnalysis.requirements %}
+                    <article class="requirement-card">
+                        <div class="requirement-heading">
+                            <div><h3>{{ requirement.label }}</h3><div class="tag-row"><span class="badge">{{ requirement.category.value }}</span><span class="badge badge-neutral">{{ requirement.importance.value }}</span></div></div>
+                            <span class="badge verdict-{{ requirement.assessment.value|lower }}">{{ requirement.assessment.value }}</span>
+                        </div>
+                        <div class="evidence-grid">
+                            <div><span class="field-label">Dans l’annonce</span><blockquote>{{ requirement.offerEvidence }}</blockquote></div>
+                            <div><span class="field-label">Dans votre CV</span><blockquote>{{ requirement.cvEvidence ?? 'Aucune preuve explicite trouvée' }}</blockquote></div>
+                        </div>
+                        <p class="requirement-explanation">{{ requirement.explanation }}</p>
+                    </article>
+                {% endfor %}
             </div>
 
             <div class="explanation-grid">
-                <div><h3>Forces</h3><ul>{% for item in semanticAnalysis.strengths %}<li>{{ item }}</li>{% else %}<li>Aucune force certaine.</li>{% endfor %}</ul></div>
-                <div><h3>Points de vigilance</h3><ul>{% for item in semanticAnalysis.concerns %}<li>{{ item }}</li>{% else %}<li>Aucun point de vigilance certain.</li>{% endfor %}</ul></div>
-                <div><h3>Questions à poser</h3><ul>{% for item in semanticAnalysis.questions %}<li>{{ item }}</li>{% else %}<li>Aucune question supplémentaire.</li>{% endfor %}</ul></div>
+                <div class="insight insight-positive"><h3>Forces</h3><ul>{% for item in semanticAnalysis.strengths %}<li>{{ item }}</li>{% else %}<li>Aucune force certaine.</li>{% endfor %}</ul></div>
+                <div class="insight insight-warning"><h3>Points de vigilance</h3><ul>{% for item in semanticAnalysis.concerns %}<li>{{ item }}</li>{% else %}<li>Aucun point de vigilance certain.</li>{% endfor %}</ul></div>
+                <div class="insight insight-info"><h3>Questions à poser</h3><ul>{% for item in semanticAnalysis.questions %}<li>{{ item }}</li>{% else %}<li>Aucune question supplémentaire.</li>{% endfor %}</ul></div>
             </div>
         {% else %}
             <p>L’analyse complète lit toutes les missions, exigences, responsabilités, qualités attendues et conditions de travail, puis les compare au texte du CV avec des preuves.</p>

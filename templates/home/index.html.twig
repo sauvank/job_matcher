@@ -3,14 +3,27 @@
 {% block title %}Job Matcher · Accueil{% endblock %}
 
 {% block body %}
-    <section class="hero">
-        <p class="eyebrow">Symfony 7.4 · PHP 8.4</p>
-        <h1>Trouvez les offres qui correspondent vraiment à votre profil.</h1>
-        <p>
-            Le socle est opérationnel. Les prochains incréments ajouteront le profil candidat,
-            l'import des offres et un score explicable combinant règles métier et analyse sémantique.
-        </p>
-        <div class="status"><span aria-hidden="true"></span> Application prête</div>
-        <p><a class="button" href="{{ path('app_cv_upload') }}">Déposer mon CV</a></p>
+    <section class="hero hero-grid">
+        <div class="hero-copy">
+            <p class="eyebrow">Votre recherche, mieux ciblée</p>
+            <h1>Repérez les offres qui vous correspondent vraiment.</h1>
+            <p>Job Matcher lit chaque annonce dans son intégralité, la compare à votre CV et vous livre un avis clair, argumenté et vérifiable.</p>
+            <div class="button-row">
+                <a class="button" href="{{ path('app_job_offers') }}">Voir mes offres</a>
+                <a class="button secondary" href="{{ path('app_cv_upload') }}">Mettre à jour mon CV</a>
+            </div>
+        </div>
+        <div class="hero-preview" aria-label="Aperçu d’une analyse">
+            <div class="preview-topline"><span>Analyse de compatibilité</span><span class="live-dot">Automatique</span></div>
+            <div class="preview-score"><strong>86</strong><span>%</span></div>
+            <p>Un résultat unique produit par l’IA, toujours accompagné de preuves.</p>
+            <div class="preview-bars"><span></span><span></span><span></span></div>
+        </div>
+    </section>
+
+    <section class="feature-grid" aria-label="Fonctionnalités principales">
+        <article class="feature-card"><span class="feature-number">01</span><h2>Importez</h2><p>Vos recherches HelloWork sont centralisées et actualisées sans doublonner le travail.</p></article>
+        <article class="feature-card"><span class="feature-number">02</span><h2>Comparez</h2><p>Chaque nouvelle annonce est automatiquement confrontée au contenu complet de votre CV.</p></article>
+        <article class="feature-card"><span class="feature-number">03</span><h2>Décidez</h2><p>Forces, écarts et questions à poser vous donnent une lecture concrète avant de candidater.</p></article>
     </section>
 {% endblock %}

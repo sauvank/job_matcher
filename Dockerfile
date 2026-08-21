@@ -14,6 +14,7 @@ COPY composer.json composer.lock symfony.lock ./
 RUN composer install --prefer-dist --no-interaction --no-progress --no-scripts
 
 COPY . .
-RUN composer run-script post-install-cmd
+RUN composer run-script post-install-cmd \
+    && php bin/console sass:build
 
 CMD ["php-fpm"]

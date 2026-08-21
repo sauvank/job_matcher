@@ -4,19 +4,25 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}Job Matcher{% endblock %}</title>
-        <link rel="stylesheet" href="/styles/app.css">
+        <link rel="stylesheet" href="{{ asset('styles/app.scss') }}">
     </head>
     <body>
         <header class="site-header">
-            <a class="brand" href="{{ path('app_home') }}">Job Matcher</a>
-            <nav>
-                <a href="{{ path('app_cv_upload') }}">Mon CV</a>
-                <a href="{{ path('app_candidate_profile') }}">Mon profil</a>
-                <a href="{{ path('app_job_sources') }}">Sources</a>
-                <a href="{{ path('app_job_offers') }}">Offres</a>
-            </nav>
+            {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
+            <div class="header-inner">
+                <a class="brand" href="{{ path('app_home') }}" aria-label="Job Matcher — Accueil">
+                    <span class="brand-mark" aria-hidden="true">JM</span>
+                    <span>Job Matcher</span>
+                </a>
+                <nav aria-label="Navigation principale">
+                    <a class="{{ currentRoute starts with 'app_cv' ? 'active' : '' }}" href="{{ path('app_cv_upload') }}">Mon CV</a>
+                    <a class="{{ currentRoute starts with 'app_candidate' ? 'active' : '' }}" href="{{ path('app_candidate_profile') }}">Mon profil</a>
+                    <a class="{{ currentRoute starts with 'app_job_source' ? 'active' : '' }}" href="{{ path('app_job_sources') }}">Sources</a>
+                    <a class="{{ currentRoute starts with 'app_job_offer' ? 'active' : '' }}" href="{{ path('app_job_offers') }}">Offres</a>
+                </nav>
+            </div>
         </header>
-        <main class="container">
+        <main class="container main-content">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
                     <div class="flash flash-{{ type }}">{{ message|trans }}</div>
@@ -24,5 +30,6 @@
             {% endfor %}
             {% block body %}{% endblock %}
         </main>
+        <footer class="site-footer"><span>Job Matcher</span><span>Analyse locale et privée</span></footer>
     </body>
 </html>
