@@ -37,6 +37,12 @@ services:
     App\Candidate\Application\Repository\CvDocumentRepositoryInterface:
         alias: App\Candidate\Infrastructure\Persistence\CvDocumentRepository
 
+    App\Job\Application\Repository\JobSourceRepositoryInterface:
+        alias: App\Job\Repository\JobSourceRepository
+
+    App\Job\Application\Repository\JobOfferRepositoryInterface:
+        alias: App\Job\Repository\JobOfferRepository
+
     App\Candidate\Infrastructure\Storage\LocalPrivateCvStorage:
         arguments:
             $storageDirectory: '%app.cv_storage_directory%'

@@ -49,3 +49,15 @@ candidate:
       ready: "À vérifier"
       applied: "Appliqué au profil"
       failed: "Échec"
+job:
+  source:
+    added: "La source a été ajoutée et sa première synchronisation est en attente."
+    sync_dispatched: "La synchronisation de la source a été mise en attente."
+    invalid_url: "Cette URL de recherche HelloWork est invalide."
+    unsupported_provider: "Cette plateforme d’offres n’est pas encore prise en charge."
+    not_found: "La source d’offres est introuvable."
+    sync_already_running: "Cette source est déjà en cours de synchronisation."
+    sync_failed: "La synchronisation de cette source a échoué. Consultez les logs du worker."
+  provider:
+    invalid_response: "La plateforme a retourné une réponse inattendue."
+    job_posting_not_found: "La fiche ne contient aucune offre structurée exploitable."

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup build up down restart logs shell worker install migrate migration-status migration-diff schema-validate fixtures test phpstan cs-check qa ci
+.PHONY: help setup build up down restart logs shell worker install migrate migration-status migration-diff schema-validate fixtures test-db test phpstan cs-check qa ci
 
 help:
 	@echo "make setup             Install and start the application"
@@ -15,6 +15,7 @@ help:
 	@echo "make migration-diff    Generate a migration from entity changes"
 	@echo "make schema-validate   Validate Doctrine mapping and schema"
 	@echo "make fixtures          Reload development fixtures"
+	@echo "make test-db           Prepare and migrate the test database"
 	@echo "make test              Run PHPUnit"
 	@echo "make qa                Run coding style, PHPStan and tests"
 
@@ -59,7 +60,11 @@ schema-validate:
 fixtures:
 	docker compose exec -T php php bin/console doctrine:fixtures:load --no-interaction
 
-test:
+test-db:
+	docker compose run --rm -e APP_ENV=test php php bin/console doctrine:database:create --if-not-exists
+	docker compose run --rm -e APP_ENV=test php php bin/console doctrine:migrations:migrate --no-interaction
+
+test: test-db
 	docker compose run --rm -e APP_ENV=test php composer test
 
 phpstan:
@@ -68,7 +73,7 @@ phpstan:
 cs-check:
 	docker compose run --rm php composer cs-check
 
-qa:
+qa: test-db
 	docker compose run --rm -e APP_ENV=test php composer qa
 
 ci: qa

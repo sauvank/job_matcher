@@ -51,3 +51,18 @@ h1 { margin: 1rem 0; font-size: clamp(2.5rem, 7vw, 5rem); line-height: 1.02; let
 .skill-list { display: flex; flex-wrap: wrap; gap: .6rem; }
 .skill { padding: .45rem .75rem; border: 1px solid #30363d; border-radius: 999px; }
 .skill-core { border-color: #2f6f44; background: #132a1b; }
+.card + .card { margin-top: 1.5rem; }
+.button.secondary { background: #30363d; }
+.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .85rem; border-bottom: 1px solid #30363d; text-align: left; vertical-align: top; }
+th { color: #8b949e; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+td a, .section-heading a, .card a { color: #58a6ff; }
+.text-error { color: #ff7b72; }
+
+@media (max-width: 720px) {
+    .site-header { align-items: flex-start; gap: 1rem; }
+    .site-header nav { flex-wrap: wrap; gap: .75rem; }
+    .container { padding-top: 3rem; }
+}

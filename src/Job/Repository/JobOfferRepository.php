@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Job\Repository;
 
+use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /** @extends ServiceEntityRepository<JobOffer> */
-final class JobOfferRepository extends ServiceEntityRepository
+final class JobOfferRepository extends ServiceEntityRepository implements JobOfferRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
