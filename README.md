@@ -2,7 +2,7 @@
 
 Application web personnelle destinée à agréger des offres d'emploi, les comparer à un profil candidat et produire un score de compatibilité expliqué.
 
-Le projet avance par incréments. La version actuelle contient le socle technique ainsi que le dépôt privé d'un CV, son extraction, son analyse asynchrone et la validation manuelle des informations proposées avant leur ajout au profil.
+Le projet avance par incréments. La version actuelle contient le dépôt privé et l'analyse asynchrone d'un CV, ainsi que l'ajout de recherches HelloWork et l'import asynchrone d'offres normalisées.
 
 ## Stack
 
@@ -46,6 +46,14 @@ make qa                # style, PHPStan et PHPUnit
 
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 
+## Import HelloWork
+
+La page `/sources` permet de coller une URL complète de recherche HelloWork, par exemple une recherche contenant les paramètres `k` (mots-clés) et `l` (localisation). Après validation du domaine et du chemin, un message Messenger est envoyé au worker.
+
+Le connecteur récupère la première page de résultats, limite chaque synchronisation à dix fiches et lit les données structurées `JobPosting` de chaque offre. Les offres sont normalisées puis mises à jour de façon idempotente à partir de l'identifiant HelloWork.
+
+Les résultats sont visibles sur `/jobs`. La vérification de disponibilité, le classement par rapport au CV et l'analyse IA des offres feront l'objet des incréments suivants.
+
 ## Analyse réelle du CV avec OpenAI
 
 Sans configuration locale, l'application utilise volontairement un faux analyseur gratuit. Pour activer l'analyse OpenAI, créer un fichier `.env.local` à partir de l'exemple :
@@ -85,15 +93,14 @@ Les critères bloquants pourront appliquer des malus ou plafonner le score. Les 
 
 - Les PDF contenant du texte et les DOCX sont pris en charge. Un PDF constitué uniquement d'images nécessite encore un module OCR.
 - L'analyse OpenAI implique l'envoi du texte du CV à un fournisseur externe et génère un coût d'API.
-- L'import d'offres et le moteur de scoring ne sont pas encore implémentés.
+- Seule la première page d'une recherche HelloWork est importée, avec un maximum de dix fiches par synchronisation.
+- Le moteur de scoring des offres n'est pas encore implémenté.
 - L'application n'intègre pas encore d'authentification et doit rester accessible en local.
 
 ## Roadmap
 
-1. modèle des offres et normalisation ;
-2. import JSON et faux fournisseur ;
-3. moteur de scoring déterministe ;
-4. pipeline d'analyse des offres idempotent ;
-5. analyse sémantique des offres en JSON strict ;
-6. contrôle de disponibilité ;
-7. dashboard Twig.
+1. moteur de scoring déterministe ;
+2. analyse sémantique des offres en JSON strict ;
+3. contrôle de disponibilité ;
+4. filtres et détails du dashboard Twig ;
+5. pagination des sources et planification quotidienne.
