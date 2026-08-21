@@ -48,6 +48,9 @@ final class OpenAiJobSemanticAnalyzerTest extends TestCase
         self::assertTrue($requestBody['text']['format']['strict']);
         self::assertStringContainsString('Angular', $requestBody['input']);
         self::assertStringContainsString('CV complet', $requestBody['input']);
+        self::assertStringContainsString('certification REQUIRED sans preuve explicite', $requestBody['instructions']);
+        self::assertStringContainsString('plafonne le score global à 69', $requestBody['instructions']);
+        self::assertContains('CERTIFICATION', $requestBody['text']['format']['schema']['properties']['requirements']['items']['properties']['category']['enum']);
     }
 
     private function offer(): JobOffer
