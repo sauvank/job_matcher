@@ -21,7 +21,7 @@
         <section class="offer-list">
             {% for match in matches %}
                 {% set offer = match.jobOffer %}
-                <article class="offer-card">
+                <a class="offer-card" href="{{ path('app_job_offer_show', {id: match.id}) }}" aria-label="Voir le détail de l’offre {{ offer.title }}">
                     <div class="offer-score">
                         {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
                             <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}"><strong>{{ match.semanticScore }}</strong><small>%</small></span>
@@ -35,7 +35,7 @@
                         <div class="offer-card-heading">
                             <div>
                                 <p class="offer-company">{{ offer.company ?? 'Entreprise non renseignée' }}</p>
-                                <h2><a href="{{ path('app_job_offer_show', {id: match.id}) }}">{{ offer.title }}</a></h2>
+                                <h2>{{ offer.title }}</h2>
                             </div>
                             <span class="arrow-link" aria-hidden="true">→</span>
                         </div>
@@ -48,7 +48,7 @@
                             <span>{{ match.semanticAnalyzedAt ? 'Analysée le ' ~ match.semanticAnalyzedAt|date('d/m/Y') : 'Analyse en cours' }}</span>
                         </div>
                     </div>
-                </article>
+                </a>
             {% endfor %}
         </section>
     {% endif %}
