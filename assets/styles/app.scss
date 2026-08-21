@@ -44,6 +44,7 @@ html { background: var(--background); scroll-behavior: smooth; }
 body { min-height: 100vh; margin: 0; background: radial-gradient(circle at 85% 0%, rgb(91 91 214 / 8%), transparent 24rem), var(--background); color: var(--text); line-height: 1.5; }
 a { color: var(--primary); text-underline-offset: .18em; }
 button, input, select, textarea { font: inherit; }
+turbo-frame { display: block; }
 
 .site-header { position: sticky; z-index: 20; top: 0; border-bottom: 1px solid rgb(229 232 240 / 85%); background: rgb(255 255 255 / 88%); backdrop-filter: blur(18px); }
 .header-inner { display: flex; max-width: 1180px; min-height: 72px; margin: 0 auto; padding: 0 1.5rem; align-items: center; justify-content: space-between; gap: 2rem; }

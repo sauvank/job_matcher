@@ -22,17 +22,18 @@
         {% endif %}
     </section>
 
-    <section class="card">
-        <div class="section-heading">
-            <h2>Sources configurées</h2>
-            <a href="{{ path('app_job_offers') }}">Voir les offres</a>
-        </div>
+    <turbo-frame id="job-sources-list">
+        <section class="card">
+            <div class="section-heading">
+                <h2>Sources configurées</h2>
+                <a href="{{ path('app_job_offers') }}" data-turbo-frame="_top">Voir les offres</a>
+            </div>
 
-        {% if sources is empty %}
-            <p>Aucune recherche configurée. Déposez un CV, puis validez son intitulé de poste et sa localisation.</p>
-        {% else %}
-            <div class="table-wrapper">
-                <table>
+            {% if sources is empty %}
+                <p>Aucune recherche configurée. Déposez un CV, puis validez son intitulé de poste et sa localisation.</p>
+            {% else %}
+                <div class="table-wrapper">
+                    <table>
                     <thead><tr><th>Nom</th><th>Fournisseur</th><th>Dernier succès</th><th>État</th><th></th></tr></thead>
                     <tbody>
                     {% for source in sources %}
@@ -77,25 +78,21 @@
                         </tr>
                     {% endfor %}
                     </tbody>
-                </table>
-            </div>
-        {% endif %}
-    </section>
-    {% if hasActiveSync %}
-        <script>
-            window.setTimeout(() => {
-                const searchForm = document.querySelector('form[name="job_search"]');
-                const searchInput = searchForm?.querySelector('input[type="text"]');
-                const isEditing = searchForm?.contains(document.activeElement) || searchInput?.value.trim();
-
-                if (!isEditing) {
-                    if (window.Turbo) {
-                        window.Turbo.visit(window.location.href, {action: 'replace'});
-                    } else {
-                        window.location.reload();
+                    </table>
+                </div>
+            {% endif %}
+        </section>
+        {% if hasActiveSync %}
+            <script>
+                window.setTimeout(() => {
+                    const frame = document.getElementById('job-sources-list');
+                    if (frame?.src) {
+                        frame.reload();
+                    } else if (frame) {
+                        frame.src = '{{ path('app_job_sources') }}';
                     }
-                }
-            }, 2000);
-        </script>
-    {% endif %}
+                }, 2000);
+            </script>
+        {% endif %}
+    </turbo-frame>
 {% endblock %}
