@@ -15,6 +15,13 @@ final readonly class DeterministicJobScorer
 {
     private const SCORE_UNKNOWN = 50;
 
+    /** @var array<string, list<string>> */
+    private const DETECTABLE_REQUIREMENTS = [
+        'React' => ['react'],
+        'Webhooks' => ['webhook', 'webhooks'],
+        'CI/CD' => ['ci/cd', 'ci cd'],
+    ];
+
     /** @param array{stack: int, experience: int, salary: int, location: int, contract: int, remote: int, backend: int} $weights */
     public function __construct(private array $weights)
     {
@@ -27,7 +34,7 @@ final readonly class DeterministicJobScorer
         $unknowns = [];
         $haystack = $this->normalize($offer->getTitle().' '.($offer->getDescription() ?? ''));
 
-        $stackScore = $this->scoreStack($profile, $haystack, $strengths, $gaps, $unknowns);
+        $stackScore = $this->scoreStack($profile, $offer, $strengths, $gaps, $unknowns);
         $experienceScore = $this->scoreExperience($profile, $offer, $strengths, $gaps, $unknowns);
         $salaryScore = $this->scoreSalary($profile, $offer, $strengths, $gaps, $unknowns);
         $locationScore = $this->scoreLocation($profile, $offer, $strengths, $gaps, $unknowns);
@@ -76,31 +83,32 @@ final readonly class DeterministicJobScorer
      * @param list<MatchReason> $gaps
      * @param list<MatchReason> $unknowns
      */
-    private function scoreStack(CandidateProfile $profile, string $haystack, array &$strengths, array &$gaps, array &$unknowns): int
+    private function scoreStack(CandidateProfile $profile, JobOffer $offer, array &$strengths, array &$gaps, array &$unknowns): int
     {
-        $skills = $profile->getCandidateSkills();
-        if ($skills->isEmpty()) {
+        if ($profile->getCandidateSkills()->isEmpty()) {
             $unknowns[] = new MatchReason(MatchingMessage::SKILLS_UNKNOWN);
 
             return self::SCORE_UNKNOWN;
         }
 
-        $matchedWeight = 0;
-        $totalWeight = 0;
-        foreach ($skills as $candidateSkill) {
-            $skill = $candidateSkill->getSkill();
-            $skillWeight = $candidateSkill->isCoreSkill() ? 2 : 1;
-            $totalWeight += $skillWeight;
+        $requiredSkills = $this->requiredSkills($offer);
+        if ($requiredSkills === []) {
+            $unknowns[] = new MatchReason(MatchingMessage::REQUIRED_SKILLS_UNKNOWN);
 
-            if ($this->skillIsMentioned($haystack, $skill->getName(), $skill->getNormalizedName())) {
-                $matchedWeight += $skillWeight;
-                $strengths[] = new MatchReason(MatchingMessage::SKILL_PRESENT, ['%skill%' => $skill->getName()]);
-            } elseif ($candidateSkill->isCoreSkill()) {
-                $gaps[] = new MatchReason(MatchingMessage::SKILL_MISSING, ['%skill%' => $skill->getName()]);
+            return self::SCORE_UNKNOWN;
+        }
+
+        $matched = 0;
+        foreach ($requiredSkills as $requiredSkill) {
+            if ($this->candidateHasSkill($profile, $requiredSkill)) {
+                ++$matched;
+                $strengths[] = new MatchReason(MatchingMessage::SKILL_PRESENT, ['%skill%' => $requiredSkill]);
+            } else {
+                $gaps[] = new MatchReason(MatchingMessage::REQUIRED_SKILL_MISSING, ['%skill%' => $requiredSkill]);
             }
         }
 
-        return $totalWeight > 0 ? (int) round(100 * $matchedWeight / $totalWeight) : self::SCORE_UNKNOWN;
+        return (int) round(100 * $matched / count($requiredSkills));
     }
 
     /**
@@ -291,6 +299,44 @@ final readonly class DeterministicJobScorer
         }
 
         return array_any($aliases, fn (string $alias): bool => $this->contains($haystack, $alias));
+    }
+
+    /** @return list<string> */
+    private function requiredSkills(JobOffer $offer): array
+    {
+        $payload = $offer->getRawPayload();
+        $skills = [];
+        $structuredSkills = $payload['skills'] ?? [];
+        if (is_array($structuredSkills)) {
+            foreach ($structuredSkills as $skill) {
+                if (is_string($skill) && trim($skill) !== '') {
+                    $skills[$this->normalize($skill)] = trim($skill);
+                }
+            }
+        }
+
+        $qualifications = is_string($payload['qualifications'] ?? null) ? $payload['qualifications'] : '';
+        $requirementsText = $this->normalize($offer->getTitle().' '.$qualifications);
+        foreach (self::DETECTABLE_REQUIREMENTS as $label => $signals) {
+            if (array_any($signals, fn (string $signal): bool => $this->contains($requirementsText, $signal))) {
+                $skills[$this->normalize($label)] = $label;
+            }
+        }
+
+        return array_values($skills);
+    }
+
+    private function candidateHasSkill(CandidateProfile $profile, string $requiredSkill): bool
+    {
+        foreach ($profile->getCandidateSkills() as $candidateSkill) {
+            $skill = $candidateSkill->getSkill();
+            $candidateSkillText = $this->normalize($skill->getName().' '.$skill->getNormalizedName());
+            if ($this->skillIsMentioned($candidateSkillText, $requiredSkill, $requiredSkill)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function locationsOverlap(string $candidateLocation, string $offerLocation): bool

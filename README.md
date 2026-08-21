@@ -82,7 +82,7 @@ La V1 utilise un seul profil candidat actif. Plusieurs CV peuvent être analysé
 
 ## Scoring
 
-Le score actuel est déterministe et pondère les compétences (35), l’expérience (15), le salaire (15), la localisation (10), le contrat (10), l’orientation backend (10) et le télétravail (5). Les poids sont configurés dans `config/services.yaml`, pas figés dans le service métier.
+Le score actuel est déterministe et pondère les compétences (35), l’expérience (15), le salaire (15), la localisation (10), le contrat (10), l’orientation backend (10) et le télétravail (5). Les compétences exigées par l’annonce sont comparées à celles validées dans le CV ; les exigences absentes du profil sont affichées explicitement. Les poids sont configurés dans `config/services.yaml`, pas figés dans le service métier.
 
 Une information absente reçoit une valeur neutre de 50 et apparaît dans les informations à vérifier. Chaque import crée ou met à jour un unique résultat par couple profil/offre. Le futur score sémantique restera séparé du score déterministe et fournira des observations JSON structurées.
 

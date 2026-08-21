@@ -68,6 +68,8 @@ matching:
     skill_present: "%skill% est présent dans l’annonce et dans le CV."
     skill_missing: "%skill%, compétence importante du CV, n’est pas mentionné dans l’annonce."
     skills_unknown: "Aucune compétence validée n’est disponible dans le profil."
+    required_skill_missing: "%skill% est demandé dans l’annonce mais n’est pas confirmé dans le CV."
+    required_skills_unknown: "Les compétences demandées ne sont pas assez structurées dans l’annonce."
     experience_compatible: "L’expérience est compatible : %candidate% an(s) dans le profil pour %required% an(s) demandé(s)."
     experience_insufficient: "L’expérience semble insuffisante : %candidate% an(s) dans le profil pour %required% an(s) demandé(s)."
     experience_unknown: "L’expérience demandée ou celle du profil n’est pas renseignée."

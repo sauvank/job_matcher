@@ -30,6 +30,7 @@ final class DeterministicJobScorerTest extends TestCase
             remotePolicy: 'REMOTE_AVAILABLE',
             requiredExperience: 4,
             description: 'API Symfony avec PHP et Docker.',
+            requiredSkills: ['PHP', 'Symfony', 'Docker'],
         );
 
         $score = $this->scorer()->score($profile, $offer);
@@ -57,6 +58,7 @@ final class DeterministicJobScorerTest extends TestCase
             remotePolicy: null,
             requiredExperience: 10,
             description: 'Application Java historique.',
+            requiredSkills: ['Java'],
         );
 
         $score = $this->scorer()->score($this->profile(), $offer);
@@ -86,6 +88,7 @@ final class DeterministicJobScorerTest extends TestCase
             remotePolicy: 'REMOTE_AVAILABLE',
             requiredExperience: 2,
             description: 'API PHP avec Symfony, Docker et mise en place des pipelines CI/CD.',
+            requiredSkills: ['PHP', 'Symfony', 'Docker', 'CI/CD'],
         );
 
         $score = $this->scorer()->score($profile, $offer);
@@ -93,8 +96,40 @@ final class DeterministicJobScorerTest extends TestCase
         self::assertSame(100, $score->stackScore);
         self::assertTrue(array_any(
             $score->strengths,
-            static fn ($reason): bool => ($reason->parameters['%skill%'] ?? null) === 'Pipelines CI/CD (GitLab CI, GitHub Actions)',
+            static fn ($reason): bool => ($reason->parameters['%skill%'] ?? null) === 'CI/CD',
         ));
+    }
+
+    public function testItScoresRequirementsFromTheOfferAgainstTheCv(): void
+    {
+        $profile = $this->profile();
+        new CandidateSkill($profile, new Skill('API REST', 'api-rest', SkillCategory::BACKEND), isCoreSkill: true);
+        new CandidateSkill(
+            $profile,
+            new Skill('Pipelines CI/CD (GitLab CI, GitHub Actions)', 'pipelines-ci-cd-gitlab-ci-github-actions', SkillCategory::DEVOPS),
+            isCoreSkill: true,
+        );
+        $offer = $this->offer(
+            title: 'Développeur Full Stack PHP React',
+            location: 'Lyon 69000',
+            contract: 'CDI',
+            minimumSalary: 36000,
+            maximumSalary: 42000,
+            remotePolicy: 'REMOTE_AVAILABLE',
+            requiredExperience: 2,
+            description: 'Développement backend et frontend.',
+            requiredSkills: ['PHP', 'Symfony', 'PostgreSQL', 'SOAP', 'API REST', 'Docker'],
+            qualifications: 'Vous maîtrisez React et les Webhooks. Mise en place de pipelines CI/CD.',
+        );
+
+        $score = $this->scorer()->score($profile, $offer);
+
+        self::assertSame(56, $score->stackScore);
+        $missingSkills = array_map(
+            static fn ($reason): string => (string) ($reason->parameters['%skill%'] ?? ''),
+            array_filter($score->gaps, static fn ($reason): bool => $reason->key === 'matching.reason.required_skill_missing'),
+        );
+        self::assertEqualsCanonicalizing(['PostgreSQL', 'SOAP', 'React', 'Webhooks'], $missingSkills);
     }
 
     private function profile(): CandidateProfile
@@ -109,6 +144,7 @@ final class DeterministicJobScorerTest extends TestCase
         return $profile;
     }
 
+    /** @param list<string> $requiredSkills */
     private function offer(
         string $title,
         string $location,
@@ -118,6 +154,8 @@ final class DeterministicJobScorerTest extends TestCase
         ?string $remotePolicy,
         int $requiredExperience,
         string $description,
+        array $requiredSkills,
+        string $qualifications = '',
     ): JobOffer {
         $source = new JobSource('Test', 'https://example.test', JobProviderType::FAKE);
         $normalized = new NormalizedJobOffer(
@@ -134,7 +172,7 @@ final class DeterministicJobScorerTest extends TestCase
             description: $description,
             publishedAt: new \DateTimeImmutable(),
             validThrough: null,
-            rawPayload: [],
+            rawPayload: ['skills' => $requiredSkills, 'qualifications' => $qualifications],
         );
 
         return new JobOffer($source, $normalized);

@@ -9,6 +9,8 @@ final class MatchingMessage
     public const SKILL_PRESENT = 'matching.reason.skill_present';
     public const SKILL_MISSING = 'matching.reason.skill_missing';
     public const SKILLS_UNKNOWN = 'matching.reason.skills_unknown';
+    public const REQUIRED_SKILL_MISSING = 'matching.reason.required_skill_missing';
+    public const REQUIRED_SKILLS_UNKNOWN = 'matching.reason.required_skills_unknown';
     public const EXPERIENCE_COMPATIBLE = 'matching.reason.experience_compatible';
     public const EXPERIENCE_INSUFFICIENT = 'matching.reason.experience_insufficient';
     public const EXPERIENCE_UNKNOWN = 'matching.reason.experience_unknown';

@@ -163,6 +163,12 @@ final class JobOffer
         return $this->status;
     }
 
+    /** @return array<string, mixed> */
+    public function getRawPayload(): array
+    {
+        return $this->rawPayload;
+    }
+
     public function updateFrom(NormalizedJobOffer $offer): void
     {
         $this->url = $offer->url;
