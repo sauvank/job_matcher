@@ -57,4 +57,23 @@ final class HelloWorkJobPostingParserTest extends TestCase
         self::assertSame(4, $offer->yearsOfExperience);
         self::assertSame('Développement d’API avec Symfony.', $offer->description);
     }
+
+    public function testItPrefersTheExplicitExperienceRequirementWhenStructuredDataIsInconsistent(): void
+    {
+        $jobPosting = [
+            '@type' => 'JobPosting',
+            'title' => 'Développeur Full Stack PHP React',
+            'description' => '<p>Un cabinet créé il y a 15 ans.</p>',
+            'qualifications' => '<p>Vous justifiez d’au moins 2 ans d’expérience en développement Full Stack.</p>',
+            'experienceRequirements' => ['monthsOfExperience' => 12],
+        ];
+        $html = '<script type="application/ld+json">'.json_encode($jobPosting, JSON_THROW_ON_ERROR).'</script>';
+
+        $offer = (new HelloWorkJobPostingParser())->parseOffer(
+            $html,
+            'https://www.hellowork.com/fr-fr/emplois/82138842.html',
+        );
+
+        self::assertSame(2, $offer->yearsOfExperience);
+    }
 }

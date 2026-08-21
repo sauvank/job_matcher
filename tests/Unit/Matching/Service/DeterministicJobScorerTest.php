@@ -69,6 +69,34 @@ final class DeterministicJobScorerTest extends TestCase
         self::assertNotEmpty($score->unknowns);
     }
 
+    public function testItRecognizesACompositeCvSkillFromItsMainLabel(): void
+    {
+        $profile = $this->profile();
+        new CandidateSkill(
+            $profile,
+            new Skill('Pipelines CI/CD (GitLab CI, GitHub Actions)', 'pipelines-ci-cd-gitlab-ci-github-actions', SkillCategory::DEVOPS),
+            isCoreSkill: true,
+        );
+        $offer = $this->offer(
+            title: 'Développeur Full Stack PHP Symfony',
+            location: 'Lyon 69000',
+            contract: 'CDI',
+            minimumSalary: 40000,
+            maximumSalary: 50000,
+            remotePolicy: 'REMOTE_AVAILABLE',
+            requiredExperience: 2,
+            description: 'API PHP avec Symfony, Docker et mise en place des pipelines CI/CD.',
+        );
+
+        $score = $this->scorer()->score($profile, $offer);
+
+        self::assertSame(100, $score->stackScore);
+        self::assertTrue(array_any(
+            $score->strengths,
+            static fn ($reason): bool => ($reason->parameters['%skill%'] ?? null) === 'Pipelines CI/CD (GitLab CI, GitHub Actions)',
+        ));
+    }
+
     private function profile(): CandidateProfile
     {
         $profile = new CandidateProfile();

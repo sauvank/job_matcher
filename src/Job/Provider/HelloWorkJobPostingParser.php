@@ -65,7 +65,7 @@ final class HelloWorkJobPostingParser
             minimumSalary: $this->integerValue($salary, 'minValue'),
             maximumSalary: $this->integerValue($salary, 'maxValue'),
             remotePolicy: ($posting['jobLocationType'] ?? null) === 'TELECOMMUTE' ? 'REMOTE_AVAILABLE' : null,
-            yearsOfExperience: $this->extractYearsOfExperience($experience),
+            yearsOfExperience: $this->extractYearsOfExperience($experience, $posting['qualifications'] ?? null),
             description: $this->cleanHtml($posting['description'] ?? null),
             publishedAt: $this->dateValue($posting['datePosted'] ?? null),
             validThrough: $this->dateValue($posting['validThrough'] ?? null),
@@ -150,18 +150,28 @@ final class HelloWorkJobPostingParser
             : null;
     }
 
-    private function extractYearsOfExperience(mixed $experience): ?int
+    private function extractYearsOfExperience(mixed $experience, mixed $qualifications): ?int
     {
-        if (!is_array($experience)) {
-            return null;
+        $years = [];
+
+        if (is_array($experience)) {
+            $months = $experience['monthsOfExperience'] ?? null;
+            if (is_int($months) || is_float($months)) {
+                $years[] = (int) ceil($months / 12);
+            }
         }
 
-        $months = $experience['monthsOfExperience'] ?? null;
-        if (!is_int($months) && !is_float($months)) {
-            return null;
+        $qualificationText = $this->cleanHtml($qualifications);
+        if ($qualificationText !== null) {
+            foreach (['~(\d+)\s+ans?\s+d[\'’]expérience~iu', '~expérience\s+(?:minimum\s+)?de\s+(\d+)\s+ans?~iu'] as $pattern) {
+                preg_match_all($pattern, $qualificationText, $matches);
+                foreach ($matches[1] as $textualYears) {
+                    $years[] = (int) $textualYears;
+                }
+            }
         }
 
-        return (int) ceil($months / 12);
+        return $years === [] ? null : max($years);
     }
 
     private function cleanHtml(mixed $value): ?string

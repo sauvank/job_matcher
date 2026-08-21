@@ -92,7 +92,7 @@ final readonly class DeterministicJobScorer
             $skillWeight = $candidateSkill->isCoreSkill() ? 2 : 1;
             $totalWeight += $skillWeight;
 
-            if ($this->contains($haystack, $skill->getNormalizedName())) {
+            if ($this->skillIsMentioned($haystack, $skill->getName(), $skill->getNormalizedName())) {
                 $matchedWeight += $skillWeight;
                 $strengths[] = new MatchReason(MatchingMessage::SKILL_PRESENT, ['%skill%' => $skill->getName()]);
             } elseif ($candidateSkill->isCoreSkill()) {
@@ -278,6 +278,19 @@ final readonly class DeterministicJobScorer
         $needle = $this->normalize($needle);
 
         return $needle !== '' && str_contains(' '.$haystack.' ', ' '.$needle.' ');
+    }
+
+    private function skillIsMentioned(string $haystack, string $name, string $normalizedName): bool
+    {
+        $aliases = [$name, $normalizedName];
+        if (preg_match('/^([^()]+)\s*\(([^)]+)\)$/u', $name, $matches) === 1) {
+            $aliases[] = trim($matches[1]);
+            foreach (preg_split('/\s*[,;]\s*/u', $matches[2]) ?: [] as $alias) {
+                $aliases[] = $alias;
+            }
+        }
+
+        return array_any($aliases, fn (string $alias): bool => $this->contains($haystack, $alias));
     }
 
     private function locationsOverlap(string $candidateLocation, string $offerLocation): bool
