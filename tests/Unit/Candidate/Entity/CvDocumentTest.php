@@ -11,16 +11,24 @@ use PHPUnit\Framework\TestCase;
 
 final class CvDocumentTest extends TestCase
 {
+    public function testItExposesTheProgressOfEachAnalysisStage(): void
+    {
+        $document = $this->document();
+        self::assertSame(10, $document->getProcessingProgress());
+
+        $document->markExtracting();
+        self::assertSame(35, $document->getProcessingProgress());
+
+        $document->markAnalyzing('Texte extrait du CV suffisamment long.');
+        self::assertSame(70, $document->getProcessingProgress());
+
+        $document->completeAnalysis(['summary' => 'Analyse'], 'fake');
+        self::assertSame(100, $document->getProcessingProgress());
+    }
+
     public function testItCanRequestAReanalysis(): void
     {
-        $document = new CvDocument(
-            new CandidateProfile(),
-            'cv.pdf',
-            'stored.pdf',
-            'application/pdf',
-            1234,
-            str_repeat('a', 64),
-        );
+        $document = $this->document();
         $document->completeAnalysis(['summary' => 'Ancienne analyse'], 'fake');
 
         $document->requestReanalysis();
@@ -30,5 +38,17 @@ final class CvDocumentTest extends TestCase
         self::assertNull($document->getAnalyzer());
         self::assertNull($document->getAnalyzedAt());
         self::assertNull($document->getErrorMessage());
+    }
+
+    private function document(): CvDocument
+    {
+        return new CvDocument(
+            new CandidateProfile(),
+            'cv.pdf',
+            'stored.pdf',
+            'application/pdf',
+            1234,
+            str_repeat('a', 64),
+        );
     }
 }

@@ -77,7 +77,7 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::exactly(4))->method('flush');
+        $entityManager->expects(self::exactly(6))->method('flush');
         $entityManager->expects(self::exactly(2))
             ->method('persist')
             ->willReturnCallback(static function (object $entity) use ($offerRepository, $matchRepository): void {
@@ -122,5 +122,6 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
         self::assertSame('fake-php-symfony', $offerRepository->offer->getExternalId());
         self::assertNotNull($source->getLastSuccessAt());
         self::assertNull($source->getLastError());
+        self::assertSame(1, $source->getProcessedOfferCount());
     }
 }

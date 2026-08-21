@@ -73,6 +73,8 @@ final readonly class ImportJobSourceMessageHandler
                 }
 
                 ++$importedCount;
+                $source->recordProcessedOffer();
+                $this->entityManager->flush();
             }
 
             $source->completeSync();

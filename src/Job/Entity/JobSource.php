@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Job\Entity;
 
 use App\Job\Enum\JobProviderType;
+use App\Job\Enum\JobSourceSyncStatus;
 use App\Job\Repository\JobSourceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -40,6 +41,12 @@ final class JobSource
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $lastError = null;
+
+    #[ORM\Column(enumType: JobSourceSyncStatus::class)]
+    private JobSourceSyncStatus $syncStatus = JobSourceSyncStatus::IDLE;
+
+    #[ORM\Column]
+    private int $processedOfferCount = 0;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -101,6 +108,21 @@ final class JobSource
         return $this->lastError;
     }
 
+    public function getSyncStatus(): JobSourceSyncStatus
+    {
+        return $this->syncStatus;
+    }
+
+    public function getProcessedOfferCount(): int
+    {
+        return $this->processedOfferCount;
+    }
+
+    public function isSyncPending(): bool
+    {
+        return in_array($this->syncStatus, [JobSourceSyncStatus::QUEUED, JobSourceSyncStatus::RUNNING], true);
+    }
+
     public function updateSearch(string $name, string $url): void
     {
         $this->name = $name;
@@ -108,18 +130,37 @@ final class JobSource
         $this->lastSyncStartedAt = null;
         $this->lastSuccessAt = null;
         $this->lastError = null;
+        $this->syncStatus = JobSourceSyncStatus::IDLE;
+        $this->processedOfferCount = 0;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function queueSync(): void
+    {
+        $this->syncStatus = JobSourceSyncStatus::QUEUED;
+        $this->processedOfferCount = 0;
+        $this->lastError = null;
         $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function markSyncStarted(): void
     {
+        $this->syncStatus = JobSourceSyncStatus::RUNNING;
+        $this->processedOfferCount = 0;
         $this->lastSyncStartedAt = new \DateTimeImmutable();
         $this->lastError = null;
         $this->updatedAt = $this->lastSyncStartedAt;
     }
 
+    public function recordProcessedOffer(): void
+    {
+        ++$this->processedOfferCount;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function completeSync(): void
     {
+        $this->syncStatus = JobSourceSyncStatus::SUCCEEDED;
         $this->lastSuccessAt = new \DateTimeImmutable();
         $this->lastError = null;
         $this->updatedAt = $this->lastSuccessAt;
@@ -127,6 +168,7 @@ final class JobSource
 
     public function failSync(string $message): void
     {
+        $this->syncStatus = JobSourceSyncStatus::FAILED;
         $this->lastError = mb_substr($message, 0, 2000);
         $this->updatedAt = new \DateTimeImmutable();
     }

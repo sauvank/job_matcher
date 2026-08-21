@@ -21,9 +21,17 @@
     {% if document.status.value in ['UPLOADED', 'EXTRACTING', 'ANALYZING'] %}
         <section class="card">
             <h2>Traitement en cours</h2>
+            <div class="progress-block">
+                <div class="progress-label">
+                    <span>{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
+                    <strong>{{ document.processingProgress }} %</strong>
+                </div>
+                <progress max="100" value="{{ document.processingProgress }}">{{ document.processingProgress }} %</progress>
+            </div>
             <p>Le worker extrait le texte et prépare l'analyse. Rechargez cette page dans quelques instants.</p>
             <a class="button" href="{{ path('app_cv_show', {id: document.id}) }}">Actualiser</a>
         </section>
+        <script>window.setTimeout(() => window.location.reload(), 2000);</script>
     {% elseif document.status.value == 'FAILED' %}
         <section class="card error-card">
             <h2>Analyse impossible</h2>

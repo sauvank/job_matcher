@@ -28,7 +28,26 @@
                             <td>{{ source.provider.value }}</td>
                             <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</td>
                             <td>
-                                {% if source.lastError %}<span class="text-error">{{ source.lastError|trans }}</span>{% else %}Prête{% endif %}
+                                {% if source.syncStatus.value == 'QUEUED' %}
+                                    <div class="progress-block compact">
+                                        <span>Mise en attente…</span>
+                                        <progress max="100">Import en attente</progress>
+                                    </div>
+                                {% elseif source.syncStatus.value == 'RUNNING' %}
+                                    <div class="progress-block compact">
+                                        <span>{{ source.processedOfferCount }} offre(s) traitée(s)</span>
+                                        <progress max="100">Import en cours</progress>
+                                    </div>
+                                {% elseif source.syncStatus.value == 'SUCCEEDED' %}
+                                    <div class="progress-block compact">
+                                        <span>{{ source.processedOfferCount }} offre(s) traitée(s)</span>
+                                        <progress max="100" value="100">100 %</progress>
+                                    </div>
+                                {% elseif source.lastError %}
+                                    <span class="text-error">{{ source.lastError|trans }}</span>
+                                {% else %}
+                                    Prête
+                                {% endif %}
                             </td>
                             <td>
                                 <form method="post" action="{{ path('app_job_source_sync', {id: source.id}) }}">
@@ -43,4 +62,7 @@
             </div>
         {% endif %}
     </section>
+    {% if hasActiveSync %}
+        <script>window.setTimeout(() => window.location.reload(), 2000);</script>
+    {% endif %}
 {% endblock %}

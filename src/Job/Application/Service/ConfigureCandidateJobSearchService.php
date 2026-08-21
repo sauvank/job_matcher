@@ -47,6 +47,7 @@ final readonly class ConfigureCandidateJobSearchService
             $source->updateSearch($name, $url);
         }
 
+        $source->queueSync();
         $this->entityManager->flush();
 
         $sourceId = $source->getId();

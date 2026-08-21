@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Job\Entity;
 
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
+use App\Job\Enum\JobSourceSyncStatus;
 use PHPUnit\Framework\TestCase;
 
 final class JobSourceTest extends TestCase
@@ -23,5 +24,26 @@ final class JobSourceTest extends TestCase
         self::assertNull($source->getLastSyncStartedAt());
         self::assertNull($source->getLastSuccessAt());
         self::assertNull($source->getLastError());
+        self::assertSame(JobSourceSyncStatus::IDLE, $source->getSyncStatus());
+        self::assertSame(0, $source->getProcessedOfferCount());
+    }
+
+    public function testItTracksImportProgress(): void
+    {
+        $source = new JobSource('Recherche', 'https://example.test/jobs', JobProviderType::HELLOWORK);
+
+        $source->queueSync();
+        self::assertSame(JobSourceSyncStatus::QUEUED, $source->getSyncStatus());
+        self::assertTrue($source->isSyncPending());
+
+        $source->markSyncStarted();
+        $source->recordProcessedOffer();
+        $source->recordProcessedOffer();
+        self::assertSame(JobSourceSyncStatus::RUNNING, $source->getSyncStatus());
+        self::assertSame(2, $source->getProcessedOfferCount());
+
+        $source->completeSync();
+        self::assertSame(JobSourceSyncStatus::SUCCEEDED, $source->getSyncStatus());
+        self::assertFalse($source->isSyncPending());
     }
 }

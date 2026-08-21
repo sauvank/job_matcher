@@ -158,6 +158,16 @@ final class CvDocument
         return $this->analyzedAt;
     }
 
+    public function getProcessingProgress(): int
+    {
+        return match ($this->status) {
+            CvStatus::UPLOADED => 10,
+            CvStatus::EXTRACTING => 35,
+            CvStatus::ANALYZING => 70,
+            CvStatus::READY, CvStatus::APPLIED, CvStatus::FAILED => 100,
+        };
+    }
+
     public function markExtracting(): void
     {
         $this->status = CvStatus::EXTRACTING;
