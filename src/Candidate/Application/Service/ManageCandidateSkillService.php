@@ -55,9 +55,16 @@ final readonly class ManageCandidateSkillService
         return $candidateSkill;
     }
 
-    public function updateLevel(CandidateSkill $candidateSkill, SkillLevel $level): void
+    /** @param array<int, SkillLevel> $levelsBySkillId */
+    public function updateLevels(CandidateProfile $profile, array $levelsBySkillId): void
     {
-        $candidateSkill->updateLevel($level);
+        foreach ($profile->getCandidateSkills() as $candidateSkill) {
+            $id = $candidateSkill->getId();
+            if ($id !== null && isset($levelsBySkillId[$id])) {
+                $candidateSkill->updateLevel($levelsBySkillId[$id]);
+            }
+        }
+
         $this->entityManager->flush();
     }
 

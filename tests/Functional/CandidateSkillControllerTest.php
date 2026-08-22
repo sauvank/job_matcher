@@ -8,6 +8,7 @@ use App\Candidate\Entity\CandidateSkill;
 use App\Candidate\Entity\Skill;
 use App\Candidate\Enum\SkillCategory;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\UX\Turbo\TurboBundle;
 
 final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
 {
@@ -26,20 +27,30 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/profile');
+        self::assertResponseRedirects('/profile#skills');
         $crawler = $client->followRedirect();
         self::assertSelectorTextContains('.skill-management-list', 'Laravel '.$uniqueId);
-        self::assertSelectorExists('.skill-level-form option[value="ADVANCED"][selected]');
+        self::assertSelectorExists('.skill-level-field option[value="ADVANCED"][selected]');
 
-        $levelForm = $crawler->filter('.skill-level-form')->form(['level' => 'EXPERT']);
-        $client->submit($levelForm);
-        self::assertResponseRedirects('/profile');
-        $crawler = $client->followRedirect();
-        self::assertSelectorExists('.skill-level-form option[value="EXPERT"][selected]');
+        $levelSelect = $crawler->filter('.skill-level-field select');
+        $skillIdValue = str_replace(['levels[', ']'], '', (string) $levelSelect->attr('name'));
+        self::assertTrue(ctype_digit($skillIdValue));
+        $skillId = (int) $skillIdValue;
+        $token = (string) $crawler->filter('.skill-levels-form input[name="_token"]')->attr('value');
+        $client->request('POST', '/profile/skills/levels', [
+            '_token' => $token,
+            'levels' => [$skillId => 'EXPERT'],
+        ], [], ['HTTP_ACCEPT' => TurboBundle::STREAM_MEDIA_TYPE]);
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('content-type', TurboBundle::STREAM_MEDIA_TYPE.'; charset=UTF-8');
+        self::assertSelectorTextContains('turbo-stream[target="skill-feedback"]', 'Tous les niveaux ont été enregistrés.');
 
-        $deleteForm = $crawler->filter('.skill-management-row form[action$="/delete"]')->form();
+        $crawler = $client->request('GET', '/profile');
+        self::assertSelectorExists('.skill-level-field option[value="EXPERT"][selected]');
+
+        $deleteForm = $crawler->filter('form[action$="/delete"]')->form();
         $client->submit($deleteForm);
-        self::assertResponseRedirects('/profile');
+        self::assertResponseRedirects('/profile#skills');
         $client->followRedirect();
         self::assertSelectorTextNotContains('body', 'Laravel '.$uniqueId);
     }
@@ -54,14 +65,23 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
         $skill = new Skill('Compétence privée '.$uniqueId, 'private-skill-'.$uniqueId, SkillCategory::OTHER);
         $candidateSkill = new CandidateSkill($otherAccount->getCandidateProfile(), $skill);
+        $ownerSkill = new Skill('Compétence du propriétaire '.$uniqueId, 'owner-skill-'.$uniqueId, SkillCategory::OTHER);
+        $ownerCandidateSkill = new CandidateSkill($owner->getCandidateProfile(), $ownerSkill);
         $entityManager->persist($skill);
         $entityManager->persist($candidateSkill);
+        $entityManager->persist($ownerSkill);
+        $entityManager->persist($ownerCandidateSkill);
         $entityManager->flush();
         $candidateSkillId = $candidateSkill->getId();
         self::assertNotNull($candidateSkillId);
         $client->loginUser($owner);
 
-        $client->request('POST', '/profile/skills/'.$candidateSkillId.'/level', ['level' => 'EXPERT']);
+        $crawler = $client->request('GET', '/profile');
+        $token = (string) $crawler->filter('.skill-levels-form input[name="_token"]')->attr('value');
+        $client->request('POST', '/profile/skills/levels', [
+            '_token' => $token,
+            'levels' => [$candidateSkillId => 'EXPERT'],
+        ]);
 
         self::assertResponseStatusCodeSame(404);
     }

@@ -24,6 +24,7 @@
                 <span class="analysis-count">{{ profile.candidateSkills|length }} compétence{{ profile.candidateSkills|length > 1 ? 's' : '' }}</span>
             </div>
             <p class="skills-intro">Ajoutez uniquement les technologies que vous maîtrisez réellement et précisez votre niveau actuel.</p>
+            <div id="skill-feedback" aria-live="polite"></div>
 
             <div class="card form-card skill-add-card">
                 <h3>Ajouter une compétence</h3>
@@ -40,7 +41,13 @@
                     <span><i class="skill-swatch skill-swatch-core" aria-hidden="true"></i> Principales</span>
                     <span><i class="skill-swatch" aria-hidden="true"></i> Complémentaires</span>
                 </div>
-                <div class="skill-management-list">
+                <form class="skill-levels-form" method="post" action="{{ path('app_candidate_skill_levels') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('update-skill-levels') }}">
+                    <div class="skill-save-bar">
+                        <span>Vous pouvez modifier plusieurs niveaux avant d’enregistrer.</span>
+                        <button class="button button-compact" type="submit">Enregistrer les modifications</button>
+                    </div>
+                    <div class="skill-management-list">
                     {% for candidateSkill in profile.candidateSkills %}
                         <article class="skill-management-row {{ candidateSkill.coreSkill ? 'skill-management-row-core' : '' }}">
                             <div class="skill-identity">
@@ -50,24 +57,25 @@
                                 </div>
                                 <span>{{ candidateSkill.skill.category.label() }}</span>
                             </div>
-                            <form class="skill-level-form" method="post" action="{{ path('app_candidate_skill_level', {id: candidateSkill.id}) }}">
+                            <div class="skill-level-field">
                                 <label for="skill-level-{{ candidateSkill.id }}">Niveau</label>
-                                <select id="skill-level-{{ candidateSkill.id }}" name="level">
+                                <select id="skill-level-{{ candidateSkill.id }}" name="levels[{{ candidateSkill.id }}]">
                                     {% if candidateSkill.level is null %}<option value="" selected disabled>À préciser</option>{% endif %}
                                     {% for skillLevel in skillLevels %}
                                         <option value="{{ skillLevel.value }}" {{ candidateSkill.level == skillLevel ? 'selected' : '' }}>{{ skillLevel.label() }}</option>
                                     {% endfor %}
                                 </select>
-                                <input type="hidden" name="_token" value="{{ csrf_token('level-skill-' ~ candidateSkill.id) }}">
-                                <button class="button secondary button-compact" type="submit">Enregistrer</button>
-                            </form>
-                            <form method="post" action="{{ path('app_candidate_skill_delete', {id: candidateSkill.id}) }}" onsubmit="return confirm('Retirer cette compétence de votre profil ?');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete-skill-' ~ candidateSkill.id) }}">
-                                <button class="button danger button-compact" type="submit" aria-label="Supprimer {{ candidateSkill.skill.name }}">Supprimer</button>
-                            </form>
+                            </div>
+                            <button class="button danger button-compact" type="submit" form="delete-skill-{{ candidateSkill.id }}" aria-label="Supprimer {{ candidateSkill.skill.name }}">Supprimer</button>
                         </article>
                     {% endfor %}
-                </div>
+                    </div>
+                </form>
+                {% for candidateSkill in profile.candidateSkills %}
+                    <form id="delete-skill-{{ candidateSkill.id }}" method="post" action="{{ path('app_candidate_skill_delete', {id: candidateSkill.id}) }}" onsubmit="return confirm('Retirer cette compétence de votre profil ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete-skill-' ~ candidateSkill.id) }}">
+                    </form>
+                {% endfor %}
             {% else %}
                 <div class="card empty-skills"><p>Aucune compétence enregistrée pour le moment.</p></div>
             {% endif %}

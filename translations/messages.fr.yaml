@@ -1,7 +1,7 @@
 candidate:
   skill:
     saved: "La compétence et son niveau ont été enregistrés."
-    level_updated: "Le niveau de la compétence a été mis à jour."
+    levels_updated: "Tous les niveaux ont été enregistrés."
     deleted: "La compétence a été retirée de votre profil."
     invalid: "Vérifiez le nom, le niveau et la catégorie de la compétence."
     not_found: "La compétence demandée est introuvable."

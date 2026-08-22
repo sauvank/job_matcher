@@ -177,21 +177,26 @@ p { color: var(--muted); }
 .skill { padding: .45rem .72rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted); font-size: .88rem; }
 .skill-core { border-color: #b8ddd0; background: var(--success-soft); color: var(--success); }
 .skills-intro { max-width: 720px; margin: -1rem 0 1.25rem; }
+#skill-feedback:empty { display: none; }
+.skill-feedback-message { margin-bottom: 1rem; }
 .skill-add-card { margin-bottom: 1.2rem; }
 .skill-add-card h3 { margin-bottom: 1rem; }
 .skill-add-form { display: grid; grid-template-columns: minmax(180px, 1.4fr) minmax(150px, .8fr) minmax(160px, .9fr) auto; align-items: end; gap: .8rem; }
 .skill-add-form > div { margin: 0 !important; }
 .skill-add-form button { min-width: 105px; }
 .skill-management-list { display: grid; gap: .65rem; }
+.skill-levels-form { margin: 0; }
+.skill-save-bar { position: sticky; z-index: 12; top: 5.4rem; display: flex; margin-bottom: .8rem; padding: .7rem .75rem .7rem 1rem; border: 1px solid #d9d9f2; border-radius: .85rem; align-items: center; justify-content: space-between; gap: 1rem; background: rgb(255 255 255 / 94%); box-shadow: 0 10px 28px rgb(41 48 78 / 10%); backdrop-filter: blur(14px); }
+.skill-save-bar span { color: var(--muted); font-size: .82rem; }
 .skill-management-row { display: grid; min-height: 82px; padding: .9rem 1rem; border: 1px solid var(--border); border-radius: .9rem; grid-template-columns: minmax(190px, 1fr) auto auto; align-items: center; gap: 1rem; background: white; box-shadow: var(--shadow-sm); }
 .skill-management-row-core { border-left: 3px solid var(--success); }
 .skill-identity { display: grid; gap: .28rem; }
 .skill-identity > div { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
 .skill-identity > span { color: var(--subtle); font-size: .76rem; font-weight: 700; text-transform: uppercase; }
 .skill-main-badge { background: var(--success-soft); color: var(--success); }
-.skill-level-form { display: grid; grid-template-columns: auto minmax(135px, 165px) auto; align-items: center; gap: .55rem; }
-.skill-level-form label { color: var(--subtle); font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-.skill-level-form select { min-height: 40px; padding: .48rem .7rem; border: 1px solid var(--border-strong); border-radius: .65rem; background: var(--surface-soft); color: var(--text); }
+.skill-level-field { display: grid; grid-template-columns: auto minmax(135px, 165px); align-items: center; gap: .55rem; }
+.skill-level-field label { color: var(--subtle); font-size: .72rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.skill-level-field select { min-height: 40px; padding: .48rem .7rem; border: 1px solid var(--border-strong); border-radius: .65rem; background: var(--surface-soft); color: var(--text); }
 .skill-management-row form { margin: 0; }
 .empty-skills { padding-block: 1rem; text-align: center; }
 .empty-skills p { margin: 0; }
@@ -347,7 +352,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--primary); 
     .evidence-grid { grid-template-columns: 1fr; }
     .skill-add-form { grid-template-columns: 1fr 1fr; }
     .skill-management-row { grid-template-columns: 1fr; align-items: stretch; }
-    .skill-level-form { grid-template-columns: auto minmax(130px, 1fr) auto; }
+    .skill-level-field { grid-template-columns: auto minmax(130px, 1fr); }
     .cv-skill-choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -374,7 +379,9 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--primary); 
     .disclosure-count { display: none; }
     .site-footer { align-items: flex-start; justify-content: center; flex-direction: column; }
     .skill-add-form { grid-template-columns: 1fr; }
-    .skill-level-form { grid-template-columns: 1fr; }
-    .skill-level-form .button, .skill-management-row > form .button { width: 100%; }
+    .skill-save-bar { top: 8.4rem; align-items: stretch; flex-direction: column; }
+    .skill-save-bar .button { width: 100%; }
+    .skill-level-field { grid-template-columns: 1fr; }
+    .skill-management-row > .button { width: 100%; }
     .cv-skill-choice-grid { grid-template-columns: 1fr; }
 }

@@ -47,7 +47,7 @@ final class CandidateMessage
     public const DOCUMENT_DELETED = 'candidate.cv.deleted';
     public const DOCUMENT_DELETE_PROCESSING = 'candidate.cv.delete_processing';
     public const SKILL_SAVED = 'candidate.skill.saved';
-    public const SKILL_LEVEL_UPDATED = 'candidate.skill.level_updated';
+    public const SKILL_LEVELS_UPDATED = 'candidate.skill.levels_updated';
     public const SKILL_DELETED = 'candidate.skill.deleted';
     public const SKILL_INVALID = 'candidate.skill.invalid';
     public const SKILL_NOT_FOUND = 'candidate.skill.not_found';
