@@ -32,6 +32,7 @@ security:
                 enable_csrf: true
 
     access_control:
+        - { path: ^/health$, roles: PUBLIC_ACCESS }
         - { path: ^/(connexion|inscription), roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }

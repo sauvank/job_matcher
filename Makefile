@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup build up down restart logs shell worker install sass migrate migration-status migration-diff schema-validate fixtures test-db test phpstan cs-check qa ci
+.PHONY: help setup build up down restart logs shell worker install sass migrate migration-status migration-diff schema-validate fixtures test-db test phpstan cs-check qa ci prod-config prod-build
 
 help:
 	@echo "make setup             Install and start the application"
@@ -19,6 +19,8 @@ help:
 	@echo "make test-db           Prepare and migrate the test database"
 	@echo "make test              Run PHPUnit"
 	@echo "make qa                Run coding style, PHPStan and tests"
+	@echo "make prod-config       Validate the production Compose configuration"
+	@echo "make prod-build        Build the production PHP and nginx images"
 
 setup: build up install migrate sass
 
@@ -81,3 +83,9 @@ qa: test-db
 	docker compose run --rm -e APP_ENV=test php composer qa
 
 ci: qa
+
+prod-config:
+	docker compose --env-file .env.prod.example -f compose.prod.yaml config --quiet
+
+prod-build: prod-config
+	docker compose --env-file .env.prod.example -f compose.prod.yaml build php nginx

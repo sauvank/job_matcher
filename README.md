@@ -60,6 +60,19 @@ make qa                # style, PHPStan et PHPUnit
 
 Le workflow GitHub Actions `.github/workflows/ci.yaml` s’exécute à chaque push et pull request. Il construit l’image PHP 8.4, prépare la base PostgreSQL de test, applique les migrations puis lance Sass, PHP-CS-Fixer, PHPStan et toute la suite PHPUnit avec `make qa`.
 
+## Image de production
+
+Le fichier `compose.prod.yaml` décrit une exécution sans montage du code source et sans exposition publique de PostgreSQL ou Redis. Deux cibles sont construites depuis le même `Dockerfile` : `php_prod`, utilisée par PHP-FPM et le worker, et `nginx_prod`, qui contient les fichiers publics compilés. Les CV privés résident dans un volume monté sur `/app/var/cv` et les sessions de production sont conservées dans Redis.
+
+Pour valider la configuration puis construire les deux images localement avec des valeurs factices :
+
+```bash
+make prod-config
+make prod-build
+```
+
+Sur le serveur, copier `.env.prod.example` vers `.env.prod.local`, remplacer toutes les valeurs factices et limiter ses droits avec `chmod 600 .env.prod.local`. Ce fichier ne doit jamais être commité.
+
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 
 ## Import HelloWork

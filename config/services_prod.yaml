@@ -1,0 +1,12 @@
+services:
+    app.session_redis:
+        class: Redis
+        factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
+        arguments:
+            - '%env(SESSION_REDIS_DSN)%'
+
+    app.redis_session_handler:
+        class: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
+        arguments:
+            - '@app.session_redis'
+            - { prefix: 'job_matcher_session_', ttl: 2592000 }

@@ -1,0 +1,84 @@
+name: job-matcher-prod
+
+services:
+  php:
+    image: ${PHP_IMAGE:-job-matcher-php:prod}
+    build:
+      context: .
+      target: php_prod
+    env_file:
+      - ${PROD_ENV_FILE:-.env.prod.local}
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: 0
+    volumes:
+      - cv_data:/app/var/cv
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    image: ${NGINX_IMAGE:-job-matcher-nginx:prod}
+    build:
+      context: .
+      target: nginx_prod
+    ports:
+      - "127.0.0.1:${APP_HTTP_PORT:-8081}:80"
+    depends_on:
+      - php
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    image: ${PHP_IMAGE:-job-matcher-php:prod}
+    env_file:
+      - ${PROD_ENV_FILE:-.env.prod.local}
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: 0
+    command: php bin/console messenger:consume async --time-limit=3600 --memory-limit=128M --no-interaction
+    volumes:
+      - cv_data:/app/var/cv
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  database:
+    image: postgres:16-alpine
+    env_file:
+      - ${PROD_ENV_FILE:-.env.prod.local}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  cv_data:
+  database_data:
+  redis_data:
