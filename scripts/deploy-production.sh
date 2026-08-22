@@ -2,8 +2,8 @@
 
 set -Eeuo pipefail
 
-if [[ $# -ne 1 || ! $1 =~ ^[0-9a-f]{40}$ ]]; then
-    echo "Usage: $0 <full-git-sha>" >&2
+if [[ $# -lt 1 || $# -gt 2 || ! $1 =~ ^[0-9a-f]{40}$ ]]; then
+    echo "Usage: $0 <full-git-sha> [compose-file]" >&2
     exit 64
 fi
 
@@ -22,6 +22,16 @@ if [[ ! -f .env.prod.local ]]; then
     echo "Missing $project_dir/.env.prod.local" >&2
     exit 66
 fi
+if [[ ! -f $project_dir/compose.prod.yaml ]]; then
+    echo "Missing current production manifest $project_dir/compose.prod.yaml" >&2
+    exit 66
+fi
+
+release_compose_file=${2:-$project_dir/compose.prod.yaml}
+if [[ ! -f $release_compose_file ]]; then
+    echo "Missing deployment manifest $release_compose_file" >&2
+    exit 66
+fi
 
 mkdir -p .deploy/backups
 chmod 700 .deploy .deploy/backups
@@ -32,8 +42,8 @@ if ! flock -n 9; then
     exit 75
 fi
 
-compose=(docker compose --env-file .env.prod.local -f compose.prod.yaml)
-previous_revision=$(git rev-parse HEAD)
+compose=(docker compose --project-directory "$project_dir" --env-file .env.prod.local -f "$release_compose_file")
+rollback_compose=(docker compose --project-directory "$project_dir" --env-file .env.prod.local -f "$project_dir/compose.prod.yaml")
 previous_php_image=$(sed -n 's/^PHP_IMAGE=//p' .env.prod.local | tail -n 1)
 previous_nginx_image=$(sed -n 's/^NGINX_IMAGE=//p' .env.prod.local | tail -n 1)
 app_http_port=$(sed -n 's/^APP_HTTP_PORT=//p' .env.prod.local | tail -n 1)
@@ -57,11 +67,10 @@ restore_previous_release() {
     if [[ $deployment_started -eq 1 ]]; then
         echo "Deployment failed; restoring the previous application images." >&2
         set +e
-        git checkout --quiet --detach "$previous_revision"
         sed -i "s|^PHP_IMAGE=.*$|PHP_IMAGE=$previous_php_image|" .env.prod.local
         sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=$previous_nginx_image|" .env.prod.local
-        "${compose[@]}" pull php worker nginx
-        "${compose[@]}" up -d --force-recreate php worker nginx
+        "${rollback_compose[@]}" pull php worker nginx
+        "${rollback_compose[@]}" up -d --force-recreate php worker nginx
         curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 3 \
             "$healthcheck_url" >/dev/null
         set -e
@@ -75,17 +84,6 @@ restore_previous_release() {
 
 trap restore_previous_release ERR
 
-echo "Fetching production revision $deploy_sha."
-git fetch --quiet origin main:refs/remotes/origin/main
-if ! git cat-file -e "${deploy_sha}^{commit}"; then
-    echo "The requested revision was not fetched from origin/main." >&2
-    exit 65
-fi
-if ! git merge-base --is-ancestor "$deploy_sha" origin/main; then
-    echo "Refusing to deploy a revision that is not part of origin/main." >&2
-    exit 65
-fi
-
 backup_file=".deploy/backups/database-$(date -u +%Y%m%dT%H%M%SZ)-${deploy_sha:0:12}.dump"
 echo "Creating database backup $backup_file."
 "${compose[@]}" exec -T database sh -c \
@@ -93,8 +91,6 @@ echo "Creating database backup $backup_file."
 chmod 600 "$backup_file"
 
 deployment_started=1
-git checkout --quiet --detach "$deploy_sha"
-
 sed -i "s|^PHP_IMAGE=.*$|PHP_IMAGE=ghcr.io/sauvank/job-matcher-php:sha-$deploy_sha|" .env.prod.local
 sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=ghcr.io/sauvank/job-matcher-nginx:sha-$deploy_sha|" .env.prod.local
 
@@ -109,5 +105,8 @@ curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 3
     "$healthcheck_url" >/dev/null
 
 "${compose[@]}" ps
+if [[ $release_compose_file != "$project_dir/compose.prod.yaml" ]]; then
+    install -m 644 "$release_compose_file" "$project_dir/compose.prod.yaml"
+fi
 trap - ERR
 echo "Production deployment completed for $deploy_sha."

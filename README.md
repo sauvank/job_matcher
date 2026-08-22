@@ -95,7 +95,7 @@ Créer l'environnement **Settings → Environments → production**, limiter ses
 - `VPS_SSH_PRIVATE_KEY` : clé privée SSH dédiée au déploiement ;
 - `VPS_KNOWN_HOSTS` : ligne `known_hosts` du serveur, dont l'empreinte a été vérifiée avant enregistrement.
 
-Le serveur conserve seul `.env.prod.local` et tous les secrets applicatifs. `scripts/deploy-production.sh` verrouille les déploiements concurrents, refuse un commit absent de `origin/main`, sauvegarde PostgreSQL dans `.deploy/backups`, applique les migrations, recrée les services applicatifs et contrôle `/health`. Si une étape échoue, il tente de restaurer la révision et les images précédentes ; une migration de schéma incompatible reste une opération à traiter manuellement depuis la sauvegarde.
+Le serveur conserve seul `.env.prod.local` et tous les secrets applicatifs ; son dossier de production n'a pas besoin d'être un clone Git. Le workflow transfère uniquement `compose.prod.yaml` et `scripts/deploy-production.sh` dans `.deploy/releases/<sha>`. Le script verrouille les déploiements concurrents, sauvegarde PostgreSQL dans `.deploy/backups`, applique les migrations, recrée les services applicatifs et contrôle `/health`. Si une étape échoue, il tente de restaurer les images précédentes avec le manifeste Compose déjà en production ; une migration de schéma incompatible reste une opération à traiter manuellement depuis la sauvegarde.
 
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 

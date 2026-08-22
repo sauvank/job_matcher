@@ -98,6 +98,9 @@ jobs:
       DEPLOY_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
       DEPLOY_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
     steps:
+      - name: Check out deployment files
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
       - name: Configure production SSH identity
         run: |
           test -n "$DEPLOY_HOST"
@@ -116,6 +119,31 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
 
+      - name: Transfer deployment files
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          package="$RUNNER_TEMP/job-matcher-deployment-$DEPLOY_SHA.tar.gz"
+          tar -czf "$package" compose.prod.yaml scripts/deploy-production.sh
+          ssh \
+            -i "$HOME/.ssh/job-matcher-production" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -p "$DEPLOY_PORT" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            bash -s -- "$DEPLOY_PATH" "$DEPLOY_SHA" <<'REMOTE'
+          set -Eeuo pipefail
+          mkdir -p "$1/.deploy/releases/$2"
+          chmod 700 "$1/.deploy" "$1/.deploy/releases"
+          REMOTE
+          scp \
+            -i "$HOME/.ssh/job-matcher-production" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -P "$DEPLOY_PORT" \
+            "$package" \
+            "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/.deploy/releases/$DEPLOY_SHA/deployment.tar.gz"
+
       - name: Deploy immutable revision
         env:
           DEPLOY_SHA: ${{ github.sha }}
@@ -129,7 +157,8 @@ jobs:
             "$DEPLOY_USER@$DEPLOY_HOST" \
             bash -s -- "$DEPLOY_PATH" "$DEPLOY_SHA" <<'REMOTE'
           set -Eeuo pipefail
-          cd "$1"
-          git fetch --quiet origin main:refs/remotes/origin/main
-          git show "${2}:scripts/deploy-production.sh" | DEPLOY_PROJECT_DIR="$1" bash -s -- "$2"
+          release_dir="$1/.deploy/releases/$2"
+          tar -xzf "$release_dir/deployment.tar.gz" -C "$release_dir"
+          DEPLOY_PROJECT_DIR="$1" \
+            "$release_dir/scripts/deploy-production.sh" "$2" "$release_dir/compose.prod.yaml"
           REMOTE
