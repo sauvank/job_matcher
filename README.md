@@ -56,6 +56,10 @@ make test              # lancer PHPUnit
 make qa                # style, PHPStan et PHPUnit
 ```
 
+## Intégration continue
+
+Le workflow GitHub Actions `.github/workflows/ci.yaml` s’exécute à chaque push et pull request. Il construit l’image PHP 8.4, prépare la base PostgreSQL de test, applique les migrations puis lance Sass, PHP-CS-Fixer, PHPStan et toute la suite PHPUnit avec `make qa`.
+
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 
 ## Import HelloWork
