@@ -31,6 +31,8 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
         $crawler = $client->followRedirect();
         self::assertSelectorTextContains('.skill-management-list', 'Laravel '.$uniqueId);
         self::assertSelectorExists('.skill-level-field option[value="ADVANCED"][selected]');
+        self::assertSelectorExists('#skill-level-filter option[value="ADVANCED"]');
+        self::assertSelectorExists('.skill-management-row[data-skill-level="ADVANCED"]');
 
         $levelSelect = $crawler->filter('.skill-level-field select');
         $skillIdValue = str_replace(['levels[', ']'], '', (string) $levelSelect->attr('name'));
