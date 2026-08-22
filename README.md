@@ -38,7 +38,7 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 ```
 
-Un compte Google portant le même email est associé au compte local existant. Une nouvelle identité Google crée son propre espace personnel.
+Un compte Google portant le même email est associé au compte local existant. Une nouvelle identité Google crée son propre espace personnel. La session authentifiée reste valide pendant 30 jours d’activité, sauf déconnexion volontaire.
 
 ## Commandes utiles
 
