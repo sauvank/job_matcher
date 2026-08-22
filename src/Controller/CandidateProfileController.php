@@ -11,6 +11,7 @@ use App\Candidate\Enum\SkillLevel;
 use App\Candidate\Translation\CandidateMessage;
 use App\Form\CandidateSkillType;
 use App\Security\Entity\Account;
+use App\Security\GoogleOAuthClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +25,7 @@ final class CandidateProfileController extends AbstractController
     #[Route('/profile', name: 'app_candidate_profile', methods: ['GET'])]
     public function __invoke(
         #[CurrentUser] Account $account,
+        GoogleOAuthClient $google,
     ): Response {
         $profile = $account->getCandidateProfile();
 
@@ -33,6 +35,8 @@ final class CandidateProfileController extends AbstractController
                 'action' => $this->generateUrl('app_candidate_skill_add'),
             ]),
             'skillLevels' => SkillLevel::cases(),
+            'googleEnabled' => $google->isConfigured(),
+            'googleConnected' => $account->isGoogleConnected(),
         ]);
     }
 

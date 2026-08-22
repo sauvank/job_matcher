@@ -21,7 +21,9 @@ final class AccountTest extends TestCase
     public function testGoogleConnectionCannotBeReplacedByAnotherIdentity(): void
     {
         $account = new Account('owner@example.test');
+        self::assertFalse($account->isGoogleConnected());
         $account->connectGoogle('first-subject');
+        self::assertTrue($account->isGoogleConnected());
 
         $this->expectException(\DomainException::class);
         $account->connectGoogle('another-subject');

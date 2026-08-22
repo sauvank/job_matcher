@@ -24,6 +24,9 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 final class SecurityController extends AbstractController
 {
+    private const GOOGLE_INTENT_LINK = 'link';
+    private const GOOGLE_INTENT_LOGIN = 'login';
+
     #[Route('/connexion', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(AuthenticationUtils $authenticationUtils, GoogleOAuthClient $google): Response
     {
@@ -76,16 +79,36 @@ final class SecurityController extends AbstractController
     #[Route('/connexion/google', name: 'app_google_start', methods: ['GET'])]
     public function googleStart(Request $request, GoogleOAuthClient $google): RedirectResponse
     {
+        if ($this->getUser() !== null) {
+            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+        }
         if (!$google->isConfigured()) {
             $this->addFlash('error', 'La connexion Google n’est pas encore configurée.');
 
             return $this->redirectToRoute('app_login');
         }
 
-        $state = bin2hex(random_bytes(32));
-        $request->getSession()->set('google_oauth_state', $state);
+        return $this->beginGoogleOAuth($request, $google, self::GOOGLE_INTENT_LOGIN);
+    }
 
-        return new RedirectResponse($google->authorizationUrl($this->googleCallbackUrl(), $state));
+    #[Route('/profile/google', name: 'app_google_link', methods: ['GET'])]
+    public function googleLink(
+        Request $request,
+        #[CurrentUser] Account $account,
+        GoogleOAuthClient $google,
+    ): RedirectResponse {
+        if (!$google->isConfigured()) {
+            $this->addFlash('error', 'La connexion Google n’est pas encore configurée.');
+
+            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+        }
+        if ($account->isGoogleConnected()) {
+            $this->addFlash('info', 'Votre compte Google est déjà associé.');
+
+            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+        }
+
+        return $this->beginGoogleOAuth($request, $google, self::GOOGLE_INTENT_LINK);
     }
 
     #[Route('/connexion/google/retour', name: 'app_google_callback', methods: ['GET'])]
@@ -97,9 +120,10 @@ final class SecurityController extends AbstractController
         Security $security,
     ): RedirectResponse {
         $expectedState = $request->getSession()->remove('google_oauth_state');
+        $intent = $request->getSession()->remove('google_oauth_intent');
         $state = $request->query->getString('state');
         $code = $request->query->getString('code');
-        if (!is_string($expectedState) || $expectedState === '' || $state === '' || !hash_equals($expectedState, $state) || $code === '') {
+        if (!is_string($expectedState) || $expectedState === '' || !in_array($intent, [self::GOOGLE_INTENT_LOGIN, self::GOOGLE_INTENT_LINK], true) || $state === '' || !hash_equals($expectedState, $state) || $code === '') {
             $this->addFlash('error', 'La connexion Google a été annulée ou a expiré.');
 
             return $this->redirectToRoute('app_login');
@@ -107,22 +131,63 @@ final class SecurityController extends AbstractController
 
         try {
             $identity = $google->fetchIdentity($code, $this->googleCallbackUrl());
-            $account = $accounts->findOneBy(['googleSubject' => $identity['subject']]);
-            $account ??= $accounts->findOneBy(['email' => $identity['email']]);
-            if (!$account instanceof Account) {
-                $account = new Account($identity['email']);
-                $entityManager->persist($account);
-            }
-            $account->connectGoogle($identity['subject']);
-            $entityManager->flush();
-            $security->login($account, 'form_login');
-
-            return $this->redirectToRoute('app_post_login');
         } catch (\Throwable) {
             $this->addFlash('error', 'Impossible de vous connecter avec Google. Réessayez ou utilisez votre mot de passe.');
 
             return $this->redirectToRoute('app_login');
         }
+
+        if ($intent === self::GOOGLE_INTENT_LINK) {
+            $authenticatedAccount = $security->getUser();
+            if (!$authenticatedAccount instanceof Account || $authenticatedAccount->getId() === null) {
+                $this->addFlash('error', 'Reconnectez-vous avec votre mot de passe avant d’associer Google.');
+
+                return $this->redirectToRoute('app_login');
+            }
+
+            $account = $accounts->find($authenticatedAccount->getId());
+            if (!$account instanceof Account) {
+                $this->addFlash('error', 'Votre compte est introuvable. Reconnectez-vous avant d’associer Google.');
+
+                return $this->redirectToRoute('app_login');
+            }
+            if ($identity['email'] !== $account->getEmail()) {
+                $this->addFlash('error', 'L’adresse du compte Google doit correspondre à celle de votre profil.');
+
+                return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+            }
+
+            $subjectOwner = $accounts->findOneBy(['googleSubject' => $identity['subject']]);
+            if ($subjectOwner instanceof Account && $subjectOwner->getId() !== $account->getId()) {
+                $this->addFlash('error', 'Ce compte Google est déjà associé à un autre profil.');
+
+                return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+            }
+
+            $account->connectGoogle($identity['subject']);
+            $entityManager->flush();
+            $this->addFlash('success', 'Votre compte Google est maintenant associé.');
+
+            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+        }
+
+        $account = $accounts->findOneBy(['googleSubject' => $identity['subject']]);
+        if (!$account instanceof Account) {
+            if ($accounts->findOneBy(['email' => $identity['email']]) instanceof Account) {
+                $this->addFlash('error', 'Un compte local utilise déjà cette adresse. Connectez-vous avec votre mot de passe, puis associez Google depuis votre profil.');
+
+                return $this->redirectToRoute('app_login');
+            }
+
+            $account = new Account($identity['email']);
+            $account->connectGoogle($identity['subject']);
+            $entityManager->persist($account);
+            $entityManager->flush();
+        }
+
+        $security->login($account, 'form_login');
+
+        return $this->redirectToRoute('app_post_login');
     }
 
     #[Route('/deconnexion', name: 'app_logout', methods: ['POST'])]
@@ -144,5 +209,14 @@ final class SecurityController extends AbstractController
     private function googleCallbackUrl(): string
     {
         return $this->generateUrl('app_google_callback', [], UrlGeneratorInterface::ABSOLUTE_URL);
+    }
+
+    private function beginGoogleOAuth(Request $request, GoogleOAuthClient $google, string $intent): RedirectResponse
+    {
+        $state = bin2hex(random_bytes(32));
+        $request->getSession()->set('google_oauth_state', $state);
+        $request->getSession()->set('google_oauth_intent', $intent);
+
+        return new RedirectResponse($google->authorizationUrl($this->googleCallbackUrl(), $state));
     }
 }

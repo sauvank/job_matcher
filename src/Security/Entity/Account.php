@@ -95,6 +95,11 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
         $this->googleSubject = $subject;
     }
 
+    public function isGoogleConnected(): bool
+    {
+        return $this->googleSubject !== null;
+    }
+
     public function eraseCredentials(): void
     {
     }
