@@ -20,6 +20,7 @@ final class CvPagesControllerTest extends AuthenticatedWebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.upload-zone', 'Déposez votre CV ici');
         self::assertSelectorExists('input[type="file"].upload-input');
+        self::assertSelectorExists('.upload-card');
     }
 
     public function testCvOptimizationHasItsOwnPage(): void

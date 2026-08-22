@@ -127,7 +127,7 @@ p { color: var(--muted); }
 .form-card ul { color: var(--danger); }
 .form-card input[type="checkbox"] { accent-color: var(--primary); }
 
-.upload-card { max-width: 760px; }
+.upload-card { max-width: 760px; margin-inline: auto; }
 .upload-field { margin: 0; }
 .upload-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .upload-zone { display: grid; min-height: 290px; padding: 2rem; border: 1.5px dashed #c8cbe0; border-radius: 1rem; place-items: center; align-content: center; background: linear-gradient(145deg, #fafaff, #f7f7fd); cursor: pointer; text-align: center; transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease; }
