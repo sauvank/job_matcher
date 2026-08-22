@@ -14,7 +14,7 @@
             {% if error %}
                 <div class="auth-error" role="alert">{{ error.messageKey == 'Vérifiez votre adresse email avant de vous connecter.' ? error.messageKey : 'Email ou mot de passe incorrect.' }}</div>
             {% endif %}
-            <form method="post" action="{{ path('app_login') }}">
+            <form method="post" action="{{ path('app_login') }}" data-turbo="false">
                 <div>
                     <label for="email">Adresse email</label>
                     <input id="email" type="email" name="email" value="{{ lastEmail }}" autocomplete="email" required autofocus>

@@ -47,6 +47,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('h1', 'Heureux de vous revoir');
         self::assertSelectorExists('input[name="email"]');
         self::assertSelectorExists('input[name="password"]');
+        self::assertSelectorExists('form[action="/connexion"][data-turbo="false"]');
         self::assertSelectorExists('a[href="/connexion/google"]');
     }
 
