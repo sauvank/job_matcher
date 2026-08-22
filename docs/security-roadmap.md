@@ -4,11 +4,11 @@ Cette roadmap ordonne les travaux selon le risque pour les comptes, les CV et l'
 
 ## Critique
 
-- [ ] **SEC-01 — Fiabiliser l'identité des comptes**
+- [x] **SEC-01 — Fiabiliser l'identité des comptes**
   - [x] Interdire le rattachement Google automatique à un compte local existant.
   - [x] Exiger une session locale authentifiée et un email Google identique pour l'association explicite.
-  - [ ] Vérifier l'adresse email avant d'activer une nouvelle inscription locale.
-  - [ ] Prévoir le traitement des comptes locaux historiques non vérifiés.
+  - [x] Vérifier l'adresse email avant d'activer une nouvelle inscription locale.
+  - [x] Préserver l'accès des comptes historiques via une migration explicite.
 - [ ] **SEC-02 — Isoler l'analyse des CV non fiables**
   - [ ] Valider la signature et la structure PDF/DOCX, avec limite décompressée.
   - [ ] Analyser les fichiers avec un antivirus local.

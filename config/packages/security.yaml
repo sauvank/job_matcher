@@ -16,6 +16,7 @@ security:
         main:
             lazy: true
             provider: app_accounts
+            user_checker: App\Security\VerifiedAccountUserChecker
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -33,7 +34,7 @@ security:
 
     access_control:
         - { path: ^/health$, roles: PUBLIC_ACCESS }
-        - { path: ^/(connexion|inscription), roles: PUBLIC_ACCESS }
+        - { path: ^/(connexion|inscription|verification-email), roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: ROLE_USER }
 

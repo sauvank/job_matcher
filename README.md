@@ -73,6 +73,15 @@ make prod-build
 
 Sur le serveur, copier `.env.prod.example` vers `.env.prod.local`, remplacer toutes les valeurs factices et limiter ses droits avec `chmod 600 .env.prod.local`. Ce fichier ne doit jamais être commité.
 
+Les inscriptions locales exigent une vérification par email. Avant de les ouvrir en production, remplacer le transport neutre par le DSN SMTP du fournisseur et une adresse d'expédition valide :
+
+```dotenv
+MAILER_DSN=smtp://user:password@smtp.example.com:587
+MAILER_FROM='Job Matcher <no-reply@example.com>'
+```
+
+Le DSN réel reste uniquement dans `.env.prod.local`. Les comptes créés avec Google utilisent déjà une adresse vérifiée par Google.
+
 Le workflow manuel `.github/workflows/publish-images.yaml` construit et publie les deux cibles sur GitHub Container Registry. Dans GitHub, ouvrir **Actions → Publish production images → Run workflow**, puis conserver `latest` ou saisir une version. Chaque image reçoit également une étiquette immuable `sha-<commit>` :
 
 ```text

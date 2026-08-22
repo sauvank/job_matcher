@@ -12,7 +12,7 @@
 
         <div class="card form-card auth-card">
             {% if error %}
-                <div class="auth-error" role="alert">Email ou mot de passe incorrect.</div>
+                <div class="auth-error" role="alert">{{ error.messageKey == 'Vérifiez votre adresse email avant de vous connecter.' ? error.messageKey : 'Email ou mot de passe incorrect.' }}</div>
             {% endif %}
             <form method="post" action="{{ path('app_login') }}">
                 <div>
@@ -33,6 +33,7 @@
             </a>
             {% if not googleEnabled %}<p class="help-text auth-note">Google sera disponible après configuration des identifiants OAuth.</p>{% endif %}
             <p class="auth-footer">Première utilisation ? <a href="{{ path('app_register') }}">Créer le compte</a></p>
+            <p class="auth-footer"><a href="{{ path('app_email_resend') }}">Renvoyer l’email de vérification</a></p>
         </div>
     </section>
 {% endblock %}

@@ -37,6 +37,7 @@ abstract class AuthenticatedWebTestCase extends WebTestCase
 
         $account = $repository->findOneBy(['email' => $email]) ?? new Account($email);
         $account->setPassword($passwordHasher->hashPassword($account, 'correct horse battery staple'));
+        $account->verifyEmail();
         if ($account->getId() === null) {
             $entityManager->persist($account);
         }

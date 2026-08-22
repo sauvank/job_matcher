@@ -31,6 +31,9 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, unique: true, nullable: true)]
     private ?string $googleSubject = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $emailVerifiedAt = null;
+
     #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true)]
     #[ORM\JoinColumn(nullable: false)]
     private CandidateProfile $candidateProfile;
@@ -98,6 +101,16 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     public function isGoogleConnected(): bool
     {
         return $this->googleSubject !== null;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->emailVerifiedAt !== null;
+    }
+
+    public function verifyEmail(): void
+    {
+        $this->emailVerifiedAt ??= new \DateTimeImmutable();
     }
 
     public function eraseCredentials(): void

@@ -6,17 +6,21 @@ namespace App\Controller;
 
 use App\Form\RegistrationType;
 use App\Security\DTO\RegistrationData;
+use App\Security\EmailVerificationService;
 use App\Security\Entity\Account;
 use App\Security\GoogleOAuthClient;
 use App\Security\Repository\AccountRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -47,7 +51,8 @@ final class SecurityController extends AbstractController
         AccountRepository $accounts,
         UserPasswordHasherInterface $passwordHasher,
         EntityManagerInterface $entityManager,
-        Security $security,
+        EmailVerificationService $emailVerification,
+        #[Autowire(service: 'limiter.email_verification')] RateLimiterFactory $emailVerificationLimiter,
         GoogleOAuthClient $google,
     ): Response {
         if ($this->getUser() !== null) {
@@ -64,9 +69,20 @@ final class SecurityController extends AbstractController
                 $account->setPassword($passwordHasher->hashPassword($account, $data->plainPassword));
                 $entityManager->persist($account);
                 $entityManager->flush();
-                $security->login($account, 'form_login');
 
-                return $this->redirectToRoute('app_post_login');
+                $limit = $emailVerificationLimiter->create(hash('sha256', $account->getEmail()))->consume();
+                if (!$limit->isAccepted()) {
+                    $this->addFlash('error', 'Compte créé, mais trop de demandes ont été effectuées. Demandez un nouveau lien dans quelques minutes.');
+                } else {
+                    try {
+                        $emailVerification->send($account);
+                        $this->addFlash('success', 'Compte créé. Consultez votre messagerie pour vérifier votre adresse avant de vous connecter.');
+                    } catch (TransportExceptionInterface) {
+                        $this->addFlash('error', 'Compte créé, mais l’email n’a pas pu être envoyé. Demandez un nouveau lien de vérification.');
+                    }
+                }
+
+                return $this->redirectToRoute('app_login');
             }
         }
 
@@ -74,6 +90,67 @@ final class SecurityController extends AbstractController
             'form' => $form,
             'googleEnabled' => $google->isConfigured(),
         ]);
+    }
+
+    #[Route('/verification-email/{id<\d+>}', name: 'app_email_verify', methods: ['GET'])]
+    public function verifyEmail(
+        int $id,
+        Request $request,
+        AccountRepository $accounts,
+        EmailVerificationService $emailVerification,
+        EntityManagerInterface $entityManager,
+    ): RedirectResponse {
+        $account = $accounts->find($id);
+        if (!$account instanceof Account || !$emailVerification->isValid($request)) {
+            $this->addFlash('error', 'Ce lien de vérification est invalide ou a expiré.');
+
+            return $this->redirectToRoute('app_login');
+        }
+
+        $account->verifyEmail();
+        $entityManager->flush();
+        $this->addFlash('success', 'Votre adresse email est vérifiée. Vous pouvez maintenant vous connecter.');
+
+        return $this->redirectToRoute('app_login');
+    }
+
+    #[Route('/verification-email', name: 'app_email_resend', methods: ['GET', 'POST'])]
+    public function resendVerificationEmail(
+        Request $request,
+        AccountRepository $accounts,
+        EmailVerificationService $emailVerification,
+        #[Autowire(service: 'limiter.email_verification')] RateLimiterFactory $emailVerificationLimiter,
+    ): Response {
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('email_verification_resend', $request->request->getString('_csrf_token'))) {
+                $this->addFlash('error', 'La demande a expiré. Veuillez recommencer.');
+
+                return $this->redirectToRoute('app_email_resend');
+            }
+
+            $email = mb_strtolower(trim($request->request->getString('email')));
+            $limit = $emailVerificationLimiter->create(hash('sha256', $email))->consume();
+            if (!$limit->isAccepted()) {
+                $this->addFlash('error', 'Trop de demandes ont été effectuées. Réessayez dans quelques minutes.');
+
+                return $this->redirectToRoute('app_email_resend');
+            }
+
+            $account = $accounts->findOneBy(['email' => $email]);
+            if ($account instanceof Account && !$account->isEmailVerified()) {
+                try {
+                    $emailVerification->send($account);
+                } catch (TransportExceptionInterface) {
+                    // Keep the response generic so the endpoint cannot reveal whether an account exists.
+                }
+            }
+
+            $this->addFlash('success', 'Si un compte non vérifié correspond à cette adresse, un nouveau lien vient d’être envoyé.');
+
+            return $this->redirectToRoute('app_login');
+        }
+
+        return $this->render('security/resend_verification.html.twig');
     }
 
     #[Route('/connexion/google', name: 'app_google_start', methods: ['GET'])]
@@ -181,6 +258,7 @@ final class SecurityController extends AbstractController
 
             $account = new Account($identity['email']);
             $account->connectGoogle($identity['subject']);
+            $account->verifyEmail();
             $entityManager->persist($account);
             $entityManager->flush();
         }

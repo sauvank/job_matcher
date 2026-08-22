@@ -99,5 +99,11 @@ services:
             $clientId: '%env(GOOGLE_CLIENT_ID)%'
             $clientSecret: '%env(GOOGLE_CLIENT_SECRET)%'
 
+    App\Security\EmailVerificationService:
+        arguments:
+            $appSecret: '%kernel.secret%'
+            $sender: '%env(MAILER_FROM)%'
+            $verificationLifetimeSeconds: 86400
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -11,6 +11,7 @@ use App\Security\Repository\AccountRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Component\Mime\Email;
 
 final class SecurityControllerTest extends AuthenticatedWebTestCase
 {
@@ -63,6 +64,85 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         self::assertResponseRedirects('/cv');
         $client->followRedirect();
         self::assertSelectorTextContains('h1', 'Déposer un CV');
+    }
+
+    public function testLocalRegistrationRequiresEmailVerificationBeforeLogin(): void
+    {
+        $client = self::createClient();
+        $client->enableProfiler();
+        $email = 'verify-'.bin2hex(random_bytes(6)).'@example.test';
+        $crawler = $client->request('GET', '/inscription');
+        $form = $crawler->selectButton('Créer mon compte')->form([
+            'registration[email]' => $email,
+            'registration[plainPassword]' => 'correct horse battery staple',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/connexion');
+        self::assertEmailCount(1);
+        $message = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $message);
+        $textBody = $message->getTextBody();
+        self::assertIsString($textBody);
+        self::assertMatchesRegularExpression('~http://localhost/verification-email/\d+\?[^\\s]+~', $textBody);
+        preg_match('~http://localhost/verification-email/\d+\?[^\\s]+~', $textBody, $matches);
+        $verificationUrl = $matches[0] ?? null;
+        self::assertIsString($verificationUrl);
+        self::assertFalse($this->reloadAccount($email)->isEmailVerified());
+
+        $client->request('GET', $verificationUrl.'&tampered=1');
+        self::assertResponseRedirects('/connexion');
+        self::assertFalse($this->reloadAccount($email)->isEmailVerified());
+
+        $crawler = $client->request('GET', '/connexion');
+        $client->submit($crawler->selectButton('Se connecter')->form([
+            'email' => $email,
+            'password' => 'correct horse battery staple',
+        ]));
+        self::assertResponseRedirects('/connexion');
+        $client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'Vérifiez votre adresse email');
+
+        $client->request('GET', $verificationUrl);
+        self::assertResponseRedirects('/connexion');
+        self::assertTrue($this->reloadAccount($email)->isEmailVerified());
+
+        $crawler = $client->request('GET', '/connexion');
+        $client->submit($crawler->selectButton('Se connecter')->form([
+            'email' => $email,
+            'password' => 'correct horse battery staple',
+        ]));
+        self::assertResponseRedirects('/apres-connexion');
+    }
+
+    public function testVerificationEmailCanBeRequestedWithoutRevealingAccountExistence(): void
+    {
+        $client = self::createClient();
+        $client->enableProfiler();
+        $email = 'resend-'.bin2hex(random_bytes(6)).'@example.test';
+        $account = new Account($email);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $entityManager->persist($account);
+        $entityManager->flush();
+
+        $crawler = $client->request('GET', '/verification-email');
+        $client->submit($crawler->selectButton('Renvoyer le lien')->form(['email' => $email]));
+
+        self::assertResponseRedirects('/connexion');
+        self::assertEmailCount(1);
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Si un compte non vérifié correspond');
+
+        $crawler = $client->request('GET', '/verification-email');
+        $client->submit($crawler->selectButton('Renvoyer le lien')->form([
+            'email' => 'absent-'.bin2hex(random_bytes(6)).'@example.test',
+        ]));
+
+        self::assertResponseRedirects('/connexion');
+        self::assertEmailCount(0);
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Si un compte non vérifié correspond');
     }
 
     public function testAccountWithACvIsSentToItsProfileAfterLogin(): void

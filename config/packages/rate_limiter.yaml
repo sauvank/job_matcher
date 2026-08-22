@@ -1,0 +1,6 @@
+framework:
+    rate_limiter:
+        email_verification:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '15 minutes'

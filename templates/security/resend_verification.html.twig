@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Renvoyer l’email de vérification — Job Matcher{% endblock %}
+
+{% block body %}
+    <section class="auth-shell">
+        <div class="page-heading auth-heading">
+            <p class="eyebrow">Sécurité du compte</p>
+            <h1>Vérifiez votre adresse email.</h1>
+            <p>Le nouveau lien sera valable pendant 24 heures.</p>
+        </div>
+
+        <div class="card form-card auth-card">
+            <form method="post" action="{{ path('app_email_resend') }}">
+                <div>
+                    <label for="verification-email">Adresse email</label>
+                    <input id="verification-email" type="email" name="email" autocomplete="email" required autofocus>
+                </div>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('email_verification_resend') }}">
+                <button class="auth-submit" type="submit">Renvoyer le lien</button>
+            </form>
+            <p class="auth-footer"><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
+        </div>
+    </section>
+{% endblock %}
