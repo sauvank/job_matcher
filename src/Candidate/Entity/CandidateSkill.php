@@ -96,4 +96,9 @@ final class CandidateSkill
         $this->isCoreSkill = $isCoreSkill;
         $this->confidence = $confidence;
     }
+
+    public function updateLevel(SkillLevel $level): void
+    {
+        $this->level = $level;
+    }
 }

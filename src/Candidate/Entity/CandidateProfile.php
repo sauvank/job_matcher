@@ -165,6 +165,13 @@ final class CandidateProfile
         }
     }
 
+    public function removeCandidateSkill(CandidateSkill $candidateSkill): void
+    {
+        if ($this->candidateSkills->removeElement($candidateSkill)) {
+            $this->updatedAt = new \DateTimeImmutable();
+        }
+    }
+
     public function addCvDocument(CvDocument $document): void
     {
         if (!$this->cvDocuments->contains($document)) {

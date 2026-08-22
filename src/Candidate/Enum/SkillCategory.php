@@ -13,4 +13,17 @@ enum SkillCategory: string
     case TESTING = 'TESTING';
     case METHODOLOGY = 'METHODOLOGY';
     case OTHER = 'OTHER';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::BACKEND => 'Backend',
+            self::FRONTEND => 'Frontend',
+            self::DATABASE => 'Base de données',
+            self::DEVOPS => 'DevOps',
+            self::TESTING => 'Tests',
+            self::METHODOLOGY => 'Méthodologie',
+            self::OTHER => 'Autre',
+        };
+    }
 }

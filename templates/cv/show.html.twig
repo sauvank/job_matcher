@@ -55,7 +55,29 @@
                     {{ form_row(reviewForm.title) }}
                     {{ form_row(reviewForm.location) }}
                     {{ form_row(reviewForm.yearsOfExperience) }}
-                    {{ form_row(reviewForm.selectedSkills) }}
+                    <div class="cv-review-skills">
+                        <span class="form-section-label">Compétences à conserver</span>
+                        <p>Décochez une compétence si elle ne doit pas rejoindre votre profil. Le niveau proposé pourra être ajusté ensuite dans « Mes compétences ».</p>
+                        <div class="cv-skill-choice-grid">
+                            {% for choice in reviewForm.selectedSkills %}
+                                {% set skillMetadata = null %}
+                                {% for analyzedSkill in analysis.skills %}
+                                    {% if analyzedSkill.name == choice.vars.value %}{% set skillMetadata = analyzedSkill %}{% endif %}
+                                {% endfor %}
+                                <label class="cv-skill-choice" for="{{ choice.vars.id }}">
+                                    {{ form_widget(choice) }}
+                                    <span>
+                                        <strong>{{ choice.vars.label }}</strong>
+                                        {% if skillMetadata %}
+                                            <small>{{ skillMetadata.category.label() }} · {{ skillMetadata.level ? skillMetadata.level.label() : 'Niveau à préciser' }}</small>
+                                        {% endif %}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {{ form_errors(reviewForm.selectedSkills) }}
+                        {% do reviewForm.selectedSkills.setRendered %}
+                    </div>
                     {{ form_row(reviewForm.apply) }}
                 {{ form_end(reviewForm) }}
             </section>

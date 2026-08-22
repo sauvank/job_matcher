@@ -46,6 +46,11 @@ final class CandidateMessage
     public const REANALYSIS_ACCEPTED = 'candidate.cv.analysis.reanalysis_accepted';
     public const DOCUMENT_DELETED = 'candidate.cv.deleted';
     public const DOCUMENT_DELETE_PROCESSING = 'candidate.cv.delete_processing';
+    public const SKILL_SAVED = 'candidate.skill.saved';
+    public const SKILL_LEVEL_UPDATED = 'candidate.skill.level_updated';
+    public const SKILL_DELETED = 'candidate.skill.deleted';
+    public const SKILL_INVALID = 'candidate.skill.invalid';
+    public const SKILL_NOT_FOUND = 'candidate.skill.not_found';
 
     private function __construct()
     {

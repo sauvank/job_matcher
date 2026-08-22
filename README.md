@@ -90,6 +90,8 @@ Le fichier `.env.local` est ignoré par Git et ne doit jamais être commité. Su
 
 Le texte extrait du CV est envoyé à l'API Responses avec `store: false`. La réponse est contrainte par un schéma JSON strict puis présentée à l'utilisateur pour vérification ; elle n'est jamais appliquée automatiquement au profil.
 
+La validation présente les compétences détectées sous forme de cartes avec leur catégorie et leur niveau proposé. Après application, la section **Mes compétences** du profil permet d'ajouter une compétence manuellement, d'ajuster son niveau ou de la supprimer.
+
 La V1 utilise un seul profil candidat actif. Plusieurs CV peuvent être analysés et conservés dans l’historique, mais appliquer un CV remplace les informations et les compétences du profil actif. Une ancienne analyse peut être réutilisée depuis sa fiche sans appeler à nouveau l’IA.
 
 ## Analyse complète des offres
