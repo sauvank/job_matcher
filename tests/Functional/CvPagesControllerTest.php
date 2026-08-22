@@ -22,15 +22,21 @@ final class CvPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('input[type="file"].upload-input');
     }
 
-    public function testProfileShowsTheCvOptimizationArea(): void
+    public function testCvOptimizationHasItsOwnPage(): void
     {
         $client = self::createClient();
         $this->loginOwner($client);
         $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('.optimization-section h2', 'Optimiser mon CV');
-        self::assertSelectorTextContains('.optimization-section', 'n’ajoutent jamais une compétence sans preuve');
+        self::assertSelectorNotExists('.optimization-section');
+        self::assertSelectorExists('nav a[href="/profile/optimisation-cv"]');
+
+        $client->request('GET', '/profile/optimisation-cv');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Optimiser mon CV');
+        self::assertSelectorTextContains('.page-heading', 'n’ajoutent jamais une compétence sans preuve');
     }
 
     public function testACompletedCvCanBeDeletedWithTurbo(): void

@@ -92,13 +92,15 @@ Le texte extrait du CV est envoyé à l'API Responses avec `store: false`. La r�
 
 La validation présente les compétences détectées sous forme de cartes avec leur catégorie et leur niveau proposé. Après application, la section **Mes compétences** du profil permet d'ajouter une compétence manuellement, de filtrer la liste par niveau, de modifier plusieurs niveaux puis de les enregistrer en une fois grâce à une barre d’action persistante, ou de supprimer une compétence.
 
-La V1 utilise un seul profil candidat actif. Plusieurs CV peuvent être analysés et conservés dans l’historique, mais appliquer un CV remplace les informations et les compétences du profil actif. Une ancienne analyse peut être réutilisée depuis sa fiche sans appeler à nouveau l’IA.
+Chaque compte utilise son propre profil candidat actif. Plusieurs CV peuvent être analysés et conservés dans son historique, mais appliquer un CV remplace les informations et les compétences de ce profil. Une ancienne analyse peut être réutilisée depuis sa fiche sans appeler à nouveau l’IA.
 
 ## Analyse complète des offres
 
 À chaque import, toute nouvelle annonce est automatiquement envoyée au worker avec son texte complet utile, ses données `JobPosting`, les compétences validées et le texte du CV. Une annonce déjà analysée est automatiquement réanalysée si son contenu change, mais pas lors d’une synchronisation strictement identique. OpenAI retourne un JSON strict contenant un unique `compatibilityScore`, un résumé et toutes les exigences classées par catégorie, priorité et verdict. Chaque exigence doit citer une preuve issue de l’annonce et, lorsqu’elle existe, une preuve issue du CV.
 
 Le seul pourcentage affiché dans `/jobs` et sur la fiche est celui retourné par l’IA. Une offre sans analyse affiche **À analyser**. Les contrôles déterministes restent internes et servent à normaliser les informations du fournisseur, notamment une durée d’expérience incohérente ou une stack absente du champ `skills`.
+
+Le rapport agrégé **Optimiser mon CV** dispose de sa propre page `/profile/optimisation-cv`, accessible depuis la navigation principale.
 
 Le modèle des offres est configurable séparément avec `JOB_OPENAI_MODEL`. La valeur par défaut est `gpt-5.6-luna`, choisie pour limiter le coût. La commande suivante permet également de mettre en file les anciennes correspondances qui n’ont pas encore été analysées, ou de relancer certains identifiants :
 

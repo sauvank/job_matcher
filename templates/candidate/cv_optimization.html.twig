@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Optimiser mon CV · Job Matcher{% endblock %}
+
+{% block body %}
+    <div class="page-heading page-heading-actions">
+    <div>
+        <p class="eyebrow">Conseils issus des annonces</p>
+        <h1>Optimiser mon CV</h1>
+        <p>Ces recommandations croisent votre CV avec les exigences des offres proposées. Elles n’ajoutent jamais une compétence sans preuve.</p>
+    </div>
+    {% if cvOptimization.analyzedOfferCount > 0 %}
+        <span class="analysis-count">{{ cvOptimization.analyzedOfferCount }} offre{{ cvOptimization.analyzedOfferCount > 1 ? 's' : '' }} analysée{{ cvOptimization.analyzedOfferCount > 1 ? 's' : '' }}</span>
+    {% endif %}
+    </div>
+
+    <section class="optimization-section">
+
+        {% if cvOptimization.analyzedOfferCount == 0 %}
+            <div class="card empty-optimization">
+                <p>Le rapport apparaîtra ici dès que des offres auront été analysées avec votre CV.</p>
+                <a class="button secondary" href="{{ path('app_job_offers') }}">Voir les offres</a>
+            </div>
+        {% else %}
+            {% set priorityActions = [] %}
+            {% if cvOptimization.detailsToImprove is not empty %}
+                {% set priorityActions = priorityActions|merge([{
+                    number: '01', action: 'Clarifier', class: 'warning', item: cvOptimization.detailsToImprove|first
+                }]) %}
+            {% endif %}
+            {% if cvOptimization.unmentionedToVerify is not empty %}
+                {% set priorityActions = priorityActions|merge([{
+                    number: '02', action: 'Vérifier avant d’ajouter', class: 'info', item: cvOptimization.unmentionedToVerify|first
+                }]) %}
+            {% endif %}
+            {% if cvOptimization.strengthsToHighlight is not empty %}
+                {% set priorityActions = priorityActions|merge([{
+                    number: '03', action: 'Mettre en avant', class: 'positive', item: cvOptimization.strengthsToHighlight|first
+                }]) %}
+            {% endif %}
+            {% if priorityActions|length < 3 and cvOptimization.skillsToDevelop is not empty %}
+                {% set priorityActions = priorityActions|merge([{
+                    number: '03', action: 'Développer', class: 'neutral', item: cvOptimization.skillsToDevelop|first
+                }]) %}
+            {% endif %}
+
+            <div class="optimization-plan-heading">
+                <span>Plan d’action prioritaire</span>
+                <small>Commencez par ces {{ priorityActions|length }} actions</small>
+            </div>
+            <div class="optimization-plan">
+                {% for priority in priorityActions %}
+                    <article class="priority-action priority-action-{{ priority.class }}">
+                        <div class="priority-action-topline">
+                            <span>{{ priority.number }}</span>
+                            <small>{{ priority.action }}</small>
+                        </div>
+                        <h3>{{ priority.item.label }}</h3>
+                        <p>{{ priority.item.recommendation }}</p>
+                        <div class="optimization-tags">
+                            {% if priority.item.requiredCount > 0 %}<span class="badge badge-required">Requis dans {{ priority.item.requiredCount }}</span>{% endif %}
+                            <span class="badge badge-neutral">{{ priority.item.offerCount }} offre{{ priority.item.offerCount > 1 ? 's' : '' }}</span>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            {% set groups = [
+                {
+                    title: 'À préciser',
+                    description: 'Preuves présentes, mais trop peu détaillées.',
+                    class: 'warning',
+                    items: cvOptimization.detailsToImprove
+                },
+                {
+                    title: 'Non mentionné — à vérifier',
+                    description: 'À ajouter seulement si vous pouvez le prouver.',
+                    class: 'info',
+                    items: cvOptimization.unmentionedToVerify
+                },
+                {
+                    title: 'Forces à mettre en valeur',
+                    description: 'Éléments déjà prouvés et recherchés.',
+                    class: 'positive',
+                    items: cvOptimization.strengthsToHighlight
+                },
+                {
+                    title: 'À développer',
+                    description: 'Ces écarts reviennent dans les annonces ; ne les ajoutez pas avant de les maîtriser.',
+                    class: 'neutral',
+                    items: cvOptimization.skillsToDevelop
+                }
+            ] %}
+            <div class="optimization-details-heading">
+                <h3>Toutes les recommandations</h3>
+                <p>Ouvrez uniquement la catégorie que vous souhaitez travailler.</p>
+            </div>
+            <div class="optimization-disclosures">
+                {% for group in groups %}
+                    {% if group.items is not empty %}
+                        <details class="optimization-disclosure optimization-disclosure-{{ group.class }}">
+                            <summary>
+                                <span class="disclosure-indicator" aria-hidden="true"></span>
+                                <div>
+                                    <h3>{{ group.title }}</h3>
+                                    <p>{{ group.description }}</p>
+                                </div>
+                                <span class="disclosure-count">{{ group.items|length }} priorité{{ group.items|length > 1 ? 's' : '' }}</span>
+                                <span class="disclosure-chevron" aria-hidden="true">⌄</span>
+                            </summary>
+                            <div class="optimization-list">
+                                {% for item in group.items %}
+                                    <div class="optimization-item">
+                                        <div class="optimization-item-heading">
+                                            <strong>{{ item.label }}</strong>
+                                            <div class="optimization-tags">
+                                                {% if item.requiredCount > 0 %}<span class="badge badge-required">Requis dans {{ item.requiredCount }}</span>{% endif %}
+                                                <span class="badge badge-neutral">{{ item.offerCount }} offre{{ item.offerCount > 1 ? 's' : '' }}</span>
+                                            </div>
+                                        </div>
+                                        <p>{{ item.recommendation }}</p>
+                                        {% if item.cvEvidence %}
+                                            <div class="optimization-evidence"><span>{{ group.class == 'neutral' ? 'Élément actuel' : 'Preuve repérée' }}</span> « {{ item.cvEvidence }} »</div>
+                                        {% endif %}
+                                        <a href="{{ path('app_job_offer_show', {id: item.exampleOfferId}) }}">Voir un exemple : {{ item.exampleOfferTitle }} →</a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

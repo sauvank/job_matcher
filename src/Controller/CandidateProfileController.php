@@ -10,8 +10,6 @@ use App\Candidate\Entity\CandidateSkill;
 use App\Candidate\Enum\SkillLevel;
 use App\Candidate\Translation\CandidateMessage;
 use App\Form\CandidateSkillType;
-use App\Matching\Repository\JobMatchRepository;
-use App\Matching\Service\CvOptimizationReportBuilder;
 use App\Security\Entity\Account;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,15 +24,11 @@ final class CandidateProfileController extends AbstractController
     #[Route('/profile', name: 'app_candidate_profile', methods: ['GET'])]
     public function __invoke(
         #[CurrentUser] Account $account,
-        JobMatchRepository $matchRepository,
-        CvOptimizationReportBuilder $reportBuilder,
     ): Response {
         $profile = $account->getCandidateProfile();
-        $report = $reportBuilder->build($matchRepository->findCompletedForProfile($profile));
 
         return $this->render('candidate/profile.html.twig', [
             'profile' => $profile,
-            'cvOptimization' => $report,
             'skillForm' => $this->createForm(CandidateSkillType::class, new CandidateSkillData(), [
                 'action' => $this->generateUrl('app_candidate_skill_add'),
             ]),
