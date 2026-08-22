@@ -29,10 +29,10 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
                 return null;
             }
 
-            public function findOneByUrl(string $url): ?JobSource
+            public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource
             {
                 foreach ($this->sources as $source) {
-                    if ($source->getUrl() === $url) {
+                    if ($source->getCandidateProfile() === $profile && $source->getUrl() === $url) {
                         return $source;
                     }
                 }
@@ -59,8 +59,9 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             $messageBus,
         );
 
-        $phpSource = $service->configureTitle('Développeur PHP backend', 'Lyon');
-        $symfonySource = $service->configureTitle('Symfony', 'Lyon');
+        $profile = new CandidateProfile();
+        $phpSource = $service->configureTitle($profile, 'Développeur PHP backend', 'Lyon');
+        $symfonySource = $service->configureTitle($profile, 'Symfony', 'Lyon');
 
         self::assertNotSame($phpSource, $symfonySource);
         self::assertCount(2, $sourceRepository->sources);
@@ -75,6 +76,7 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
 
         $urlBuilder = new HelloWorkSearchUrlBuilder();
         $source = new JobSource(
+            $profile,
             'HelloWork — Développeur PHP — Paris',
             $urlBuilder->build('Développeur PHP', 'Paris'),
             JobProviderType::HELLOWORK,
@@ -91,9 +93,9 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
                 return $id === 12 ? $this->source : null;
             }
 
-            public function findOneByUrl(string $url): ?JobSource
+            public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource
             {
-                return $url === $this->source->getUrl() ? $this->source : null;
+                return $profile === $this->source->getCandidateProfile() && $url === $this->source->getUrl() ? $this->source : null;
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);

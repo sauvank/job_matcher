@@ -12,12 +12,14 @@ use App\Security\Repository\AccountRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 final class SecurityController extends AbstractController
@@ -26,7 +28,7 @@ final class SecurityController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils, GoogleOAuthClient $google): Response
     {
         if ($this->getUser() !== null) {
-            return $this->redirectToRoute('app_candidate_profile');
+            return $this->redirectToRoute('app_post_login');
         }
 
         return $this->render('security/login.html.twig', [
@@ -46,25 +48,23 @@ final class SecurityController extends AbstractController
         GoogleOAuthClient $google,
     ): Response {
         if ($this->getUser() !== null) {
-            return $this->redirectToRoute('app_candidate_profile');
+            return $this->redirectToRoute('app_post_login');
         }
-        if ($accounts->count([]) > 0) {
-            $this->addFlash('info', 'La configuration initiale est terminée. Connectez-vous avec le compte existant.');
-
-            return $this->redirectToRoute('app_login');
-        }
-
         $data = new RegistrationData();
         $form = $this->createForm(RegistrationType::class, $data);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $account = new Account($data->email);
-            $account->setPassword($passwordHasher->hashPassword($account, $data->plainPassword));
-            $entityManager->persist($account);
-            $entityManager->flush();
-            $security->login($account, 'form_login');
+            if ($accounts->findOneBy(['email' => mb_strtolower(trim($data->email))]) !== null) {
+                $form->get('email')->addError(new FormError('Un compte utilise déjà cette adresse email.'));
+            } else {
+                $account = new Account($data->email);
+                $account->setPassword($passwordHasher->hashPassword($account, $data->plainPassword));
+                $entityManager->persist($account);
+                $entityManager->flush();
+                $security->login($account, 'form_login');
 
-            return $this->redirectToRoute('app_candidate_profile');
+                return $this->redirectToRoute('app_post_login');
+            }
         }
 
         return $this->render('security/register.html.twig', [
@@ -110,9 +110,6 @@ final class SecurityController extends AbstractController
             $account = $accounts->findOneBy(['googleSubject' => $identity['subject']]);
             $account ??= $accounts->findOneBy(['email' => $identity['email']]);
             if (!$account instanceof Account) {
-                if ($accounts->count([]) > 0) {
-                    throw new \DomainException('Ce Job Matcher personnel est déjà associé à un autre compte.');
-                }
                 $account = new Account($identity['email']);
                 $entityManager->persist($account);
             }
@@ -120,7 +117,7 @@ final class SecurityController extends AbstractController
             $entityManager->flush();
             $security->login($account, 'form_login');
 
-            return $this->redirectToRoute('app_candidate_profile');
+            return $this->redirectToRoute('app_post_login');
         } catch (\Throwable) {
             $this->addFlash('error', 'Impossible de vous connecter avec Google. Réessayez ou utilisez votre mot de passe.');
 
@@ -132,6 +129,16 @@ final class SecurityController extends AbstractController
     public function logout(): never
     {
         throw new \LogicException('Cette route est interceptée par le pare-feu Symfony.');
+    }
+
+    #[Route('/apres-connexion', name: 'app_post_login', methods: ['GET'])]
+    public function postLogin(#[CurrentUser] Account $account): RedirectResponse
+    {
+        if ($account->getCandidateProfile()->getCvDocuments()->isEmpty()) {
+            return $this->redirectToRoute('app_cv_upload');
+        }
+
+        return $this->redirectToRoute('app_candidate_profile');
     }
 
     private function googleCallbackUrl(): string

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\Candidate\Entity\CvDocument;
+use Doctrine\ORM\EntityManagerInterface;
+
 final class SecurityControllerTest extends AuthenticatedWebTestCase
 {
     public function testPrivatePagesRedirectAnonymousVisitorsToLogin(): void
@@ -42,7 +45,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
     public function testOwnerCanLogInWithEmailAndPassword(): void
     {
         $client = self::createClient();
-        $account = $this->owner();
+        $account = $this->account('login-'.bin2hex(random_bytes(6)).'@example.test');
         $crawler = $client->request('GET', '/connexion');
         $form = $crawler->selectButton('Se connecter')->form([
             'email' => mb_strtoupper($account->getEmail()),
@@ -50,9 +53,35 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         ]);
         $client->submit($form);
 
-        self::assertResponseRedirects('/profile');
+        self::assertResponseRedirects('/apres-connexion');
         $client->followRedirect();
-        self::assertSelectorTextContains('h1', 'Mon profil');
+        self::assertResponseRedirects('/cv');
+        $client->followRedirect();
+        self::assertSelectorTextContains('h1', 'Déposer un CV');
+    }
+
+    public function testAccountWithACvIsSentToItsProfileAfterLogin(): void
+    {
+        $client = self::createClient();
+        $uniqueId = bin2hex(random_bytes(6));
+        $account = $this->account('login-with-cv-'.$uniqueId.'@example.test');
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $document = new CvDocument(
+            $account->getCandidateProfile(),
+            'cv-present.pdf',
+            'functional-login-with-cv-'.$uniqueId.'.pdf',
+            'application/pdf',
+            1024,
+            hash('sha256', 'functional-login-with-cv-'.$uniqueId),
+        );
+        $entityManager->persist($document);
+        $entityManager->flush();
+        $client->loginUser($account);
+
+        $client->request('GET', '/apres-connexion');
+
+        self::assertResponseRedirects('/profile');
     }
 
     public function testGoogleLoginUsesStateAndExpectedCallback(): void

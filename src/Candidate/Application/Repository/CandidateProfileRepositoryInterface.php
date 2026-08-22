@@ -8,5 +8,6 @@ use App\Candidate\Entity\CandidateProfile;
 
 interface CandidateProfileRepositoryInterface
 {
-    public function findDefault(): ?CandidateProfile;
+    /** @return list<CandidateProfile> */
+    public function findAll(): array;
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Job\MessageHandler;
 
-use App\Candidate\Application\Repository\CandidateProfileRepositoryInterface;
 use App\Candidate\Entity\CandidateProfile;
 use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
@@ -33,7 +32,8 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
 {
     public function testItImportsAJobOfferIdempotently(): void
     {
-        $source = new JobSource('Fake', 'https://example.test/jobs', JobProviderType::FAKE);
+        $profile = new CandidateProfile();
+        $source = new JobSource($profile, 'Fake', 'https://example.test/jobs', JobProviderType::FAKE);
         $sourceRepository = new class($source) implements JobSourceRepositoryInterface {
             public function __construct(private readonly JobSource $source)
             {
@@ -44,9 +44,9 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
                 return $id === 12 ? $this->source : null;
             }
 
-            public function findOneByUrl(string $url): ?JobSource
+            public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource
             {
-                return $this->source->getUrl() === $url ? $this->source : null;
+                return $this->source->getCandidateProfile() === $profile && $this->source->getUrl() === $url ? $this->source : null;
             }
         };
         $offerRepository = new class implements JobOfferRepositoryInterface {
@@ -59,17 +59,6 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
 
             public function deleteBySource(JobSource $source): void
             {
-            }
-        };
-        $profile = new CandidateProfile();
-        $profileRepository = new class($profile) implements CandidateProfileRepositoryInterface {
-            public function __construct(private readonly CandidateProfile $profile)
-            {
-            }
-
-            public function findDefault(): CandidateProfile
-            {
-                return $this->profile;
             }
         };
         $matchRepository = new class implements JobMatchRepositoryInterface {
@@ -125,7 +114,6 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             $sourceRepository,
             $offerRepository,
             new JobProviderRegistry([new FakeJobProvider()]),
-            $profileRepository,
             $matchService,
             $entityManager,
             $messageBus,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Job\MessageHandler;
 
-use App\Candidate\Application\Repository\CandidateProfileRepositoryInterface;
 use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobOffer;
@@ -27,7 +26,6 @@ final readonly class ImportJobSourceMessageHandler
         private JobSourceRepositoryInterface $sourceRepository,
         private JobOfferRepositoryInterface $offerRepository,
         private JobProviderRegistry $providerRegistry,
-        private CandidateProfileRepositoryInterface $profileRepository,
         private MatchJobOfferService $matchService,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
@@ -61,7 +59,7 @@ final readonly class ImportJobSourceMessageHandler
             $this->entityManager->flush();
 
             $provider = $this->providerRegistry->get($source->getProvider());
-            $profile = $this->profileRepository->findDefault();
+            $profile = $source->getCandidateProfile();
             $importedCount = 0;
 
             foreach ($provider->fetch($source) as $normalizedOffer) {
@@ -74,10 +72,9 @@ final readonly class ImportJobSourceMessageHandler
                     $offer->updateFrom($normalizedOffer);
                 }
 
-                $match = $profile === null ? null : $this->matchService->match($profile, $offer);
-                $analysisStatus = $match?->getSemanticAnalysisStatus();
-                $shouldQueueAnalysis = $match !== null
-                    && !in_array($analysisStatus, [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)
+                $match = $this->matchService->match($profile, $offer);
+                $analysisStatus = $match->getSemanticAnalysisStatus();
+                $shouldQueueAnalysis = !in_array($analysisStatus, [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)
                     && ($contentChanged || in_array($analysisStatus, [SemanticAnalysisStatus::NOT_REQUESTED, SemanticAnalysisStatus::FAILED], true));
                 if ($shouldQueueAnalysis) {
                     $match->queueSemanticAnalysis();

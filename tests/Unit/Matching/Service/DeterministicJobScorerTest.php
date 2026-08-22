@@ -158,7 +158,7 @@ final class DeterministicJobScorerTest extends TestCase
         array $requiredSkills,
         string $qualifications = '',
     ): JobOffer {
-        $source = new JobSource('Test', 'https://example.test', JobProviderType::FAKE);
+        $source = new JobSource(new CandidateProfile(), 'Test', 'https://example.test', JobProviderType::FAKE);
         $normalized = new NormalizedJobOffer(
             externalId: 'offer-1',
             url: 'https://example.test/offer-1',

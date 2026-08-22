@@ -16,9 +16,4 @@ final class CandidateProfileRepository extends ServiceEntityRepository implement
     {
         parent::__construct($registry, CandidateProfile::class);
     }
-
-    public function findDefault(): ?CandidateProfile
-    {
-        return $this->findOneBy([], ['id' => 'ASC']);
-    }
 }

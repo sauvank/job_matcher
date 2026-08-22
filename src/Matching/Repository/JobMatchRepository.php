@@ -31,10 +31,12 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     }
 
     /** @return list<JobMatch> */
-    public function findRanked(int $limit = 100): array
+    public function findRankedForProfile(CandidateProfile $profile, int $limit = 100): array
     {
         return $this->createQueryBuilder('jobMatch')
             ->addSelect('CASE WHEN jobMatch.semanticScore IS NULL THEN 1 ELSE 0 END AS HIDDEN semanticScoreMissing')
+            ->andWhere('jobMatch.candidateProfile = :profile')
+            ->setParameter('profile', $profile)
             ->orderBy('semanticScoreMissing', 'ASC')
             ->addOrderBy('jobMatch.semanticScore', 'DESC')
             ->addOrderBy('jobMatch.semanticAnalyzedAt', 'DESC')

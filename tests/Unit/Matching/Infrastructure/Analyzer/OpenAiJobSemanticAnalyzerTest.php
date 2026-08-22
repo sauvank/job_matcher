@@ -57,7 +57,7 @@ final class OpenAiJobSemanticAnalyzerTest extends TestCase
     private function offer(): JobOffer
     {
         return new JobOffer(
-            new JobSource('HelloWork', 'https://example.test', JobProviderType::HELLOWORK),
+            new JobSource(new CandidateProfile(), 'HelloWork', 'https://example.test', JobProviderType::HELLOWORK),
             new NormalizedJobOffer(
                 externalId: '79162910',
                 url: 'https://www.hellowork.com/fr-fr/emplois/79162910.html',

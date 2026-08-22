@@ -93,6 +93,11 @@ final class JobOffer
         return $this->id;
     }
 
+    public function getSource(): JobSource
+    {
+        return $this->source;
+    }
+
     public function getExternalId(): string
     {
         return $this->externalId;

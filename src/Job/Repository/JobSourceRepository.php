@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Job\Repository;
 
+use App\Candidate\Entity\CandidateProfile;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobSource;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -22,8 +23,14 @@ final class JobSourceRepository extends ServiceEntityRepository implements JobSo
         return $this->find($id);
     }
 
-    public function findOneByUrl(string $url): ?JobSource
+    public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource
     {
-        return $this->findOneBy(['url' => $url]);
+        return $this->findOneBy(['candidateProfile' => $profile, 'url' => $url]);
+    }
+
+    /** @return list<JobSource> */
+    public function findForProfile(CandidateProfile $profile): array
+    {
+        return $this->findBy(['candidateProfile' => $profile], ['createdAt' => 'DESC']);
     }
 }

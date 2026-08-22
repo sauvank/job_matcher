@@ -23,6 +23,11 @@ abstract class AuthenticatedWebTestCase extends WebTestCase
 
     protected function owner(): Account
     {
+        return $this->account('owner@example.test');
+    }
+
+    protected function account(string $email): Account
+    {
         $repository = self::getContainer()->get(AccountRepository::class);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $passwordHasher = self::getContainer()->get(UserPasswordHasherInterface::class);
@@ -30,7 +35,7 @@ abstract class AuthenticatedWebTestCase extends WebTestCase
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
         self::assertInstanceOf(UserPasswordHasherInterface::class, $passwordHasher);
 
-        $account = $repository->findOneBy([]) ?? new Account('owner@example.test');
+        $account = $repository->findOneBy(['email' => $email]) ?? new Account($email);
         $account->setPassword($passwordHasher->hashPassword($account, 'correct horse battery staple'));
         if ($account->getId() === null) {
             $entityManager->persist($account);

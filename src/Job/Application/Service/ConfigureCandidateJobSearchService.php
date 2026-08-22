@@ -33,10 +33,10 @@ final readonly class ConfigureCandidateJobSearchService
             throw new \DomainException(JobMessage::SEARCH_CRITERIA_REQUIRED);
         }
 
-        return $this->configureTitle($title, $location);
+        return $this->configureTitle($profile, $title, $location);
     }
 
-    public function configureTitle(string $title, string $location): JobSource
+    public function configureTitle(CandidateProfile $profile, string $title, string $location): JobSource
     {
         $title = trim($title);
         $location = trim($location);
@@ -46,10 +46,10 @@ final readonly class ConfigureCandidateJobSearchService
 
         $url = $this->urlBuilder->build($title, $location);
         $name = mb_substr(sprintf('HelloWork — %s — %s', $title, $location), 0, 120);
-        $source = $this->sourceRepository->findOneByUrl($url);
+        $source = $this->sourceRepository->findOneByProfileAndUrl($profile, $url);
 
         if ($source === null) {
-            $source = new JobSource($name, $url, JobProviderType::HELLOWORK);
+            $source = new JobSource($profile, $name, $url, JobProviderType::HELLOWORK);
             $this->entityManager->persist($source);
         }
 

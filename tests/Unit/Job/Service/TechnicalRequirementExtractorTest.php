@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Job\Service;
 
+use App\Candidate\Entity\CandidateProfile;
 use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
@@ -26,7 +27,7 @@ final class TechnicalRequirementExtractorTest extends TestCase
             <h2>Le profil recherché</h2>
             HTML;
         $offer = new JobOffer(
-            new JobSource('HelloWork', 'https://example.test', JobProviderType::HELLOWORK),
+            new JobSource(new CandidateProfile(), 'HelloWork', 'https://example.test', JobProviderType::HELLOWORK),
             new NormalizedJobOffer(
                 externalId: '79315367',
                 url: 'https://www.hellowork.com/fr-fr/emplois/79315367.html',
@@ -71,7 +72,7 @@ final class TechnicalRequirementExtractorTest extends TestCase
     {
         $description = '<p>Stack technique : PHP 8.4 / Symfony 6.4 / API REST / Git / MySQL / MariaDB / Angular 21<br /></p>';
         $offer = new JobOffer(
-            new JobSource('HelloWork', 'https://example.test', JobProviderType::HELLOWORK),
+            new JobSource(new CandidateProfile(), 'HelloWork', 'https://example.test', JobProviderType::HELLOWORK),
             new NormalizedJobOffer(
                 externalId: '79162910',
                 url: 'https://www.hellowork.com/fr-fr/emplois/79162910.html',

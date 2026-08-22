@@ -10,21 +10,21 @@ use App\Candidate\Application\DTO\CvUploadData;
 use App\Candidate\Application\Message\ProcessCvMessage;
 use App\Candidate\Application\Service\ApplyCvAnalysisService;
 use App\Candidate\Application\Storage\CvStorageInterface;
-use App\Candidate\Entity\CandidateProfile;
 use App\Candidate\Entity\CvDocument;
 use App\Candidate\Enum\CvStatus;
-use App\Candidate\Infrastructure\Persistence\CandidateProfileRepository;
 use App\Candidate\Infrastructure\Persistence\CvDocumentRepository;
 use App\Candidate\Translation\CandidateMessage;
 use App\Form\CvReviewType;
 use App\Form\CvUploadType;
 use App\Job\Application\Service\ConfigureCandidateJobSearchService;
+use App\Security\Entity\Account;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\UX\Turbo\TurboBundle;
 
@@ -33,7 +33,7 @@ final class CvController extends AbstractController
     #[Route('/cv', name: 'app_cv_upload', methods: ['GET', 'POST'])]
     public function upload(
         Request $request,
-        CandidateProfileRepository $profileRepository,
+        #[CurrentUser] Account $account,
         CvDocumentRepository $documentRepository,
         CvStorageInterface $storage,
         EntityManagerInterface $entityManager,
@@ -44,7 +44,7 @@ final class CvController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid() && $data->file !== null) {
-            $profile = $profileRepository->findDefault() ?? new CandidateProfile();
+            $profile = $account->getCandidateProfile();
             $storedFile = $storage->store($data->file);
 
             if ($profile->getId() !== null) {
@@ -65,7 +65,6 @@ final class CvController extends AbstractController
                 $storedFile->size,
                 $storedFile->sha256,
             );
-            $entityManager->persist($profile);
             $entityManager->persist($document);
             $entityManager->flush();
 
@@ -82,17 +81,19 @@ final class CvController extends AbstractController
 
         return $this->render('cv/upload.html.twig', [
             'form' => $form,
-            'profile' => $profileRepository->findDefault(),
+            'profile' => $account->getCandidateProfile(),
         ]);
     }
 
     #[Route('/cv/{id<\d+>}', name: 'app_cv_show', methods: ['GET', 'POST'])]
     public function show(
         CvDocument $document,
+        #[CurrentUser] Account $account,
         Request $request,
         ApplyCvAnalysisService $applyService,
         ConfigureCandidateJobSearchService $jobSearchService,
     ): Response {
+        $this->assertOwnsDocument($account, $document);
         $analysis = null;
         $reviewForm = null;
 
@@ -130,10 +131,12 @@ final class CvController extends AbstractController
     #[Route('/cv/{id<\d+>}/reanalyze', name: 'app_cv_reanalyze', methods: ['POST'])]
     public function reanalyze(
         CvDocument $document,
+        #[CurrentUser] Account $account,
         Request $request,
         EntityManagerInterface $entityManager,
         MessageBusInterface $messageBus,
     ): Response {
+        $this->assertOwnsDocument($account, $document);
         if (!$this->isCsrfTokenValid('reanalyze-cv-'.$document->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
@@ -157,11 +160,13 @@ final class CvController extends AbstractController
     #[Route('/cv/{id<\d+>}/delete', name: 'app_cv_delete', methods: ['POST'])]
     public function delete(
         CvDocument $document,
+        #[CurrentUser] Account $account,
         Request $request,
         CvStorageInterface $storage,
         EntityManagerInterface $entityManager,
         TranslatorInterface $translator,
     ): Response {
+        $this->assertOwnsDocument($account, $document);
         if (!$this->isCsrfTokenValid('delete-cv-'.$document->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
@@ -191,5 +196,12 @@ final class CvController extends AbstractController
         $this->addFlash('success', CandidateMessage::DOCUMENT_DELETED);
 
         return $this->redirectToRoute('app_cv_upload');
+    }
+
+    private function assertOwnsDocument(Account $account, CvDocument $document): void
+    {
+        if ($account->getCandidateProfile()->getId() !== $document->getCandidateProfile()->getId()) {
+            throw $this->createNotFoundException(CandidateMessage::DOCUMENT_NOT_FOUND);
+        }
     }
 }

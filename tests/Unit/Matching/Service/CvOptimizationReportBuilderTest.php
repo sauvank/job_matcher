@@ -49,7 +49,7 @@ final class CvOptimizationReportBuilderTest extends TestCase
     /** @param list<array<string, string|null>> $requirements */
     private function match(CandidateProfile $profile, int $offerId, string $title, array $requirements): JobMatch
     {
-        $source = new JobSource('Source', 'https://example.test/source-'.$offerId, JobProviderType::FAKE);
+        $source = new JobSource($profile, 'Source', 'https://example.test/source-'.$offerId, JobProviderType::FAKE);
         $offer = new JobOffer($source, new NormalizedJobOffer(
             externalId: 'offer-'.$offerId,
             url: 'https://example.test/offer-'.$offerId,

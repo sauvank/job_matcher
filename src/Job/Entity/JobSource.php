@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Job\Entity;
 
+use App\Candidate\Entity\CandidateProfile;
 use App\Job\Enum\JobProviderType;
 use App\Job\Enum\JobSourceSyncStatus;
 use App\Job\Repository\JobSourceRepository;
@@ -14,13 +15,17 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: JobSourceRepository::class)]
 #[ORM\Table(name: 'job_source')]
-#[ORM\UniqueConstraint(name: 'uniq_job_source_url', columns: ['url'])]
+#[ORM\UniqueConstraint(name: 'uniq_job_source_profile_url', columns: ['candidate_profile_id', 'url'])]
 final class JobSource
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private CandidateProfile $candidateProfile;
 
     #[ORM\Column(length: 120)]
     private string $name;
@@ -59,8 +64,9 @@ final class JobSource
     #[ORM\OneToMany(mappedBy: 'source', targetEntity: JobOffer::class)]
     private Collection $offers;
 
-    public function __construct(string $name, string $url, JobProviderType $provider)
+    public function __construct(CandidateProfile $candidateProfile, string $name, string $url, JobProviderType $provider)
     {
+        $this->candidateProfile = $candidateProfile;
         $this->name = $name;
         $this->url = $url;
         $this->provider = $provider;
@@ -72,6 +78,11 @@ final class JobSource
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getCandidateProfile(): CandidateProfile
+    {
+        return $this->candidateProfile;
     }
 
     public function getName(): string

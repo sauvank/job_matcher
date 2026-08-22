@@ -9,24 +9,29 @@ use App\Matching\Entity\JobMatch;
 use App\Matching\Message\AnalyzeJobMatchMessage;
 use App\Matching\Repository\JobMatchRepository;
 use App\Matching\Translation\MatchingMessage;
+use App\Security\Entity\Account;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class JobOfferController extends AbstractController
 {
     #[Route('/jobs', name: 'app_job_offers', methods: ['GET'])]
-    public function index(JobMatchRepository $repository): Response
+    public function index(#[CurrentUser] Account $account, JobMatchRepository $repository): Response
     {
-        return $this->render('job/offer/index.html.twig', ['matches' => $repository->findRanked()]);
+        return $this->render('job/offer/index.html.twig', [
+            'matches' => $repository->findRankedForProfile($account->getCandidateProfile()),
+        ]);
     }
 
     #[Route('/jobs/{id<\d+>}', name: 'app_job_offer_show', methods: ['GET'])]
-    public function show(JobMatch $match): Response
+    public function show(JobMatch $match, #[CurrentUser] Account $account): Response
     {
+        $this->assertOwnsMatch($account, $match);
         $semanticAnalysis = $match->getSemanticAnalysis();
 
         return $this->render('job/offer/show.html.twig', [
@@ -38,10 +43,12 @@ final class JobOfferController extends AbstractController
     #[Route('/jobs/{id<\d+>}/analyze', name: 'app_job_offer_analyze', methods: ['POST'])]
     public function analyze(
         JobMatch $match,
+        #[CurrentUser] Account $account,
         Request $request,
         EntityManagerInterface $entityManager,
         MessageBusInterface $messageBus,
     ): Response {
+        $this->assertOwnsMatch($account, $match);
         if (!$this->isCsrfTokenValid('analyze-job-'.$match->getId(), (string) $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
@@ -55,5 +62,12 @@ final class JobOfferController extends AbstractController
         $this->addFlash('success', MatchingMessage::SEMANTIC_ANALYSIS_QUEUED);
 
         return $this->redirectToRoute('app_job_offer_show', ['id' => $id]);
+    }
+
+    private function assertOwnsMatch(Account $account, JobMatch $match): void
+    {
+        if ($account->getCandidateProfile()->getId() !== $match->getCandidateProfile()->getId()) {
+            throw $this->createNotFoundException(MatchingMessage::MATCH_NOT_FOUND);
+        }
     }
 }

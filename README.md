@@ -29,7 +29,7 @@ make setup
 
 L'application est ensuite accessible sur <http://localhost:8080>. PostgreSQL et Redis sont exposés respectivement sur les ports `5433` et `6380` pour les outils locaux.
 
-Au premier accès, ouvrez `/inscription` pour créer l'unique compte propriétaire. Le reste de l'application est ensuite protégé par connexion email et mot de passe.
+Ouvrez `/inscription` pour créer un compte. Chaque compte possède son propre profil, ses CV, ses recherches et ses analyses ; le reste de l'application est protégé par connexion email et mot de passe.
 
 Pour activer « Continuer avec Google », créez un client OAuth Web dans Google Cloud, autorisez l'URI de retour `http://localhost:8080/connexion/google/retour`, puis définissez dans `.env.local` :
 
@@ -38,7 +38,7 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 ```
 
-Un compte Google portant le même email est associé au compte local existant. Comme l'application utilise un profil personnel unique, toute autre identité est refusée.
+Un compte Google portant le même email est associé au compte local existant. Une nouvelle identité Google crée son propre espace personnel.
 
 ## Commandes utiles
 

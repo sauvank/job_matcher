@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\Job\DTO\NormalizedJobOffer;
+use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
 use App\Job\Repository\JobSourceRepository;
+use App\Matching\DTO\MatchScore;
+use App\Matching\Entity\JobMatch;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class JobPagesControllerTest extends AuthenticatedWebTestCase
@@ -37,10 +41,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
     public function testAJobSourceCanBeDeleted(): void
     {
         $client = self::createClient();
-        $this->loginOwner($client);
+        $account = $this->loginOwner($client);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
-        $source = new JobSource('Recherche à supprimer', 'https://example.test/jobs/delete-me', JobProviderType::HELLOWORK);
+        $source = new JobSource($account->getCandidateProfile(), 'Recherche à supprimer', 'https://example.test/jobs/delete-me', JobProviderType::HELLOWORK);
         $entityManager->persist($source);
         $entityManager->flush();
         $sourceId = $source->getId();
@@ -60,5 +64,66 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $repository = self::getContainer()->get(JobSourceRepository::class);
         self::assertInstanceOf(JobSourceRepository::class, $repository);
         self::assertNull($repository->find($sourceId));
+    }
+
+    public function testAnotherAccountsSourcesAndMatchesAreHidden(): void
+    {
+        $client = self::createClient();
+        $owner = $this->owner();
+        $otherAccount = $this->account('other-jobs@example.test');
+        $client->loginUser($owner);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(6));
+
+        $source = new JobSource(
+            $otherAccount->getCandidateProfile(),
+            'Recherche privée autre compte',
+            'https://example.test/jobs/private-other-account-'.$uniqueId,
+            JobProviderType::FAKE,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'private-other-account-'.$uniqueId,
+            url: 'https://example.test/jobs/private-other-account-'.$uniqueId.'/offer',
+            title: 'Offre privée autre compte',
+            company: 'Entreprise privée',
+            location: 'Paris',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description privée',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $otherAccount->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+        $sourceId = $source->getId();
+        $matchId = $match->getId();
+        self::assertNotNull($sourceId);
+        self::assertNotNull($matchId);
+
+        $client->request('GET', '/sources');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextNotContains('body', 'Recherche privée autre compte');
+
+        $client->request('GET', '/jobs');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextNotContains('body', 'Offre privée autre compte');
+
+        $client->request('POST', '/sources/'.$sourceId.'/sync');
+        self::assertResponseStatusCodeSame(404);
+
+        $client->request('GET', '/jobs/'.$matchId);
+        self::assertResponseStatusCodeSame(404);
     }
 }

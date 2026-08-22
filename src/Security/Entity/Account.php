@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Security\Entity;
 
+use App\Candidate\Entity\CandidateProfile;
 use App\Security\Repository\AccountRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -30,6 +31,10 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, unique: true, nullable: true)]
     private ?string $googleSubject = null;
 
+    #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\JoinColumn(nullable: false)]
+    private CandidateProfile $candidateProfile;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -41,6 +46,7 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->email = $normalizedEmail;
+        $this->candidateProfile = new CandidateProfile();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -68,6 +74,11 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPassword(): ?string
     {
         return $this->password;
+    }
+
+    public function getCandidateProfile(): CandidateProfile
+    {
+        return $this->candidateProfile;
     }
 
     public function setPassword(string $password): void

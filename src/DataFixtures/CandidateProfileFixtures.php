@@ -4,19 +4,26 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Candidate\Entity\CandidateProfile;
 use App\Candidate\Entity\CandidateSkill;
 use App\Candidate\Entity\Skill;
 use App\Candidate\Enum\SkillCategory;
 use App\Candidate\Enum\SkillLevel;
+use App\Security\Entity\Account;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class CandidateProfileFixtures extends Fixture
 {
+    public function __construct(private readonly UserPasswordHasherInterface $passwordHasher)
+    {
+    }
+
     public function load(ObjectManager $manager): void
     {
-        $profile = new CandidateProfile();
+        $account = new Account('demo@example.test');
+        $account->setPassword($this->passwordHasher->hashPassword($account, 'demo-password-change-me'));
+        $profile = $account->getCandidateProfile();
         $profile->updateFromCv('Développeur backend PHP/Symfony', 'Paris', 6, 'CV de démonstration PHP Symfony Docker PostgreSQL PHPUnit.');
 
         foreach ([
@@ -30,7 +37,7 @@ final class CandidateProfileFixtures extends Fixture
             $manager->persist($skill);
         }
 
-        $manager->persist($profile);
+        $manager->persist($account);
         $manager->flush();
     }
 }

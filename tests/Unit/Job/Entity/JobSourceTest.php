@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Job\Entity;
 
+use App\Candidate\Entity\CandidateProfile;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
 use App\Job\Enum\JobSourceSyncStatus;
@@ -13,7 +14,7 @@ final class JobSourceTest extends TestCase
 {
     public function testItUpdatesItsGeneratedSearch(): void
     {
-        $source = new JobSource('Ancienne recherche', 'https://example.test/old', JobProviderType::HELLOWORK);
+        $source = new JobSource(new CandidateProfile(), 'Ancienne recherche', 'https://example.test/old', JobProviderType::HELLOWORK);
         $source->markSyncStarted();
         $source->completeSync();
 
@@ -30,7 +31,7 @@ final class JobSourceTest extends TestCase
 
     public function testItTracksImportProgress(): void
     {
-        $source = new JobSource('Recherche', 'https://example.test/jobs', JobProviderType::HELLOWORK);
+        $source = new JobSource(new CandidateProfile(), 'Recherche', 'https://example.test/jobs', JobProviderType::HELLOWORK);
 
         $source->queueSync();
         self::assertSame(JobSourceSyncStatus::QUEUED, $source->getSyncStatus());

@@ -15,6 +15,7 @@ final class AccountTest extends TestCase
 
         self::assertSame('owner@example.test', $account->getUserIdentifier());
         self::assertSame(['ROLE_USER'], $account->getRoles());
+        self::assertNotSame($account->getCandidateProfile(), (new Account('other@example.test'))->getCandidateProfile());
     }
 
     public function testGoogleConnectionCannotBeReplacedByAnotherIdentity(): void

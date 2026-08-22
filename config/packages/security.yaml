@@ -22,7 +22,7 @@ security:
                 username_parameter: email
                 password_parameter: password
                 enable_csrf: true
-                default_target_path: app_candidate_profile
+                default_target_path: app_post_login
             login_throttling:
                 max_attempts: 5
                 interval: '15 minutes'
