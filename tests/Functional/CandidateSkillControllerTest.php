@@ -33,6 +33,7 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.skill-level-field option[value="ADVANCED"][selected]');
         self::assertSelectorExists('#skill-level-filter option[value="ADVANCED"]');
         self::assertSelectorExists('.skill-management-row[data-skill-level="ADVANCED"]');
+        self::assertSelectorExists('.empty-filtered-skills[hidden]');
 
         $levelSelect = $crawler->filter('.skill-level-field select');
         $skillIdValue = str_replace(['levels[', ']'], '', (string) $levelSelect->attr('name'));
