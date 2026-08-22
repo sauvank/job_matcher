@@ -10,6 +10,7 @@
 /vendor/
 /.phpunit.result.cache
 /PROJECT_CONTEXT.local.md
+/.deploy/
 ###< symfony/framework-bundle ###
 
 ###> friendsofphp/php-cs-fixer ###

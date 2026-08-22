@@ -82,6 +82,21 @@ ghcr.io/sauvank/job-matcher-nginx
 
 Le workflow utilise uniquement le `GITHUB_TOKEN` éphémère fourni par GitHub avec la permission `packages: write` ; aucun secret GHCR personnel n'est requis pour publier.
 
+### Déploiement automatisé
+
+Un push sur `main` lance les contrôles qualité, publie les images PHP et nginx portant le SHA immuable du commit, puis prépare un déploiement vers l'environnement GitHub `production`. Aucun nom d'hôte, port, utilisateur ou chemin du serveur n'est inscrit dans le dépôt.
+
+Créer l'environnement **Settings → Environments → production**, limiter ses branches de déploiement à `main`, ajouter une approbation obligatoire, puis y enregistrer ces secrets :
+
+- `VPS_HOST` : nom d'hôte ou adresse du serveur ;
+- `VPS_PORT` : port SSH ;
+- `VPS_USER` : utilisateur SSH dédié ;
+- `VPS_DEPLOY_PATH` : chemin absolu du clone de production ;
+- `VPS_SSH_PRIVATE_KEY` : clé privée SSH dédiée au déploiement ;
+- `VPS_KNOWN_HOSTS` : ligne `known_hosts` du serveur, dont l'empreinte a été vérifiée avant enregistrement.
+
+Le serveur conserve seul `.env.prod.local` et tous les secrets applicatifs. `scripts/deploy-production.sh` verrouille les déploiements concurrents, refuse un commit absent de `origin/main`, sauvegarde PostgreSQL dans `.deploy/backups`, applique les migrations, recrée les services applicatifs et contrôle `/health`. Si une étape échoue, il tente de restaurer la révision et les images précédentes ; une migration de schéma incompatible reste une opération à traiter manuellement depuis la sauvegarde.
+
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 
 ## Import HelloWork
