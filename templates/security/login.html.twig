@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion — Job Matcher{% endblock %}
+
+{% block body %}
+    <section class="auth-shell">
+        <div class="page-heading auth-heading">
+            <p class="eyebrow">Espace privé</p>
+            <h1>Heureux de vous revoir.</h1>
+            <p>Connectez-vous pour retrouver votre CV et vos offres analysées.</p>
+        </div>
+
+        <div class="card form-card auth-card">
+            {% if error %}
+                <div class="auth-error" role="alert">Email ou mot de passe incorrect.</div>
+            {% endif %}
+            <form method="post" action="{{ path('app_login') }}">
+                <div>
+                    <label for="email">Adresse email</label>
+                    <input id="email" type="email" name="email" value="{{ lastEmail }}" autocomplete="email" required autofocus>
+                </div>
+                <div>
+                    <label for="password">Mot de passe</label>
+                    <input id="password" type="password" name="password" autocomplete="current-password" required>
+                </div>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <button class="auth-submit" type="submit">Se connecter</button>
+            </form>
+
+            <div class="auth-separator"><span>ou</span></div>
+            <a class="button google-button {{ googleEnabled ? '' : 'disabled' }}" href="{{ path('app_google_start') }}" aria-disabled="{{ googleEnabled ? 'false' : 'true' }}">
+                <span class="google-mark" aria-hidden="true">G</span> Continuer avec Google
+            </a>
+            {% if not googleEnabled %}<p class="help-text auth-note">Google sera disponible après configuration des identifiants OAuth.</p>{% endif %}
+            <p class="auth-footer">Première utilisation ? <a href="{{ path('app_register') }}">Créer le compte</a></p>
+        </div>
+    </section>
+{% endblock %}

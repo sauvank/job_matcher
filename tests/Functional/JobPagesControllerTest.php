@@ -8,13 +8,13 @@ use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
 use App\Job\Repository\JobSourceRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-final class JobPagesControllerTest extends WebTestCase
+final class JobPagesControllerTest extends AuthenticatedWebTestCase
 {
     public function testJobSourcePageIsAvailable(): void
     {
         $client = self::createClient();
+        $this->loginOwner($client);
         $client->request('GET', '/sources');
 
         self::assertResponseIsSuccessful();
@@ -26,6 +26,7 @@ final class JobPagesControllerTest extends WebTestCase
     public function testJobOfferPageIsAvailable(): void
     {
         $client = self::createClient();
+        $this->loginOwner($client);
         $client->request('GET', '/jobs');
 
         self::assertResponseIsSuccessful();
@@ -36,6 +37,7 @@ final class JobPagesControllerTest extends WebTestCase
     public function testAJobSourceCanBeDeleted(): void
     {
         $client = self::createClient();
+        $this->loginOwner($client);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
         $source = new JobSource('Recherche à supprimer', 'https://example.test/jobs/delete-me', JobProviderType::HELLOWORK);

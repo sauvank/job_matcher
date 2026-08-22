@@ -15,12 +15,22 @@
                     <span class="brand-mark" aria-hidden="true">JM</span>
                     <span>Job Matcher</span>
                 </a>
-                <nav aria-label="Navigation principale">
-                    <a class="{{ currentRoute starts with 'app_cv' ? 'active' : '' }}" href="{{ path('app_cv_upload') }}">Mon CV</a>
-                    <a class="{{ currentRoute starts with 'app_candidate' ? 'active' : '' }}" href="{{ path('app_candidate_profile') }}">Mon profil</a>
-                    <a class="{{ currentRoute starts with 'app_job_source' ? 'active' : '' }}" href="{{ path('app_job_sources') }}">Sources</a>
-                    <a class="{{ currentRoute starts with 'app_job_offer' ? 'active' : '' }}" href="{{ path('app_job_offers') }}">Offres</a>
-                </nav>
+                {% if app.user %}
+                    <nav aria-label="Navigation principale">
+                        <a class="{{ currentRoute starts with 'app_cv' ? 'active' : '' }}" href="{{ path('app_cv_upload') }}">Mon CV</a>
+                        <a class="{{ currentRoute starts with 'app_candidate' ? 'active' : '' }}" href="{{ path('app_candidate_profile') }}">Mon profil</a>
+                        <a class="{{ currentRoute starts with 'app_job_source' ? 'active' : '' }}" href="{{ path('app_job_sources') }}">Sources</a>
+                        <a class="{{ currentRoute starts with 'app_job_offer' ? 'active' : '' }}" href="{{ path('app_job_offers') }}">Offres</a>
+                        <form method="post" action="{{ path('app_logout') }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                            <button class="nav-logout" type="submit">Déconnexion</button>
+                        </form>
+                    </nav>
+                {% else %}
+                    <nav aria-label="Navigation principale">
+                        <a class="{{ currentRoute == 'app_login' ? 'active' : '' }}" href="{{ path('app_login') }}">Connexion</a>
+                    </nav>
+                {% endif %}
             </div>
         </header>
         <main class="container main-content">

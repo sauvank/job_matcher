@@ -51,9 +51,11 @@ turbo-frame { display: block; }
 .brand { display: inline-flex; align-items: center; gap: .7rem; color: var(--text); font-weight: 750; letter-spacing: -.02em; text-decoration: none; }
 .brand-mark { display: grid; width: 2.15rem; height: 2.15rem; place-items: center; border-radius: .7rem; background: var(--primary); color: white; box-shadow: 0 8px 18px rgb(91 91 214 / 24%); font-size: .72rem; }
 .site-header nav { display: flex; align-items: center; gap: .25rem; }
-.site-header nav a { padding: .65rem .85rem; border-radius: .65rem; color: var(--muted); font-size: .93rem; font-weight: 600; text-decoration: none; transition: .18s ease; }
+.site-header nav form { margin: 0; }
+.site-header nav a, .nav-logout { padding: .65rem .85rem; border: 0; border-radius: .65rem; background: transparent; color: var(--muted); box-shadow: none; font-size: .93rem; font-weight: 600; text-decoration: none; transition: .18s ease; }
 .site-header nav a:hover { background: var(--surface-soft); color: var(--text); }
 .site-header nav a.active { background: var(--primary-soft); color: var(--primary-dark); }
+.nav-logout:hover { background: var(--surface-soft); color: var(--danger); box-shadow: none; transform: none; }
 .container { width: min(100% - 3rem, 1120px); margin-inline: auto; }
 .main-content { min-height: calc(100vh - 145px); padding-block: clamp(3rem, 6vw, 5.5rem); }
 .site-footer { display: flex; width: min(100% - 3rem, 1120px); min-height: 72px; margin: 0 auto; border-top: 1px solid var(--border); align-items: center; justify-content: space-between; color: var(--subtle); font-size: .84rem; }
@@ -145,6 +147,23 @@ p { color: var(--muted); }
 .flash-success { border-color: #bde5d5; background: var(--success-soft); color: var(--success); }
 .flash-info { border-color: #c8def5; background: var(--info-soft); color: var(--info); }
 .flash-error { border-color: #f2c8ce; background: var(--danger-soft); color: var(--danger); }
+
+.auth-shell { display: grid; max-width: 940px; margin: 0 auto; grid-template-columns: 1fr minmax(340px, 420px); align-items: center; gap: clamp(2.5rem, 8vw, 6rem); }
+.auth-heading { margin: 0; }
+.auth-heading h1 { font-size: clamp(2.5rem, 5vw, 4rem); }
+.auth-card { width: 100%; }
+.auth-card input[type="email"], .auth-card input[type="password"] { width: 100%; min-height: 48px; padding: .78rem .9rem; border: 1px solid var(--border-strong); border-radius: .72rem; outline: none; background: var(--surface-soft); color: var(--text); }
+.auth-card input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgb(91 91 214 / 10%); }
+.auth-submit, .google-button { width: 100%; }
+.google-button { border-color: var(--border-strong); background: white; color: var(--text); box-shadow: none; }
+.google-button:hover { border-color: #c7cbd8; background: var(--surface-soft); color: var(--text); }
+.google-button.disabled { opacity: .55; }
+.google-mark { display: grid; width: 1.45rem; height: 1.45rem; margin-right: .55rem; place-items: center; border-radius: 50%; background: #4285f4; color: white; font-size: .78rem; font-weight: 850; }
+.auth-separator { display: flex; margin: 1.4rem 0; align-items: center; gap: .8rem; color: var(--subtle); font-size: .78rem; }
+.auth-separator::before, .auth-separator::after { height: 1px; flex: 1; background: var(--border); content: ""; }
+.auth-error { margin-bottom: 1.2rem; padding: .8rem; border-radius: .7rem; background: var(--danger-soft); color: var(--danger); font-size: .88rem; }
+.auth-note, .auth-footer { margin: 1rem 0 0; text-align: center; }
+.auth-footer { font-size: .88rem; }
 
 .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .profile-grid span, .profile-grid strong { display: block; }
@@ -288,6 +307,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--primary); 
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @include viewport-at-most(850px) {
+    .auth-shell { max-width: 520px; grid-template-columns: 1fr; gap: 2rem; }
     .hero-grid { grid-template-columns: 1fr; }
     .hero-preview { max-width: 520px; }
     .feature-grid, .profile-grid, .explanation-grid { grid-template-columns: 1fr; }

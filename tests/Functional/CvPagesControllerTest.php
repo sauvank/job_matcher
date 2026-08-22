@@ -9,13 +9,13 @@ use App\Candidate\Entity\CvDocument;
 use App\Candidate\Infrastructure\Persistence\CandidateProfileRepository;
 use App\Candidate\Infrastructure\Persistence\CvDocumentRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-final class CvPagesControllerTest extends WebTestCase
+final class CvPagesControllerTest extends AuthenticatedWebTestCase
 {
     public function testCvUploadPageUsesTheCustomDropZone(): void
     {
         $client = self::createClient();
+        $this->loginOwner($client);
         $client->request('GET', '/cv');
 
         self::assertResponseIsSuccessful();
@@ -26,6 +26,7 @@ final class CvPagesControllerTest extends WebTestCase
     public function testProfileShowsTheCvOptimizationArea(): void
     {
         $client = self::createClient();
+        $this->loginOwner($client);
         $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
@@ -36,6 +37,7 @@ final class CvPagesControllerTest extends WebTestCase
     public function testACompletedCvCanBeDeletedWithTurbo(): void
     {
         $client = self::createClient();
+        $this->loginOwner($client);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $profileRepository = self::getContainer()->get(CandidateProfileRepository::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);

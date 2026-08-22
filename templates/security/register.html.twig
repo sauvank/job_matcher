@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer le compte — Job Matcher{% endblock %}
+
+{% block body %}
+    <section class="auth-shell">
+        <div class="page-heading auth-heading">
+            <p class="eyebrow">Configuration initiale</p>
+            <h1>Protégez votre Job Matcher.</h1>
+            <p>Créez l’unique compte propriétaire de cet espace personnel.</p>
+        </div>
+
+        <div class="card form-card auth-card">
+            {{ form_start(form) }}
+                {{ form_row(form.email) }}
+                {{ form_row(form.plainPassword) }}
+                <button class="auth-submit" type="submit">Créer mon compte</button>
+            {{ form_end(form) }}
+            {% if googleEnabled %}
+                <div class="auth-separator"><span>ou</span></div>
+                <a class="button google-button" href="{{ path('app_google_start') }}"><span class="google-mark" aria-hidden="true">G</span> Créer avec Google</a>
+            {% endif %}
+            <p class="auth-footer">Déjà configuré ? <a href="{{ path('app_login') }}">Se connecter</a></p>
+        </div>
+    </section>
+{% endblock %}

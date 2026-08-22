@@ -29,6 +29,17 @@ make setup
 
 L'application est ensuite accessible sur <http://localhost:8080>. PostgreSQL et Redis sont exposés respectivement sur les ports `5433` et `6380` pour les outils locaux.
 
+Au premier accès, ouvrez `/inscription` pour créer l'unique compte propriétaire. Le reste de l'application est ensuite protégé par connexion email et mot de passe.
+
+Pour activer « Continuer avec Google », créez un client OAuth Web dans Google Cloud, autorisez l'URI de retour `http://localhost:8080/connexion/google/retour`, puis définissez dans `.env.local` :
+
+```dotenv
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+```
+
+Un compte Google portant le même email est associé au compte local existant. Comme l'application utilise un profil personnel unique, toute autre identité est refusée.
+
 ## Commandes utiles
 
 ```bash
@@ -107,7 +118,7 @@ docker compose exec -T php php bin/console app:matches:analyze 18 26
 - L'analyse OpenAI implique l'envoi du texte du CV et de l’annonce à un fournisseur externe et génère un coût d'API. Les requêtes utilisent `store: false`.
 - Seule la première page d'une recherche HelloWork est importée, avec un maximum de dix fiches par synchronisation.
 - Un score IA reste une aide à la décision : les preuves et les éléments `UNKNOWN` doivent être relus avant de candidater.
-- L'application n'intègre pas encore d'authentification et doit rester accessible en local.
+- L'application utilise un compte propriétaire unique ; elle ne fournit pas encore de récupération de mot de passe.
 
 ## Roadmap
 
