@@ -176,6 +176,6 @@ docker compose exec -T php php bin/console app:matches:analyze 18 26
 
 ## Roadmap
 
-1. contrôle de disponibilité ;
+1. synchronisation automatique quotidienne des recherches, avec mise à jour des annonces et détection de celles qui ont expiré ;
 2. filtres du dashboard Twig ;
-3. pagination des sources et planification quotidienne.
+3. pagination des sources.
