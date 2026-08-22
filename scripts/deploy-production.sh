@@ -60,6 +60,25 @@ fi
 
 healthcheck_url="http://127.0.0.1:$app_http_port/health"
 
+wait_for_application() {
+    local max_attempts=${1:-30}
+    local attempt
+
+    for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+        if curl --fail --silent --connect-timeout 2 --max-time 5 "$healthcheck_url" >/dev/null 2>&1; then
+            return 0
+        fi
+
+        if ((attempt < max_attempts)); then
+            sleep 3
+        fi
+    done
+
+    echo "The local application health check failed after $max_attempts attempts." >&2
+    curl --fail --silent --show-error --connect-timeout 2 --max-time 5 \
+        "$healthcheck_url" >/dev/null
+}
+
 restore_previous_release() {
     local failed_status=$?
 
@@ -70,9 +89,9 @@ restore_previous_release() {
         sed -i "s|^PHP_IMAGE=.*$|PHP_IMAGE=$previous_php_image|" .env.prod.local
         sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=$previous_nginx_image|" .env.prod.local
         "${rollback_compose[@]}" pull php worker nginx
-        "${rollback_compose[@]}" up -d --force-recreate php worker nginx
-        curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 3 \
-            "$healthcheck_url" >/dev/null
+        "${rollback_compose[@]}" up -d --force-recreate --no-deps php worker
+        "${rollback_compose[@]}" up -d --force-recreate --no-deps nginx
+        wait_for_application 20
         set -e
     fi
 
@@ -98,11 +117,11 @@ sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=ghcr.io/sauvank/job-matcher-nginx:sha-$de
 "${compose[@]}" pull php worker nginx
 "${compose[@]}" run --rm php \
     php bin/console doctrine:migrations:migrate --no-interaction
-"${compose[@]}" up -d --force-recreate php worker nginx
+"${compose[@]}" up -d --force-recreate --no-deps php worker
+"${compose[@]}" up -d --force-recreate --no-deps nginx
 
 echo "Waiting for the local application health check."
-curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 3 \
-    "$healthcheck_url" >/dev/null
+wait_for_application 30
 
 "${compose[@]}" ps
 if [[ $release_compose_file != "$project_dir/compose.prod.yaml" ]]; then
