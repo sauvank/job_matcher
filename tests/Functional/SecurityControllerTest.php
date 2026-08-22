@@ -15,6 +15,21 @@ use Symfony\Component\Mime\Email;
 
 final class SecurityControllerTest extends AuthenticatedWebTestCase
 {
+    public function testAuthenticatedUserCanLogOutFromNavigation(): void
+    {
+        $client = self::createClient();
+        $this->loginOwner($client);
+
+        $crawler = $client->request('GET', '/profile');
+        self::assertSelectorExists('form[action="/deconnexion"][data-turbo="false"]');
+        $client->submit($crawler->selectButton('Déconnexion')->form());
+
+        self::assertResponseRedirects('/');
+        $client->followRedirect();
+        self::assertSelectorExists('a[href="/connexion"]');
+        self::assertSelectorNotExists('button.nav-logout');
+    }
+
     public function testPrivatePagesRedirectAnonymousVisitorsToLogin(): void
     {
         $client = self::createClient();
