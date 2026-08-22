@@ -73,6 +73,15 @@ make prod-build
 
 Sur le serveur, copier `.env.prod.example` vers `.env.prod.local`, remplacer toutes les valeurs factices et limiter ses droits avec `chmod 600 .env.prod.local`. Ce fichier ne doit jamais être commité.
 
+Le workflow manuel `.github/workflows/publish-images.yaml` construit et publie les deux cibles sur GitHub Container Registry. Dans GitHub, ouvrir **Actions → Publish production images → Run workflow**, puis conserver `latest` ou saisir une version. Chaque image reçoit également une étiquette immuable `sha-<commit>` :
+
+```text
+ghcr.io/sauvank/job-matcher-php
+ghcr.io/sauvank/job-matcher-nginx
+```
+
+Le workflow utilise uniquement le `GITHUB_TOKEN` éphémère fourni par GitHub avec la permission `packages: write` ; aucun secret GHCR personnel n'est requis pour publier.
+
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 
 ## Import HelloWork
