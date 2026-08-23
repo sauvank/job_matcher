@@ -95,7 +95,14 @@ services:
       CLAMD_CONF_StreamMaxLength: 11M
       CLAMD_CONF_MaxFileSize: 11M
       CLAMD_CONF_MaxScanSize: 50M
-      FRESHCLAM_CHECKS: 12
+      CLAMD_CONF_ConcurrentDatabaseReload: "no"
+      FRESHCLAM_CHECKS: 2
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 600s
     restart: unless-stopped
     volumes:
       - clamav_data:/var/lib/clamav
