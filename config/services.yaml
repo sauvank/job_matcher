@@ -90,6 +90,10 @@ services:
         arguments:
             $maxOffers: '%app.hellowork.max_offers%'
 
+    App\Job\Scheduler\JobSyncSchedule:
+        arguments:
+            $cache: '@app.job_sync_scheduler_cache'
+
     App\Matching\Service\DeterministicJobScorer:
         arguments:
             $weights: '%app.matching.weights%'

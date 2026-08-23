@@ -29,6 +29,12 @@ final class JobSourceRepository extends ServiceEntityRepository implements JobSo
     }
 
     /** @return list<JobSource> */
+    public function findEnabled(): array
+    {
+        return $this->findBy(['enabled' => true], ['id' => 'ASC']);
+    }
+
+    /** @return list<JobSource> */
     public function findForProfile(CandidateProfile $profile): array
     {
         return $this->findBy(['candidateProfile' => $profile], ['createdAt' => 'DESC']);

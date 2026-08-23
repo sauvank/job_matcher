@@ -40,6 +40,7 @@
                             <span class="arrow-link" aria-hidden="true">→</span>
                         </div>
                         <div class="offer-meta">
+                            {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
                             {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
                             {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
                             {% if offer.minimumSalary or offer.maximumSalary %}

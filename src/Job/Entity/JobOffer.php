@@ -168,6 +168,16 @@ final class JobOffer
         return $this->status;
     }
 
+    public function hasExpiredBy(\DateTimeImmutable $now): bool
+    {
+        return $this->validThrough !== null && $this->validThrough < $now->setTime(0, 0);
+    }
+
+    public function markExpired(): void
+    {
+        $this->status = JobOfferStatus::EXPIRED;
+    }
+
     /** @return array<string, mixed> */
     public function getRawPayload(): array
     {

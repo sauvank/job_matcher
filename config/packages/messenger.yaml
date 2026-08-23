@@ -16,6 +16,7 @@ framework:
         routing:
             App\Candidate\Application\Message\ProcessCvMessage: async
             App\Job\Message\ImportJobSourceMessage: async
+            App\Job\Message\RefreshJobSourcesMessage: async
             App\Matching\Message\AnalyzeJobMatchMessage: async
 
 when@test:

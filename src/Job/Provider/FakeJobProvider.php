@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Job\Provider;
 
 use App\Job\DTO\NormalizedJobOffer;
+use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
+use App\Job\Enum\JobOfferAvailability;
 use App\Job\Enum\JobProviderType;
 
 final class FakeJobProvider implements JobProviderInterface
@@ -33,5 +35,10 @@ final class FakeJobProvider implements JobProviderInterface
             validThrough: null,
             rawPayload: ['provider' => 'fake'],
         );
+    }
+
+    public function checkAvailability(JobOffer $offer): JobOfferAvailability
+    {
+        return JobOfferAvailability::AVAILABLE;
     }
 }

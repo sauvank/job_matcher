@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Job\Provider;
 
 use App\Job\DTO\NormalizedJobOffer;
+use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
+use App\Job\Enum\JobOfferAvailability;
 use App\Job\Enum\JobProviderType;
 
 interface JobProviderInterface
@@ -14,4 +16,6 @@ interface JobProviderInterface
 
     /** @return iterable<NormalizedJobOffer> */
     public function fetch(JobSource $source): iterable;
+
+    public function checkAvailability(JobOffer $offer): JobOfferAvailability;
 }

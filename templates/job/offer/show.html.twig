@@ -11,6 +11,7 @@
             <p class="eyebrow">{{ offer.company ?? 'Entreprise non renseignée' }}</p>
             <h1>{{ offer.title }}</h1>
             <div class="offer-meta">
+                {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
                 {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
                 {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
                 {% if offer.yearsOfExperience is not null %}<span>{{ offer.yearsOfExperience }} ans d’expérience</span>{% endif %}

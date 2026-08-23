@@ -11,5 +11,8 @@ interface JobOfferRepositoryInterface
 {
     public function findOneBySourceAndExternalId(JobSource $source, string $externalId): ?JobOffer;
 
+    /** @return list<JobOffer> */
+    public function findActiveBySource(JobSource $source): array;
+
     public function deleteBySource(JobSource $source): void;
 }

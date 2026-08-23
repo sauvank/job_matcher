@@ -7,6 +7,7 @@ namespace App\Job\MessageHandler;
 use App\Job\Application\Repository\JobOfferRepositoryInterface;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobOffer;
+use App\Job\Enum\JobOfferAvailability;
 use App\Job\Message\ImportJobSourceMessage;
 use App\Job\Provider\JobProviderRegistry;
 use App\Job\Translation\JobMessage;
@@ -61,8 +62,10 @@ final readonly class ImportJobSourceMessageHandler
             $provider = $this->providerRegistry->get($source->getProvider());
             $profile = $source->getCandidateProfile();
             $importedCount = 0;
+            $seenExternalIds = [];
 
             foreach ($provider->fetch($source) as $normalizedOffer) {
+                $seenExternalIds[$normalizedOffer->externalId] = true;
                 $offer = $this->offerRepository->findOneBySourceAndExternalId($source, $normalizedOffer->externalId);
                 $contentChanged = $offer === null || !$offer->hasSameContentAs($normalizedOffer);
                 if ($offer === null) {
@@ -90,6 +93,16 @@ final readonly class ImportJobSourceMessageHandler
                         throw new \LogicException('A persisted job match must have an identifier.');
                     }
                     $this->messageBus->dispatch(new AnalyzeJobMatchMessage($matchId));
+                }
+            }
+
+            foreach ($this->offerRepository->findActiveBySource($source) as $offer) {
+                if (isset($seenExternalIds[$offer->getExternalId()])) {
+                    continue;
+                }
+
+                if ($offer->hasExpiredBy(new \DateTimeImmutable()) || $provider->checkAvailability($offer) === JobOfferAvailability::EXPIRED) {
+                    $offer->markExpired();
                 }
             }
 

@@ -48,6 +48,11 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
                 return $this->source->getCandidateProfile() === $profile && $this->source->getUrl() === $url ? $this->source : null;
             }
+
+            public function findEnabled(): array
+            {
+                return $this->source->isEnabled() ? [$this->source] : [];
+            }
         };
         $offerRepository = new class implements JobOfferRepositoryInterface {
             public ?JobOffer $offer = null;
@@ -55,6 +60,11 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             public function findOneBySourceAndExternalId(JobSource $source, string $externalId): ?JobOffer
             {
                 return $this->offer;
+            }
+
+            public function findActiveBySource(JobSource $source): array
+            {
+                return $this->offer === null ? [] : [$this->offer];
             }
 
             public function deleteBySource(JobSource $source): void

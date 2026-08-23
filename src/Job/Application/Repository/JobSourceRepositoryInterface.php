@@ -12,4 +12,7 @@ interface JobSourceRepositoryInterface
     public function get(int $id): ?JobSource;
 
     public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource;
+
+    /** @return list<JobSource> */
+    public function findEnabled(): array;
 }

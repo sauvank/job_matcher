@@ -15,5 +15,15 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            app.job_sync_scheduler_cache:
+                adapter: cache.adapter.redis
+                provider: '%env(LOCK_DSN)%'
+
+when@test:
+    framework:
+        cache:
+            pools:
+                app.job_sync_scheduler_cache:
+                    adapter: cache.adapter.array
+                    provider: null

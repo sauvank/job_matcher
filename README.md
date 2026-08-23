@@ -112,7 +112,7 @@ Les messages asynchrones utilisent Redis. Après trois échecs avec délai expon
 
 La page `/sources` permet d’ajouter plusieurs intitulés ou groupes de mots-clés, par exemple `Développeur PHP backend`, `Symfony` et `PHP`. Chaque intitulé crée une recherche HelloWork séparée en utilisant la localisation du profil, puis un message Messenger est envoyé au worker. Une URL identique réutilise la source existante au lieu de créer un doublon.
 
-Le connecteur récupère la première page de résultats, limite chaque synchronisation à dix fiches et lit les données structurées `JobPosting` de chaque offre. Les offres sont normalisées puis mises à jour de façon idempotente à partir de l'identifiant HelloWork.
+Le connecteur récupère la première page de résultats, limite chaque synchronisation à dix fiches et lit les données structurées `JobPosting` de chaque offre. Les offres sont normalisées puis mises à jour de façon idempotente à partir de l'identifiant HelloWork. Les recherches actives sont resynchronisées chaque jour à 04:00, heure de Paris. Une offre absente des résultats courants est marquée expirée seulement si sa date de validité est dépassée ou si HelloWork confirme sa disparition par une réponse 404/410 ; une erreur temporaire reste neutre.
 
 Les résultats classés sont visibles sur `/jobs`. Chaque fiche détaille le score et les raisons qui l’expliquent. Pour calculer les scores d’offres importées avant l’ajout du moteur :
 
@@ -161,7 +161,7 @@ docker compose exec -T php php bin/console app:matches:analyze 18 26
 ## Décisions
 
 - Symfony 7.4 LTS privilégie la stabilité tout en restant compatible avec PHP 8.4.
-- Redis est utilisé pour les traitements asynchrones et les futurs verrous d'idempotence.
+- Redis est utilisé pour les traitements asynchrones, les verrous d'idempotence et l'état persistant de l'ordonnanceur quotidien.
 - La file d'échec reste dans PostgreSQL afin d'être facilement inspectable.
 - L'interface reste en Twig/CSS pour limiter le coût de la V1.
 - Les entités Doctrine feront partie du domaine : un second modèle de persistance serait superflu ici.
@@ -176,6 +176,6 @@ docker compose exec -T php php bin/console app:matches:analyze 18 26
 
 ## Roadmap
 
-1. synchronisation automatique quotidienne des recherches, avec mise à jour des annonces et détection de celles qui ont expiré ;
-2. filtres du dashboard Twig ;
-3. pagination des sources.
+1. filtres du dashboard Twig ;
+2. pagination des sources ;
+3. préférences candidat : salaire minimum, contrats et télétravail.

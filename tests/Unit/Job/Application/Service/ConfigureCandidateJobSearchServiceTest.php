@@ -39,6 +39,11 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
 
                 return null;
             }
+
+            public function findEnabled(): array
+            {
+                return array_values(array_filter($this->sources, static fn (JobSource $source): bool => $source->isEnabled()));
+            }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(2))
@@ -96,6 +101,11 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource
             {
                 return $profile === $this->source->getCandidateProfile() && $url === $this->source->getUrl() ? $this->source : null;
+            }
+
+            public function findEnabled(): array
+            {
+                return $this->source->isEnabled() ? [$this->source] : [];
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
