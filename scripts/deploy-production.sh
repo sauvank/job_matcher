@@ -79,6 +79,28 @@ wait_for_application() {
         "$healthcheck_url" >/dev/null
 }
 
+print_security_service_diagnostics() {
+    local service
+    local container_id
+
+    echo "Security service diagnostics before rollback:" >&2
+    "${compose[@]}" ps -a clamav extractor >&2 || true
+
+    for service in clamav extractor; do
+        container_id=$("${compose[@]}" ps -a -q "$service" 2>/dev/null || true)
+        if [[ -z $container_id ]]; then
+            continue
+        fi
+
+        echo "State for $service:" >&2
+        docker inspect \
+            --format 'status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} restarts={{.RestartCount}}{{if .State.Health}} health={{.State.Health.Status}}{{end}} error={{.State.Error}}' \
+            "$container_id" >&2 || true
+        echo "Last logs for $service:" >&2
+        "${compose[@]}" logs --no-color --tail=150 "$service" >&2 || true
+    done
+}
+
 restore_previous_release() {
     local failed_status=$?
 
@@ -86,10 +108,11 @@ restore_previous_release() {
     if [[ $deployment_started -eq 1 ]]; then
         echo "Deployment failed; restoring the previous application images." >&2
         set +e
+        print_security_service_diagnostics
         sed -i "s|^PHP_IMAGE=.*$|PHP_IMAGE=$previous_php_image|" .env.prod.local
         sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=$previous_nginx_image|" .env.prod.local
         "${rollback_compose[@]}" pull php worker nginx
-        "${rollback_compose[@]}" up -d --force-recreate --no-deps php worker
+        "${rollback_compose[@]}" up -d --force-recreate --no-deps --remove-orphans php worker
         "${rollback_compose[@]}" up -d --force-recreate --no-deps nginx
         wait_for_application 20
         set -e
