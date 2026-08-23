@@ -40,6 +40,9 @@ services:
     App\Candidate\Application\Storage\CvStorageInterface:
         alias: App\Candidate\Infrastructure\Storage\LocalPrivateCvStorage
 
+    App\Candidate\Application\Security\CvMalwareScannerInterface:
+        alias: App\Candidate\Infrastructure\Security\ClamAvCvMalwareScanner
+
     App\Candidate\Application\Extraction\CvTextExtractorInterface:
         alias: App\Candidate\Infrastructure\Extraction\LocalCvTextExtractor
 
@@ -74,6 +77,12 @@ services:
             $maxDocxEntries: '%app.cv_max_docx_entries%'
             $maxDocxEntryBytes: '%app.cv_max_docx_entry_bytes%'
             $maxDocxUncompressedBytes: '%app.cv_max_docx_uncompressed_bytes%'
+
+    App\Candidate\Infrastructure\Security\ClamAvCvMalwareScanner:
+        arguments:
+            $dsn: '%env(CLAMAV_DSN)%'
+            $timeoutSeconds: 30
+            $chunkBytes: 8192
 
     App\Candidate\Infrastructure\Analyzer\ConfiguredCvAnalyzer:
         arguments:

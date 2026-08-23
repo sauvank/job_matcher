@@ -11,6 +11,7 @@ services:
       DATABASE_URL: postgresql://app:app@database:5432/job_matcher?serverVersion=16&charset=utf8
       LOCK_DSN: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      CLAMAV_DSN: tcp://clamav:3310
     volumes:
       - ./:/app
       - vendor_data:/app/vendor
@@ -43,6 +44,7 @@ services:
       DATABASE_URL: postgresql://app:app@database:5432/job_matcher?serverVersion=16&charset=utf8
       LOCK_DSN: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+      CLAMAV_DSN: tcp://clamav:3310
     volumes:
       - ./:/app
       - vendor_data:/app/vendor
@@ -52,6 +54,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      clamav:
+        condition: service_healthy
+
+  clamav:
+    image: clamav/clamav-debian:1.4
+    environment:
+      CLAMD_CONF_StreamMaxLength: 11M
+      CLAMD_CONF_MaxFileSize: 11M
+      CLAMD_CONF_MaxScanSize: 50M
+      FRESHCLAM_CHECKS: 12
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
 
   database:
     image: postgres:16-alpine
@@ -86,3 +101,4 @@ volumes:
   redis_data:
   vendor_data:
   assets_vendor_data:
+  clamav_data:

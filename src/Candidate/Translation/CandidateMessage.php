@@ -36,6 +36,9 @@ final class CandidateMessage
     public const INVALID_PDF_STRUCTURE = 'candidate.cv.extraction.invalid_pdf_structure';
     public const INVALID_DOCX_STRUCTURE = 'candidate.cv.extraction.invalid_docx_structure';
     public const DOCX_LIMIT_EXCEEDED = 'candidate.cv.extraction.docx_limit_exceeded';
+    public const MALWARE_DETECTED = 'candidate.cv.security.malware_detected';
+    public const MALWARE_SCAN_FAILED = 'candidate.cv.security.scan_failed';
+    public const MALWARE_SCAN_UNAVAILABLE = 'candidate.cv.security.scan_unavailable';
     public const ANALYSIS_NOT_APPLICABLE = 'candidate.cv.analysis.not_applicable';
     public const DOCUMENT_NOT_FOUND = 'candidate.cv.document_not_found';
     public const PROCESS_ALREADY_RUNNING = 'candidate.cv.process.already_running';

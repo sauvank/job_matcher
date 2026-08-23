@@ -10,6 +10,8 @@ use App\Candidate\Application\Extraction\CvTextExtractorInterface;
 use App\Candidate\Application\Message\ProcessCvMessage;
 use App\Candidate\Application\MessageHandler\ProcessCvMessageHandler;
 use App\Candidate\Application\Repository\CvDocumentRepositoryInterface;
+use App\Candidate\Application\Security\CvMalwareScanException;
+use App\Candidate\Application\Security\CvMalwareScannerInterface;
 use App\Candidate\Entity\CandidateProfile;
 use App\Candidate\Entity\CvDocument;
 use App\Candidate\Enum\CvStatus;
@@ -54,6 +56,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
         $entityManager->expects(self::exactly(3))->method('flush');
         $handler = new ProcessCvMessageHandler(
             $repository,
+            $this->createStub(CvMalwareScannerInterface::class),
             $extractor,
             new FakeCvAnalyzer(),
             $entityManager,
@@ -103,6 +106,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
         $entityManager->expects(self::exactly(3))->method('flush');
         $handler = new ProcessCvMessageHandler(
             $repository,
+            $this->createStub(CvMalwareScannerInterface::class),
             $extractor,
             $analyzer,
             $entityManager,
@@ -116,6 +120,100 @@ final class ProcessCvMessageHandlerTest extends TestCase
         } catch (UnrecoverableMessageHandlingException) {
             self::assertSame(CvStatus::FAILED, $document->getStatus());
             self::assertSame(CandidateMessage::OPENAI_QUOTA_EXCEEDED, $document->getErrorMessage());
+        }
+    }
+
+    public function testItRejectsAnInfectedCvBeforeExtraction(): void
+    {
+        $document = new CvDocument(
+            new CandidateProfile(),
+            'cv.pdf',
+            'stored.pdf',
+            'application/pdf',
+            1234,
+            str_repeat('a', 64),
+        );
+        $repository = new class($document) implements CvDocumentRepositoryInterface {
+            public function __construct(private readonly CvDocument $document)
+            {
+            }
+
+            public function get(int $id): ?CvDocument
+            {
+                return $id === 12 ? $this->document : null;
+            }
+        };
+        $scanner = $this->createStub(CvMalwareScannerInterface::class);
+        $scanner->method('scan')->willThrowException(
+            new CvMalwareScanException(CandidateMessage::MALWARE_DETECTED, false),
+        );
+        $extractor = $this->createMock(CvTextExtractorInterface::class);
+        $extractor->expects(self::never())->method('extract');
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::exactly(2))->method('flush');
+        $handler = new ProcessCvMessageHandler(
+            $repository,
+            $scanner,
+            $extractor,
+            new FakeCvAnalyzer(),
+            $entityManager,
+            new LockFactory(new InMemoryStore()),
+            new NullLogger(),
+        );
+
+        try {
+            $handler(new ProcessCvMessage(12));
+            self::fail('Une exception non récupérable était attendue.');
+        } catch (UnrecoverableMessageHandlingException) {
+            self::assertSame(CvStatus::FAILED, $document->getStatus());
+            self::assertSame(CandidateMessage::MALWARE_DETECTED, $document->getErrorMessage());
+        }
+    }
+
+    public function testItRetriesWhenTheMalwareScannerIsUnavailable(): void
+    {
+        $document = new CvDocument(
+            new CandidateProfile(),
+            'cv.pdf',
+            'stored.pdf',
+            'application/pdf',
+            1234,
+            str_repeat('a', 64),
+        );
+        $repository = new class($document) implements CvDocumentRepositoryInterface {
+            public function __construct(private readonly CvDocument $document)
+            {
+            }
+
+            public function get(int $id): ?CvDocument
+            {
+                return $id === 12 ? $this->document : null;
+            }
+        };
+        $expectedException = new CvMalwareScanException(CandidateMessage::MALWARE_SCAN_UNAVAILABLE, true);
+        $scanner = $this->createStub(CvMalwareScannerInterface::class);
+        $scanner->method('scan')->willThrowException($expectedException);
+        $extractor = $this->createMock(CvTextExtractorInterface::class);
+        $extractor->expects(self::never())->method('extract');
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::exactly(2))->method('flush');
+        $handler = new ProcessCvMessageHandler(
+            $repository,
+            $scanner,
+            $extractor,
+            new FakeCvAnalyzer(),
+            $entityManager,
+            new LockFactory(new InMemoryStore()),
+            new NullLogger(),
+        );
+
+        try {
+            $handler(new ProcessCvMessage(12));
+            self::fail('Une exception récupérable était attendue.');
+        } catch (CvMalwareScanException $exception) {
+            self::assertSame($expectedException, $exception);
+            self::assertSame(CvStatus::FAILED, $document->getStatus());
+            self::assertSame(CandidateMessage::MALWARE_SCAN_UNAVAILABLE, $document->getErrorMessage());
         }
     }
 }

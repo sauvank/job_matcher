@@ -66,6 +66,8 @@ Le fichier `compose.prod.yaml` décrit une exécution sans montage du code sourc
 
 Avant toute extraction, le worker vérifie la signature et la structure du fichier. Un PDF doit posséder un en-tête, une fin et une table de références cohérents. Un DOCX doit être un paquet OpenXML non chiffré contenant ses composants obligatoires, sans chemin dangereux ni doublon. Les archives sont limitées à 1 000 entrées, 10 Mo par entrée et 50 Mo au total après décompression afin de bloquer les bombes ZIP.
 
+Le worker transmet ensuite le fichier par flux à un service ClamAV local. Un fichier infecté est refusé définitivement avant extraction ; une indisponibilité de l’antivirus provoque une nouvelle tentative asynchrone. Le port ClamAV n’est jamais publié sur l’hôte et ses signatures sont conservées dans le volume `clamav_data`.
+
 Pour valider la configuration puis construire les deux images localement avec des valeurs factices :
 
 ```bash

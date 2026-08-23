@@ -47,6 +47,10 @@ candidate:
       invalid_pdf_structure: "La structure du fichier PDF est invalide."
       invalid_docx_structure: "La structure du fichier DOCX est invalide."
       docx_limit_exceeded: "Le fichier DOCX dépasse les limites de sécurité après décompression."
+    security:
+      malware_detected: "Le CV a été refusé car l’antivirus a détecté un contenu malveillant."
+      scan_failed: "L’antivirus n’a pas pu rendre de verdict fiable. L’analyse sera retentée automatiquement."
+      scan_unavailable: "L’antivirus est temporairement indisponible. L’analyse sera retentée automatiquement."
     document_not_found: "Le CV demandé est introuvable."
     deleted: "Le CV, son texte extrait et son analyse ont été supprimés. Les informations déjà validées dans le profil sont conservées."
     delete_processing: "Ce CV pourra être supprimé dès que son analyse sera terminée."

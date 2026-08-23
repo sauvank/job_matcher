@@ -10,6 +10,8 @@ use App\Candidate\Application\Extraction\CvExtractionException;
 use App\Candidate\Application\Extraction\CvTextExtractorInterface;
 use App\Candidate\Application\Message\ProcessCvMessage;
 use App\Candidate\Application\Repository\CvDocumentRepositoryInterface;
+use App\Candidate\Application\Security\CvMalwareScanException;
+use App\Candidate\Application\Security\CvMalwareScannerInterface;
 use App\Candidate\Enum\CvStatus;
 use App\Candidate\Translation\CandidateMessage;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,6 +25,7 @@ final readonly class ProcessCvMessageHandler
 {
     public function __construct(
         private CvDocumentRepositoryInterface $repository,
+        private CvMalwareScannerInterface $malwareScanner,
         private CvTextExtractorInterface $extractor,
         private CvAnalyzerInterface $analyzer,
         private EntityManagerInterface $entityManager,
@@ -53,6 +56,7 @@ final readonly class ProcessCvMessageHandler
             $document->markExtracting();
             $this->entityManager->flush();
 
+            $this->malwareScanner->scan($document);
             $text = $this->extractor->extract($document);
             $document->markAnalyzing($text);
             $this->entityManager->flush();
@@ -65,6 +69,19 @@ final readonly class ProcessCvMessageHandler
                 'cvDocumentId' => $message->cvDocumentId,
                 'analyzer' => $this->analyzer->name(),
             ]);
+        } catch (CvMalwareScanException $exception) {
+            $document->fail($exception->getMessage());
+            $this->entityManager->flush();
+            $this->logger->error($exception->getMessage(), [
+                'cvDocumentId' => $message->cvDocumentId,
+                'retryable' => $exception->retryable,
+            ]);
+
+            if (!$exception->retryable) {
+                throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
+            }
+
+            throw $exception;
         } catch (CvExtractionException $exception) {
             $document->fail($exception->getMessage());
             $this->entityManager->flush();
