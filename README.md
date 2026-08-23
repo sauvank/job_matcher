@@ -64,6 +64,8 @@ Le workflow GitHub Actions `.github/workflows/ci.yaml` s’exécute à chaque pu
 
 Le fichier `compose.prod.yaml` décrit une exécution sans montage du code source et sans exposition publique de PostgreSQL ou Redis. Deux cibles sont construites depuis le même `Dockerfile` : `php_prod`, utilisée par PHP-FPM et le worker, et `nginx_prod`, qui contient les fichiers publics compilés. Les CV privés résident dans un volume monté sur `/app/var/cv` et les sessions de production sont conservées dans Redis.
 
+Avant toute extraction, le worker vérifie la signature et la structure du fichier. Un PDF doit posséder un en-tête, une fin et une table de références cohérents. Un DOCX doit être un paquet OpenXML non chiffré contenant ses composants obligatoires, sans chemin dangereux ni doublon. Les archives sont limitées à 1 000 entrées, 10 Mo par entrée et 50 Mo au total après décompression afin de bloquer les bombes ZIP.
+
 Pour valider la configuration puis construire les deux images localement avec des valeurs factices :
 
 ```bash

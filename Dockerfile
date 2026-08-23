@@ -1,8 +1,8 @@
 FROM php:8.4-fpm-alpine AS php_base
 
-RUN apk add --no-cache git icu-libs libpq-dev poppler-utils unzip \
-    && apk add --no-cache --virtual .build-deps icu-dev linux-headers $PHPIZE_DEPS \
-    && docker-php-ext-install intl opcache pdo_pgsql \
+RUN apk add --no-cache git icu-libs libpq-dev libzip poppler-utils unzip \
+    && apk add --no-cache --virtual .build-deps icu-dev libzip-dev linux-headers $PHPIZE_DEPS \
+    && docker-php-ext-install intl opcache pdo_pgsql zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del .build-deps

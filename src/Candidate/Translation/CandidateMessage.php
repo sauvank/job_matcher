@@ -32,6 +32,10 @@ final class CandidateMessage
     public const TEXT_TOO_SHORT = 'candidate.cv.extraction.text_too_short';
     public const PDF_EXTRACTION_FAILED = 'candidate.cv.extraction.pdf_failed';
     public const DOCX_EXTRACTION_FAILED = 'candidate.cv.extraction.docx_failed';
+    public const INVALID_FILE_SIGNATURE = 'candidate.cv.extraction.invalid_signature';
+    public const INVALID_PDF_STRUCTURE = 'candidate.cv.extraction.invalid_pdf_structure';
+    public const INVALID_DOCX_STRUCTURE = 'candidate.cv.extraction.invalid_docx_structure';
+    public const DOCX_LIMIT_EXCEEDED = 'candidate.cv.extraction.docx_limit_exceeded';
     public const ANALYSIS_NOT_APPLICABLE = 'candidate.cv.analysis.not_applicable';
     public const DOCUMENT_NOT_FOUND = 'candidate.cv.document_not_found';
     public const PROCESS_ALREADY_RUNNING = 'candidate.cv.process.already_running';

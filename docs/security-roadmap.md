@@ -10,7 +10,7 @@ Cette roadmap ordonne les travaux selon le risque pour les comptes, les CV et l'
   - [x] Vérifier l'adresse email avant d'activer une nouvelle inscription locale.
   - [x] Préserver l'accès des comptes historiques via une migration explicite.
 - [ ] **SEC-02 — Isoler l'analyse des CV non fiables**
-  - [ ] Valider la signature et la structure PDF/DOCX, avec limite décompressée.
+  - [x] Valider la signature et la structure PDF/DOCX, avec limite décompressée.
   - [ ] Analyser les fichiers avec un antivirus local.
   - [ ] Exécuter l'extraction sans secret, sans réseau et avec des limites CPU/mémoire/PID.
 - [ ] **SEC-03 — Réduire les privilèges de déploiement**

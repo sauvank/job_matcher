@@ -8,13 +8,16 @@ use App\Candidate\Application\Extraction\CvExtractionException;
 use App\Candidate\Application\Extraction\CvTextExtractorInterface;
 use App\Candidate\Application\Storage\CvStorageInterface;
 use App\Candidate\Entity\CvDocument;
+use App\Candidate\Infrastructure\Validation\CvFileValidator;
 use App\Candidate\Translation\CandidateMessage;
 use Symfony\Component\Process\Process;
 
 final readonly class LocalCvTextExtractor implements CvTextExtractorInterface
 {
-    public function __construct(private CvStorageInterface $storage)
-    {
+    public function __construct(
+        private CvStorageInterface $storage,
+        private CvFileValidator $fileValidator,
+    ) {
     }
 
     public function extract(CvDocument $document): string
@@ -23,6 +26,8 @@ final readonly class LocalCvTextExtractor implements CvTextExtractorInterface
         if (!is_file($path)) {
             throw new CvExtractionException(CandidateMessage::FILE_NOT_FOUND);
         }
+
+        $this->fileValidator->validate($path, $document->getMimeType());
 
         $text = match ($document->getMimeType()) {
             'application/pdf' => $this->extractPdf($path),

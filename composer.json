@@ -12,6 +12,7 @@
         "ext-pdo": "*",
         "ext-pdo_pgsql": "*",
         "ext-redis": "*",
+        "ext-zip": "*",
         "doctrine/doctrine-bundle": "^3.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
