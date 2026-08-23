@@ -214,6 +214,18 @@ final class JobMatch
         $this->semanticError = null;
     }
 
+    public function belongsToActiveCv(): bool
+    {
+        return $this->jobOffer->getSource()->belongsToActiveCv();
+    }
+
+    public function cancelQueuedSemanticAnalysis(): void
+    {
+        if ($this->semanticAnalysisStatus === SemanticAnalysisStatus::QUEUED) {
+            $this->semanticAnalysisStatus = SemanticAnalysisStatus::NOT_REQUESTED;
+        }
+    }
+
     public function startSemanticAnalysis(): void
     {
         $this->semanticAnalysisStatus = SemanticAnalysisStatus::RUNNING;

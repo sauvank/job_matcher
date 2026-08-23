@@ -53,6 +53,7 @@ final class CandidateMessage
     public const UPLOAD_ACCEPTED = 'candidate.cv.upload.accepted';
     public const UPLOAD_DUPLICATE = 'candidate.cv.upload.duplicate';
     public const ANALYSIS_APPLIED = 'candidate.cv.analysis.applied';
+    public const DOCUMENT_ACTIVATED = 'candidate.cv.activated';
     public const REANALYSIS_ACCEPTED = 'candidate.cv.analysis.reanalysis_accepted';
     public const DOCUMENT_DELETED = 'candidate.cv.deleted';
     public const DOCUMENT_DELETE_PROCESSING = 'candidate.cv.delete_processing';

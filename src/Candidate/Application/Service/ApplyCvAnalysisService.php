@@ -37,28 +37,28 @@ final readonly class ApplyCvAnalysisService
 
         $analysis = CvAnalysisResult::fromArray($document->getAnalysisResult());
         $profile = $document->getCandidateProfile();
-        $profile->updateFromCv($title, $location, $yearsOfExperience, $document->getExtractedText());
+        $document->markApplied($title, $location, $yearsOfExperience);
+        $profile->activateCvDocument($document);
         $selectedNormalizedNames = array_values(array_unique(array_map(
             fn (string $skillName): string => $this->normalizer->normalize($skillName),
             $selectedSkillNames,
         )));
-        $profile->retainCandidateSkills($selectedNormalizedNames);
+        $profile->retainCandidateSkills($document, $selectedNormalizedNames);
 
         foreach ($analysis->skills as $analyzedSkill) {
             if (!in_array($analyzedSkill->name, $selectedSkillNames, true)) {
                 continue;
             }
-            $this->applySkill($profile->getCandidateSkills()->toArray(), $profile, $analyzedSkill);
+            $this->applySkill($profile->getCandidateSkillsFor($document)->toArray(), $profile, $document, $analyzedSkill);
         }
 
-        $document->markApplied();
         $this->entityManager->flush();
     }
 
     /**
      * @param array<int, CandidateSkill> $candidateSkills
      */
-    private function applySkill(array $candidateSkills, \App\Candidate\Entity\CandidateProfile $profile, AnalyzedSkill $analyzedSkill): void
+    private function applySkill(array $candidateSkills, \App\Candidate\Entity\CandidateProfile $profile, CvDocument $document, AnalyzedSkill $analyzedSkill): void
     {
         $normalizedName = $this->normalizer->normalize($analyzedSkill->name);
         $skill = $this->skillRepository->findOneByNormalizedName($normalizedName);
@@ -88,6 +88,7 @@ final readonly class ApplyCvAnalysisService
             $analyzedSkill->yearsOfExperience,
             $analyzedSkill->isCoreSkill,
             $analyzedSkill->confidence,
+            $document,
         );
         $this->entityManager->persist($candidateSkill);
     }

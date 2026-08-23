@@ -55,7 +55,8 @@ candidate:
       extraction_service_unavailable: "Le service d’extraction sécurisé est temporairement indisponible. L’analyse sera retentée automatiquement."
       extraction_service_failed: "Le service d’extraction sécurisé n’a pas rendu de résultat fiable. L’analyse sera retentée automatiquement."
     document_not_found: "Le CV demandé est introuvable."
-    deleted: "Le CV, son texte extrait et son analyse ont été supprimés. Les informations déjà validées dans le profil sont conservées."
+    activated: "Ce CV est maintenant actif. Ses compétences et ses offres sont affichées."
+    deleted: "Le CV, ses compétences, ses offres et ses analyses ont été supprimés."
     delete_processing: "Ce CV pourra être supprimé dès que son analyse sera terminée."
     process:
       already_running: "L’analyse du CV est déjà en cours."

@@ -54,8 +54,14 @@
                     <div class="document-row" id="cv-document-{{ document.id }}">
                         <a class="document-row-link" href="{{ path('app_cv_show', {id: document.id}) }}">
                             <span>{{ document.originalFilename }}</span>
-                            <span class="badge">{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
+                            <span class="badge">{{ profile.activeCvDocument == document ? 'CV actif' : ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
                         </a>
+                        {% if document.hasAppliedProfile and profile.activeCvDocument != document %}
+                            <form method="post" action="{{ path('app_cv_activate', {id: document.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('activate-cv-' ~ document.id) }}">
+                                <button class="button secondary button-compact" type="submit">Activer</button>
+                            </form>
+                        {% endif %}
                         <form method="post" action="{{ path('app_cv_delete', {id: document.id}) }}" data-turbo-confirm="Supprimer ce CV et son analyse ?">
                             <input type="hidden" name="_token" value="{{ csrf_token('delete-cv-' ~ document.id) }}">
                             <button class="button danger button-compact" type="submit" {{ isProcessing ? 'disabled' : '' }} title="{{ isProcessing ? 'Suppression disponible après la fin de l’analyse' : 'Supprimer ce CV' }}">Supprimer</button>

@@ -8,8 +8,15 @@
         <h1>{{ document.originalFilename }}</h1>
         <p>
             Statut : <span class="badge">{{ ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
+            {% if document.candidateProfile.activeCvDocument == document %}· <span class="badge">CV actif</span>{% endif %}
             {% if document.analyzer %}· {{ document.analyzer }}{% endif %}
         </p>
+        {% if document.hasAppliedProfile and document.candidateProfile.activeCvDocument != document %}
+            <form method="post" action="{{ path('app_cv_activate', {id: document.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('activate-cv-' ~ document.id) }}">
+                <button class="button secondary" type="submit">Utiliser ce CV</button>
+            </form>
+        {% endif %}
         {% if document.status.value in ['READY', 'APPLIED', 'FAILED'] %}
             <form method="post" action="{{ path('app_cv_reanalyze', {id: document.id}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('reanalyze-cv-' ~ document.id) }}">

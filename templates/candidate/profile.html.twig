@@ -9,6 +9,9 @@
     </div>
 
     {% if profile %}
+        {% if profile.activeCvDocument %}
+            <p class="profile-active-cv">CV actif : <a href="{{ path('app_cv_show', {id: profile.activeCvDocument.id}) }}">{{ profile.activeCvDocument.originalFilename }}</a></p>
+        {% endif %}
         <section class="profile-grid">
             <div class="card"><span>Titre</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>
             <div class="card"><span>Localisation</span><strong>{{ profile.location ?? 'À renseigner' }}</strong></div>

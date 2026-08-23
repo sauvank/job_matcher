@@ -48,6 +48,10 @@ final class CandidateProfile
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'active_cv_document_id', nullable: true, onDelete: 'SET NULL')]
+    private ?CvDocument $activeCvDocument = null;
+
     /** @var Collection<int, CandidateSkill> */
     #[ORM\OneToMany(mappedBy: 'candidateProfile', targetEntity: CandidateSkill::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $candidateSkills;
@@ -116,10 +120,33 @@ final class CandidateProfile
         return $this->updatedAt;
     }
 
+    public function getActiveCvDocument(): ?CvDocument
+    {
+        return $this->activeCvDocument;
+    }
+
     /** @return Collection<int, CandidateSkill> */
     public function getCandidateSkills(): Collection
     {
-        return $this->candidateSkills;
+        if ($this->activeCvDocument === null) {
+            return $this->candidateSkills->filter(
+                static fn (CandidateSkill $candidateSkill): bool => $candidateSkill->getCvDocument() === null,
+            );
+        }
+
+        $activeCvDocument = $this->activeCvDocument;
+
+        return $this->candidateSkills->filter(
+            static fn (CandidateSkill $candidateSkill): bool => $candidateSkill->getCvDocument() === $activeCvDocument,
+        );
+    }
+
+    /** @return Collection<int, CandidateSkill> */
+    public function getCandidateSkillsFor(CvDocument $document): Collection
+    {
+        return $this->candidateSkills->filter(
+            static fn (CandidateSkill $candidateSkill): bool => $candidateSkill->getCvDocument() === $document,
+        );
     }
 
     /** @return Collection<int, CvDocument> */
@@ -155,10 +182,10 @@ final class CandidateProfile
     }
 
     /** @param list<string> $normalizedSkillNames */
-    public function retainCandidateSkills(array $normalizedSkillNames): void
+    public function retainCandidateSkills(CvDocument $document, array $normalizedSkillNames): void
     {
         foreach ($this->candidateSkills as $candidateSkill) {
-            if (!in_array($candidateSkill->getSkill()->getNormalizedName(), $normalizedSkillNames, true)) {
+            if ($candidateSkill->getCvDocument() === $document && !in_array($candidateSkill->getSkill()->getNormalizedName(), $normalizedSkillNames, true)) {
                 $this->candidateSkills->removeElement($candidateSkill);
                 $this->updatedAt = new \DateTimeImmutable();
             }
@@ -177,6 +204,33 @@ final class CandidateProfile
         if (!$this->cvDocuments->contains($document)) {
             $this->cvDocuments->add($document);
         }
+    }
+
+    public function activateCvDocument(CvDocument $document): void
+    {
+        if ($document->getCandidateProfile() !== $this) {
+            throw new \InvalidArgumentException('The active CV must belong to the candidate profile.');
+        }
+        if (!$document->hasAppliedProfile()) {
+            throw new \DomainException('Only an applied CV can become active.');
+        }
+
+        $this->activeCvDocument = $document;
+        $this->title = $document->getAppliedTitle();
+        $this->location = $document->getAppliedLocation();
+        $this->yearsOfExperience = $document->getAppliedYearsOfExperience();
+        $this->rawCvText = $document->getExtractedText();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function clearActiveCvDocument(): void
+    {
+        $this->activeCvDocument = null;
+        $this->title = null;
+        $this->location = null;
+        $this->yearsOfExperience = null;
+        $this->rawCvText = null;
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function forgetRawCvTextIfMatches(?string $rawCvText): void

@@ -63,6 +63,15 @@ final class CvDocument
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $analyzedAt = null;
 
+    #[ORM\Column(length: 160, nullable: true)]
+    private ?string $appliedTitle = null;
+
+    #[ORM\Column(length: 160, nullable: true)]
+    private ?string $appliedLocation = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $appliedYearsOfExperience = null;
+
     public function __construct(
         CandidateProfile $candidateProfile,
         string $originalFilename,
@@ -158,6 +167,29 @@ final class CvDocument
         return $this->analyzedAt;
     }
 
+    public function getAppliedTitle(): ?string
+    {
+        return $this->appliedTitle;
+    }
+
+    public function getAppliedLocation(): ?string
+    {
+        return $this->appliedLocation;
+    }
+
+    public function getAppliedYearsOfExperience(): ?int
+    {
+        return $this->appliedYearsOfExperience;
+    }
+
+    public function hasAppliedProfile(): bool
+    {
+        return $this->extractedText !== null && ($this->status === CvStatus::APPLIED
+            || $this->appliedTitle !== null
+            || $this->appliedLocation !== null
+            || $this->appliedYearsOfExperience !== null);
+    }
+
     public function getProcessingProgress(): int
     {
         return match ($this->status) {
@@ -193,9 +225,12 @@ final class CvDocument
         $this->errorMessage = null;
     }
 
-    public function markApplied(): void
+    public function markApplied(?string $title = null, ?string $location = null, ?int $yearsOfExperience = null): void
     {
         $this->status = CvStatus::APPLIED;
+        $this->appliedTitle = $title;
+        $this->appliedLocation = $location;
+        $this->appliedYearsOfExperience = $yearsOfExperience;
         $this->updatedAt = new \DateTimeImmutable();
     }
 

@@ -48,7 +48,7 @@ final readonly class ManageCandidateSkillService
             $this->entityManager->persist($skill);
         }
 
-        $candidateSkill = new CandidateSkill($profile, $skill, $level);
+        $candidateSkill = new CandidateSkill($profile, $skill, $level, cvDocument: $profile->getActiveCvDocument());
         $this->entityManager->persist($candidateSkill);
         $this->entityManager->flush();
 

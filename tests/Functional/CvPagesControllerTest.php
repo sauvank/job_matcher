@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\Candidate\Entity\CandidateSkill;
 use App\Candidate\Entity\CvDocument;
+use App\Candidate\Entity\Skill;
+use App\Candidate\Enum\SkillCategory;
 use App\Candidate\Infrastructure\Persistence\CandidateProfileRepository;
 use App\Candidate\Infrastructure\Persistence\CvDocumentRepository;
+use App\Job\DTO\NormalizedJobOffer;
+use App\Job\Entity\JobOffer;
+use App\Job\Entity\JobSource;
+use App\Job\Enum\JobProviderType;
+use App\Matching\DTO\MatchScore;
+use App\Matching\Entity\JobMatch;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CvPagesControllerTest extends AuthenticatedWebTestCase
@@ -114,5 +123,92 @@ final class CvPagesControllerTest extends AuthenticatedWebTestCase
 
         $client->request('GET', '/cv/'.$documentId);
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testActivatingAnotherCvSwitchesItsSkillsAndOffers(): void
+    {
+        $client = self::createClient();
+        $account = $this->account('cv-switch-'.bin2hex(random_bytes(6)).'@example.test');
+        $client->loginUser($account);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $profile = $account->getCandidateProfile();
+        $uniqueId = bin2hex(random_bytes(6));
+
+        $phpCv = $this->appliedDocument($profile, 'cv-php-'.$uniqueId.'.pdf', 'Développeur PHP');
+        $reactCv = $this->appliedDocument($profile, 'cv-react-'.$uniqueId.'.pdf', 'Développeur React');
+        $phpSkill = new Skill('PHP '.$uniqueId, 'php-'.$uniqueId, SkillCategory::BACKEND);
+        $reactSkill = new Skill('React '.$uniqueId, 'react-'.$uniqueId, SkillCategory::FRONTEND);
+        new CandidateSkill($profile, $phpSkill, cvDocument: $phpCv);
+        new CandidateSkill($profile, $reactSkill, cvDocument: $reactCv);
+        $phpSource = new JobSource($profile, 'Recherche PHP '.$uniqueId, 'https://example.test/php-'.$uniqueId, JobProviderType::FAKE, $phpCv);
+        $reactSource = new JobSource($profile, 'Recherche React '.$uniqueId, 'https://example.test/react-'.$uniqueId, JobProviderType::FAKE, $reactCv);
+        $phpMatch = $this->match($profile, $phpSource, 'Offre PHP '.$uniqueId, 'php-'.$uniqueId);
+        $reactMatch = $this->match($profile, $reactSource, 'Offre React '.$uniqueId, 'react-'.$uniqueId);
+        $profile->activateCvDocument($phpCv);
+
+        foreach ([
+            $phpCv, $reactCv,
+            $phpSkill, $reactSkill,
+            $phpSource, $reactSource,
+            $phpMatch->getJobOffer(), $reactMatch->getJobOffer(),
+            $phpMatch, $reactMatch,
+        ] as $entity) {
+            $entityManager->persist($entity);
+        }
+        $entityManager->flush();
+
+        $client->request('GET', '/profile');
+        self::assertSelectorTextContains('body', 'PHP '.$uniqueId);
+        self::assertSelectorTextNotContains('body', 'React '.$uniqueId);
+        $client->request('GET', '/jobs');
+        self::assertSelectorTextContains('body', 'Offre PHP '.$uniqueId);
+        self::assertSelectorTextNotContains('body', 'Offre React '.$uniqueId);
+
+        $crawler = $client->request('GET', '/cv');
+        $activationForm = $crawler->filter(sprintf('form[action="/cv/%d/activate"]', $reactCv->getId()))->form();
+        $client->submit($activationForm);
+        self::assertResponseRedirects('/profile');
+        $client->followRedirect();
+        self::assertSelectorTextContains('body', 'React '.$uniqueId);
+        self::assertSelectorTextNotContains('body', 'PHP '.$uniqueId);
+
+        $client->request('GET', '/jobs');
+        self::assertSelectorTextContains('body', 'Offre React '.$uniqueId);
+        self::assertSelectorTextNotContains('body', 'Offre PHP '.$uniqueId);
+
+        $client->request('GET', '/jobs/'.$phpMatch->getId());
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    private function appliedDocument(\App\Candidate\Entity\CandidateProfile $profile, string $filename, string $title): CvDocument
+    {
+        $document = new CvDocument($profile, $filename, 'stored-'.$filename, 'application/pdf', 1024, hash('sha256', $filename));
+        $document->markAnalyzing('Contenu de '.$filename);
+        $document->markApplied($title, 'Paris', 5);
+
+        return $document;
+    }
+
+    private function match(\App\Candidate\Entity\CandidateProfile $profile, JobSource $source, string $title, string $externalId): JobMatch
+    {
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: $externalId,
+            url: 'https://example.test/offers/'.$externalId,
+            title: $title,
+            company: 'Entreprise test',
+            location: 'Paris',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description de test',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+
+        return new JobMatch($profile, $offer, new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []));
     }
 }

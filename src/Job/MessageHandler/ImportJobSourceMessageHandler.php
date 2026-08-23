@@ -47,6 +47,12 @@ final readonly class ImportJobSourceMessageHandler
         if (!$source->isEnabled()) {
             return;
         }
+        if (!$source->belongsToActiveCv()) {
+            $source->cancelQueuedSync();
+            $this->entityManager->flush();
+
+            return;
+        }
 
         $lock = $this->lockFactory->createLock('import-job-source-'.$message->jobSourceId, 180);
         if (!$lock->acquire()) {

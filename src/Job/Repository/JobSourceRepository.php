@@ -25,18 +25,31 @@ final class JobSourceRepository extends ServiceEntityRepository implements JobSo
 
     public function findOneByProfileAndUrl(CandidateProfile $profile, string $url): ?JobSource
     {
-        return $this->findOneBy(['candidateProfile' => $profile, 'url' => $url]);
+        return $this->findOneBy([
+            'candidateProfile' => $profile,
+            'cvDocument' => $profile->getActiveCvDocument(),
+            'url' => $url,
+        ]);
     }
 
     /** @return list<JobSource> */
     public function findEnabled(): array
     {
-        return $this->findBy(['enabled' => true], ['id' => 'ASC']);
+        return $this->createQueryBuilder('source')
+            ->innerJoin('source.candidateProfile', 'profile')
+            ->andWhere('source.enabled = true')
+            ->andWhere('(source.cvDocument = profile.activeCvDocument) OR (source.cvDocument IS NULL AND profile.activeCvDocument IS NULL)')
+            ->orderBy('source.id', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /** @return list<JobSource> */
     public function findForProfile(CandidateProfile $profile): array
     {
-        return $this->findBy(['candidateProfile' => $profile], ['createdAt' => 'DESC']);
+        return $this->findBy([
+            'candidateProfile' => $profile,
+            'cvDocument' => $profile->getActiveCvDocument(),
+        ], ['createdAt' => 'DESC']);
     }
 }

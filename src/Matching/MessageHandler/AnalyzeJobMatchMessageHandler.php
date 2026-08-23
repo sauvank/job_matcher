@@ -39,6 +39,12 @@ final readonly class AnalyzeJobMatchMessageHandler
         if (!in_array($match->getSemanticAnalysisStatus(), [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)) {
             return;
         }
+        if (!$match->belongsToActiveCv()) {
+            $match->cancelQueuedSemanticAnalysis();
+            $this->entityManager->flush();
+
+            return;
+        }
 
         $lock = $this->lockFactory->createLock('analyze-job-match-'.$message->jobMatchId, 180);
         if (!$lock->acquire()) {

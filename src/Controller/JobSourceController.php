@@ -115,7 +115,8 @@ final class JobSourceController extends AbstractController
 
     private function assertOwnsSource(Account $account, JobSource $source): void
     {
-        if ($account->getCandidateProfile()->getId() !== $source->getCandidateProfile()->getId()) {
+        if ($account->getCandidateProfile()->getId() !== $source->getCandidateProfile()->getId()
+            || !$source->belongsToActiveCv()) {
             throw $this->createNotFoundException(JobMessage::SOURCE_NOT_FOUND);
         }
     }

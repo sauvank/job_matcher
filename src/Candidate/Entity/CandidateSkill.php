@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'candidate_skill')]
-#[ORM\UniqueConstraint(name: 'uniq_candidate_skill', columns: ['candidate_profile_id', 'skill_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_candidate_skill_cv', columns: ['cv_document_id', 'skill_id'])]
 final class CandidateSkill
 {
     #[ORM\Id]
@@ -20,6 +20,10 @@ final class CandidateSkill
     #[ORM\ManyToOne(inversedBy: 'candidateSkills')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private CandidateProfile $candidateProfile;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?CvDocument $cvDocument;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -44,8 +48,10 @@ final class CandidateSkill
         ?int $yearsOfExperience = null,
         bool $isCoreSkill = false,
         ?float $confidence = null,
+        ?CvDocument $cvDocument = null,
     ) {
         $this->candidateProfile = $candidateProfile;
+        $this->cvDocument = $cvDocument;
         $this->skill = $skill;
         $this->level = $level;
         $this->yearsOfExperience = $yearsOfExperience;
@@ -62,6 +68,11 @@ final class CandidateSkill
     public function getCandidateProfile(): CandidateProfile
     {
         return $this->candidateProfile;
+    }
+
+    public function getCvDocument(): ?CvDocument
+    {
+        return $this->cvDocument;
     }
 
     public function getSkill(): Skill

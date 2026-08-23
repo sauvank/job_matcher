@@ -46,10 +46,11 @@ final readonly class ConfigureCandidateJobSearchService
 
         $url = $this->urlBuilder->build($title, $location);
         $name = mb_substr(sprintf('HelloWork — %s — %s', $title, $location), 0, 120);
+        $document = $profile->getActiveCvDocument();
         $source = $this->sourceRepository->findOneByProfileAndUrl($profile, $url);
 
         if ($source === null) {
-            $source = new JobSource($profile, $name, $url, JobProviderType::HELLOWORK);
+            $source = new JobSource($profile, $name, $url, JobProviderType::HELLOWORK, $document);
             $this->entityManager->persist($source);
         }
 

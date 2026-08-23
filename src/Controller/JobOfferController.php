@@ -66,7 +66,8 @@ final class JobOfferController extends AbstractController
 
     private function assertOwnsMatch(Account $account, JobMatch $match): void
     {
-        if ($account->getCandidateProfile()->getId() !== $match->getCandidateProfile()->getId()) {
+        if ($account->getCandidateProfile()->getId() !== $match->getCandidateProfile()->getId()
+            || !$match->getJobOffer()->getSource()->belongsToActiveCv()) {
             throw $this->createNotFoundException(MatchingMessage::MATCH_NOT_FOUND);
         }
     }

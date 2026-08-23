@@ -157,6 +157,28 @@ final class CvController extends AbstractController
         return $this->redirectToRoute('app_cv_show', ['id' => $document->getId()]);
     }
 
+    #[Route('/cv/{id<\d+>}/activate', name: 'app_cv_activate', methods: ['POST'])]
+    public function activate(
+        CvDocument $document,
+        #[CurrentUser] Account $account,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $this->assertOwnsDocument($account, $document);
+        if (!$this->isCsrfTokenValid('activate-cv-'.$document->getId(), $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        if (!$document->hasAppliedProfile()) {
+            throw $this->createNotFoundException(CandidateMessage::DOCUMENT_NOT_FOUND);
+        }
+
+        $account->getCandidateProfile()->activateCvDocument($document);
+        $entityManager->flush();
+        $this->addFlash('success', CandidateMessage::DOCUMENT_ACTIVATED);
+
+        return $this->redirectToRoute('app_candidate_profile');
+    }
+
     #[Route('/cv/{id<\d+>}/delete', name: 'app_cv_delete', methods: ['POST'])]
     public function delete(
         CvDocument $document,
@@ -179,7 +201,23 @@ final class CvController extends AbstractController
 
         $documentId = $document->getId();
         $storedFilename = $document->getStoredFilename();
-        $document->getCandidateProfile()->forgetRawCvTextIfMatches($document->getExtractedText());
+        $profile = $document->getCandidateProfile();
+        if ($profile->getActiveCvDocument() === $document) {
+            $replacement = null;
+            foreach ($profile->getCvDocuments() as $candidateDocument) {
+                if ($candidateDocument !== $document && $candidateDocument->hasAppliedProfile()) {
+                    $replacement = $candidateDocument;
+                    break;
+                }
+            }
+            if ($replacement === null) {
+                $profile->clearActiveCvDocument();
+            } else {
+                $profile->activateCvDocument($replacement);
+            }
+        } elseif ($profile->getActiveCvDocument() === null) {
+            $profile->forgetRawCvTextIfMatches($document->getExtractedText());
+        }
         $entityManager->remove($document);
         $entityManager->flush();
         $storage->delete($storedFilename);

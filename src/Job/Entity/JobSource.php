@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Job\Entity;
 
 use App\Candidate\Entity\CandidateProfile;
+use App\Candidate\Entity\CvDocument;
 use App\Job\Enum\JobProviderType;
 use App\Job\Enum\JobSourceSyncStatus;
 use App\Job\Repository\JobSourceRepository;
@@ -15,7 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: JobSourceRepository::class)]
 #[ORM\Table(name: 'job_source')]
-#[ORM\UniqueConstraint(name: 'uniq_job_source_profile_url', columns: ['candidate_profile_id', 'url'])]
+#[ORM\UniqueConstraint(name: 'uniq_job_source_cv_url', columns: ['cv_document_id', 'url'])]
 final class JobSource
 {
     #[ORM\Id]
@@ -26,6 +27,10 @@ final class JobSource
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private CandidateProfile $candidateProfile;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?CvDocument $cvDocument;
 
     #[ORM\Column(length: 120)]
     private string $name;
@@ -64,9 +69,10 @@ final class JobSource
     #[ORM\OneToMany(mappedBy: 'source', targetEntity: JobOffer::class)]
     private Collection $offers;
 
-    public function __construct(CandidateProfile $candidateProfile, string $name, string $url, JobProviderType $provider)
+    public function __construct(CandidateProfile $candidateProfile, string $name, string $url, JobProviderType $provider, ?CvDocument $cvDocument = null)
     {
         $this->candidateProfile = $candidateProfile;
+        $this->cvDocument = $cvDocument;
         $this->name = $name;
         $this->url = $url;
         $this->provider = $provider;
@@ -83,6 +89,16 @@ final class JobSource
     public function getCandidateProfile(): CandidateProfile
     {
         return $this->candidateProfile;
+    }
+
+    public function getCvDocument(): ?CvDocument
+    {
+        return $this->cvDocument;
+    }
+
+    public function belongsToActiveCv(): bool
+    {
+        return $this->cvDocument === $this->candidateProfile->getActiveCvDocument();
     }
 
     public function getName(): string
@@ -153,6 +169,14 @@ final class JobSource
         $this->processedOfferCount = 0;
         $this->lastError = null;
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function cancelQueuedSync(): void
+    {
+        if ($this->syncStatus === JobSourceSyncStatus::QUEUED) {
+            $this->syncStatus = JobSourceSyncStatus::IDLE;
+            $this->updatedAt = new \DateTimeImmutable();
+        }
     }
 
     public function markSyncStarted(): void
