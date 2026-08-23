@@ -15,6 +15,7 @@ final readonly class ConfiguredCvAnalyzer implements CvAnalyzerInterface
         private string $mode,
         private FakeCvAnalyzer $fakeAnalyzer,
         private OpenAiCvAnalyzer $openAiAnalyzer,
+        private GeminiCvAnalyzer $geminiAnalyzer,
     ) {
     }
 
@@ -33,6 +34,7 @@ final readonly class ConfiguredCvAnalyzer implements CvAnalyzerInterface
         return match ($this->mode) {
             'fake' => $this->fakeAnalyzer,
             'openai' => $this->openAiAnalyzer,
+            'gemini' => $this->geminiAnalyzer,
             default => throw new CvAnalysisException(CandidateMessage::UNKNOWN_ANALYZER, false),
         };
     }

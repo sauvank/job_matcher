@@ -16,6 +16,7 @@ final readonly class ConfiguredJobSemanticAnalyzer implements JobSemanticAnalyze
     public function __construct(
         private FakeJobSemanticAnalyzer $fakeAnalyzer,
         private OpenAiJobSemanticAnalyzer $openAiAnalyzer,
+        private GeminiJobSemanticAnalyzer $geminiAnalyzer,
         private string $mode,
     ) {
     }
@@ -35,6 +36,7 @@ final readonly class ConfiguredJobSemanticAnalyzer implements JobSemanticAnalyze
         return match ($this->mode) {
             'fake' => $this->fakeAnalyzer,
             'openai' => $this->openAiAnalyzer,
+            'gemini' => $this->geminiAnalyzer,
             default => throw new SemanticAnalysisException(MatchingMessage::UNKNOWN_SEMANTIC_ANALYZER, false),
         };
     }

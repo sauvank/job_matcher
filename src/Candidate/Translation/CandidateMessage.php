@@ -25,6 +25,17 @@ final class CandidateMessage
     public const OPENAI_UNAVAILABLE = 'candidate.cv.analysis.openai_unavailable';
     public const OPENAI_TIMEOUT = 'candidate.cv.analysis.openai_timeout';
     public const OPENAI_CONNECTION_FAILED = 'candidate.cv.analysis.openai_connection_failed';
+    public const MISSING_GEMINI_KEY = 'candidate.cv.analysis.missing_gemini_key';
+    public const INVALID_GEMINI_JSON = 'candidate.cv.analysis.invalid_gemini_json';
+    public const EMPTY_GEMINI_ANALYSIS = 'candidate.cv.analysis.empty_gemini_analysis';
+    public const MISSING_GEMINI_OUTPUT = 'candidate.cv.analysis.missing_gemini_output';
+    public const GEMINI_AUTHENTICATION_FAILED = 'candidate.cv.analysis.gemini_authentication_failed';
+    public const GEMINI_QUOTA_EXCEEDED = 'candidate.cv.analysis.gemini_quota_exceeded';
+    public const GEMINI_RATE_LIMITED = 'candidate.cv.analysis.gemini_rate_limited';
+    public const GEMINI_REQUEST_FAILED = 'candidate.cv.analysis.gemini_request_failed';
+    public const GEMINI_UNAVAILABLE = 'candidate.cv.analysis.gemini_unavailable';
+    public const GEMINI_TIMEOUT = 'candidate.cv.analysis.gemini_timeout';
+    public const GEMINI_CONNECTION_FAILED = 'candidate.cv.analysis.gemini_connection_failed';
     public const FILE_TYPE_NOT_ALLOWED = 'candidate.cv.upload.file_type_not_allowed';
     public const FILE_UNREADABLE = 'candidate.cv.upload.file_unreadable';
     public const FILE_NOT_FOUND = 'candidate.cv.extraction.file_not_found';

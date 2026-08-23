@@ -104,6 +104,11 @@ services:
             $apiKey: '%env(OPENAI_API_KEY)%'
             $model: '%env(OPENAI_MODEL)%'
 
+    App\Candidate\Infrastructure\Analyzer\GeminiCvAnalyzer:
+        arguments:
+            $apiKey: '%env(GEMINI_API_KEY)%'
+            $model: '%env(GEMINI_MODEL)%'
+
     App\Matching\Infrastructure\Analyzer\ConfiguredJobSemanticAnalyzer:
         arguments:
             $mode: '%env(CV_ANALYZER)%'
@@ -112,6 +117,11 @@ services:
         arguments:
             $apiKey: '%env(OPENAI_API_KEY)%'
             $model: '%env(JOB_OPENAI_MODEL)%'
+
+    App\Matching\Infrastructure\Analyzer\GeminiJobSemanticAnalyzer:
+        arguments:
+            $apiKey: '%env(GEMINI_API_KEY)%'
+            $model: '%env(JOB_GEMINI_MODEL)%'
 
     App\Job\Provider\JobProviderRegistry:
         arguments:

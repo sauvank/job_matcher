@@ -128,15 +128,33 @@ docker compose exec -T php php bin/console app:matches:refresh
 
 Une première extraction déterministe complète les champs HelloWork incomplets à partir des sections « Environnement technique » et « Stack technique ». La vérification de disponibilité fera l’objet d’un prochain incrément.
 
-## Analyse réelle du CV avec OpenAI
+## Analyse réelle du CV avec OpenAI ou Google Gemini
 
-Sans configuration locale, l'application utilise volontairement un faux analyseur gratuit. Pour activer l'analyse OpenAI, créer un fichier `.env.local` à partir de l'exemple :
+Sans configuration locale, l'application utilise volontairement un faux analyseur gratuit (`CV_ANALYZER=fake`). Pour activer l'analyse avec OpenAI ou Google Gemini, créer un fichier `.env.local` à partir de l'exemple :
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-Puis remplacer la valeur factice de `OPENAI_API_KEY` par une clé API de projet et redémarrer les processus :
+Puis configurer le fournisseur choisi dans `.env.local` :
+
+- **Pour Google Gemini** :
+  ```dotenv
+  CV_ANALYZER=gemini
+  GEMINI_API_KEY=replace-with-your-gemini-api-key
+  GEMINI_MODEL=gemini-2.0-flash
+  JOB_GEMINI_MODEL=gemini-2.0-flash
+  ```
+
+- **Pour OpenAI** :
+  ```dotenv
+  CV_ANALYZER=openai
+  OPENAI_API_KEY=replace-with-your-project-api-key
+  OPENAI_MODEL=gpt-4.1-mini
+  JOB_OPENAI_MODEL=gpt-5.6-luna
+  ```
+
+Puis redémarrer les processus :
 
 ```bash
 make restart

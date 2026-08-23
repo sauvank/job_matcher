@@ -21,6 +21,16 @@ final class MatchingMessage
     public const OPENAI_REQUEST_FAILED = 'matching.analysis.openai_request_failed';
     public const OPENAI_TIMEOUT = 'matching.analysis.openai_timeout';
     public const OPENAI_CONNECTION_FAILED = 'matching.analysis.openai_connection_failed';
+    public const MISSING_GEMINI_KEY = 'matching.analysis.missing_gemini_key';
+    public const INVALID_GEMINI_JSON = 'matching.analysis.invalid_gemini_json';
+    public const MISSING_GEMINI_OUTPUT = 'matching.analysis.missing_gemini_output';
+    public const GEMINI_AUTHENTICATION_FAILED = 'matching.analysis.gemini_authentication_failed';
+    public const GEMINI_QUOTA_EXCEEDED = 'matching.analysis.gemini_quota_exceeded';
+    public const GEMINI_RATE_LIMITED = 'matching.analysis.gemini_rate_limited';
+    public const GEMINI_UNAVAILABLE = 'matching.analysis.gemini_unavailable';
+    public const GEMINI_REQUEST_FAILED = 'matching.analysis.gemini_request_failed';
+    public const GEMINI_TIMEOUT = 'matching.analysis.gemini_timeout';
+    public const GEMINI_CONNECTION_FAILED = 'matching.analysis.gemini_connection_failed';
     public const SKILL_PRESENT = 'matching.reason.skill_present';
     public const SKILL_MISSING = 'matching.reason.skill_missing';
     public const SKILLS_UNKNOWN = 'matching.reason.skills_unknown';
