@@ -68,6 +68,8 @@ Avant toute extraction, le worker vérifie la signature et la structure du fichi
 
 Le worker transmet ensuite le fichier par flux à un service ClamAV local. Un fichier infecté est refusé définitivement avant extraction ; une indisponibilité de l’antivirus provoque une nouvelle tentative asynchrone. Le port ClamAV n’est jamais publié sur l’hôte et ses signatures sont conservées dans le volume `clamav_data`.
 
+L’extraction par `pdftotext` ou `unzip` s’exécute dans un conteneur dédié, relié au worker uniquement par une socket Unix. Ce conteneur ne reçoit aucun fichier d’environnement de production, n’a aucun réseau, monte les CV en lecture seule et fonctionne avec toutes ses capacités Linux supprimées, `no-new-privileges`, un système de fichiers racine en lecture seule, 0,5 CPU, 128 Mo de mémoire et 32 PID au maximum. Le texte retourné est limité à 2 Mo.
+
 Pour valider la configuration puis construire les deux images localement avec des valeurs factices :
 
 ```bash

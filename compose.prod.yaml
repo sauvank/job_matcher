@@ -43,9 +43,12 @@ services:
     environment:
       APP_ENV: prod
       APP_DEBUG: 0
+      CLAMAV_DSN: tcp://clamav:3310
+      CV_EXTRACTOR_DSN: unix:///run/cv-extractor/extractor.sock
     command: php bin/console messenger:consume async scheduler_job_sync --time-limit=3600 --memory-limit=128M --no-interaction
     volumes:
       - cv_data:/app/var/cv
+      - extractor_runtime:/run/cv-extractor:ro
     depends_on:
       database:
         condition: service_healthy
@@ -53,6 +56,33 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
+      extractor:
+        condition: service_healthy
+    restart: unless-stopped
+
+  extractor:
+    image: ${PHP_IMAGE:-job-matcher-php:prod}
+    command: php bin/cv-extractor-server.php
+    user: "82:82"
+    read_only: true
+    network_mode: none
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 32
+    mem_limit: 128m
+    cpus: 0.50
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+    volumes:
+      - cv_data:/app/var/cv:ro
+      - extractor_runtime:/run/cv-extractor
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(file_exists('/run/cv-extractor/extractor.sock') ? 0 : 1);"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
     restart: unless-stopped
 
   clamav:
@@ -95,4 +125,5 @@ volumes:
   clamav_data:
   cv_data:
   database_data:
+  extractor_runtime:
   redis_data:

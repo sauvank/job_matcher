@@ -30,6 +30,7 @@ final class CandidateMessage
     public const FILE_NOT_FOUND = 'candidate.cv.extraction.file_not_found';
     public const FORMAT_NOT_SUPPORTED = 'candidate.cv.extraction.format_not_supported';
     public const TEXT_TOO_SHORT = 'candidate.cv.extraction.text_too_short';
+    public const TEXT_TOO_LARGE = 'candidate.cv.extraction.text_too_large';
     public const PDF_EXTRACTION_FAILED = 'candidate.cv.extraction.pdf_failed';
     public const DOCX_EXTRACTION_FAILED = 'candidate.cv.extraction.docx_failed';
     public const INVALID_FILE_SIGNATURE = 'candidate.cv.extraction.invalid_signature';
@@ -39,6 +40,8 @@ final class CandidateMessage
     public const MALWARE_DETECTED = 'candidate.cv.security.malware_detected';
     public const MALWARE_SCAN_FAILED = 'candidate.cv.security.scan_failed';
     public const MALWARE_SCAN_UNAVAILABLE = 'candidate.cv.security.scan_unavailable';
+    public const EXTRACTION_SERVICE_UNAVAILABLE = 'candidate.cv.security.extraction_service_unavailable';
+    public const EXTRACTION_SERVICE_FAILED = 'candidate.cv.security.extraction_service_failed';
     public const ANALYSIS_NOT_APPLICABLE = 'candidate.cv.analysis.not_applicable';
     public const DOCUMENT_NOT_FOUND = 'candidate.cv.document_not_found';
     public const PROCESS_ALREADY_RUNNING = 'candidate.cv.process.already_running';

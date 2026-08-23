@@ -11,6 +11,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
+RUN mkdir -p /run/cv-extractor \
+    && chown www-data:www-data /run/cv-extractor
+
 FROM php_base AS php_prod
 
 ENV APP_ENV=prod

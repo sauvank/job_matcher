@@ -17,19 +17,27 @@ final readonly class LocalCvTextExtractor implements CvTextExtractorInterface
     public function __construct(
         private CvStorageInterface $storage,
         private CvFileValidator $fileValidator,
+        private int $maxExtractedTextBytes,
     ) {
     }
 
     public function extract(CvDocument $document): string
     {
-        $path = $this->storage->absolutePath($document->getStoredFilename());
+        return $this->extractFile(
+            $this->storage->absolutePath($document->getStoredFilename()),
+            $document->getMimeType(),
+        );
+    }
+
+    public function extractFile(string $path, string $mimeType): string
+    {
         if (!is_file($path)) {
             throw new CvExtractionException(CandidateMessage::FILE_NOT_FOUND);
         }
 
-        $this->fileValidator->validate($path, $document->getMimeType());
+        $this->fileValidator->validate($path, $mimeType);
 
-        $text = match ($document->getMimeType()) {
+        $text = match ($mimeType) {
             'application/pdf' => $this->extractPdf($path),
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip' => $this->extractDocx($path),
             default => throw new CvExtractionException(CandidateMessage::FORMAT_NOT_SUPPORTED),
@@ -38,6 +46,10 @@ final readonly class LocalCvTextExtractor implements CvTextExtractorInterface
         $text = preg_replace('/[\t ]+/u', ' ', $text) ?? $text;
         $text = preg_replace('/\R{3,}/u', "\n\n", $text) ?? $text;
         $text = trim($text);
+
+        if (strlen($text) > $this->maxExtractedTextBytes) {
+            throw new CvExtractionException(CandidateMessage::TEXT_TOO_LARGE);
+        }
 
         if (mb_strlen($text) < 50) {
             throw new CvExtractionException(CandidateMessage::TEXT_TOO_SHORT);

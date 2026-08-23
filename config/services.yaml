@@ -12,6 +12,7 @@ parameters:
     app.cv_max_docx_entries: 1000
     app.cv_max_docx_entry_bytes: 10485760
     app.cv_max_docx_uncompressed_bytes: 52428800
+    app.cv_max_extracted_text_bytes: 2097152
     app.hellowork.max_offers: 10
     app.matching.weights:
         stack: 35
@@ -44,7 +45,7 @@ services:
         alias: App\Candidate\Infrastructure\Security\ClamAvCvMalwareScanner
 
     App\Candidate\Application\Extraction\CvTextExtractorInterface:
-        alias: App\Candidate\Infrastructure\Extraction\LocalCvTextExtractor
+        alias: App\Candidate\Infrastructure\Extraction\IsolatedCvTextExtractor
 
     App\Candidate\Application\Analyzer\CvAnalyzerInterface:
         alias: App\Candidate\Infrastructure\Analyzer\ConfiguredCvAnalyzer
@@ -77,6 +78,16 @@ services:
             $maxDocxEntries: '%app.cv_max_docx_entries%'
             $maxDocxEntryBytes: '%app.cv_max_docx_entry_bytes%'
             $maxDocxUncompressedBytes: '%app.cv_max_docx_uncompressed_bytes%'
+
+    App\Candidate\Infrastructure\Extraction\LocalCvTextExtractor:
+        arguments:
+            $maxExtractedTextBytes: '%app.cv_max_extracted_text_bytes%'
+
+    App\Candidate\Infrastructure\Extraction\IsolatedCvTextExtractor:
+        arguments:
+            $dsn: '%env(CV_EXTRACTOR_DSN)%'
+            $timeoutSeconds: 40
+            $maxResponseBytes: 3145728
 
     App\Candidate\Infrastructure\Security\ClamAvCvMalwareScanner:
         arguments:

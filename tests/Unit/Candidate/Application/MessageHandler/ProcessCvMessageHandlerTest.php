@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Candidate\Application\MessageHandler;
 
 use App\Candidate\Application\Analyzer\CvAnalysisException;
 use App\Candidate\Application\Analyzer\CvAnalyzerInterface;
+use App\Candidate\Application\Extraction\CvExtractionException;
 use App\Candidate\Application\Extraction\CvTextExtractorInterface;
 use App\Candidate\Application\Message\ProcessCvMessage;
 use App\Candidate\Application\MessageHandler\ProcessCvMessageHandler;
@@ -214,6 +215,51 @@ final class ProcessCvMessageHandlerTest extends TestCase
             self::assertSame($expectedException, $exception);
             self::assertSame(CvStatus::FAILED, $document->getStatus());
             self::assertSame(CandidateMessage::MALWARE_SCAN_UNAVAILABLE, $document->getErrorMessage());
+        }
+    }
+
+    public function testItRetriesWhenTheIsolatedExtractorIsUnavailable(): void
+    {
+        $document = new CvDocument(
+            new CandidateProfile(),
+            'cv.pdf',
+            'stored.pdf',
+            'application/pdf',
+            1234,
+            str_repeat('a', 64),
+        );
+        $repository = new class($document) implements CvDocumentRepositoryInterface {
+            public function __construct(private readonly CvDocument $document)
+            {
+            }
+
+            public function get(int $id): ?CvDocument
+            {
+                return $id === 12 ? $this->document : null;
+            }
+        };
+        $expectedException = new CvExtractionException(CandidateMessage::EXTRACTION_SERVICE_UNAVAILABLE, true);
+        $extractor = $this->createStub(CvTextExtractorInterface::class);
+        $extractor->method('extract')->willThrowException($expectedException);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects(self::exactly(2))->method('flush');
+        $handler = new ProcessCvMessageHandler(
+            $repository,
+            $this->createStub(CvMalwareScannerInterface::class),
+            $extractor,
+            new FakeCvAnalyzer(),
+            $entityManager,
+            new LockFactory(new InMemoryStore()),
+            new NullLogger(),
+        );
+
+        try {
+            $handler(new ProcessCvMessage(12));
+            self::fail('Une exception récupérable était attendue.');
+        } catch (CvExtractionException $exception) {
+            self::assertSame($expectedException, $exception);
+            self::assertSame(CvStatus::FAILED, $document->getStatus());
+            self::assertSame(CandidateMessage::EXTRACTION_SERVICE_UNAVAILABLE, $document->getErrorMessage());
         }
     }
 }

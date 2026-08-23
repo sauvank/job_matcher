@@ -45,10 +45,12 @@ services:
       LOCK_DSN: redis://redis:6379
       MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
       CLAMAV_DSN: tcp://clamav:3310
+      CV_EXTRACTOR_DSN: unix:///run/cv-extractor/extractor.sock
     volumes:
       - ./:/app
       - vendor_data:/app/vendor
       - assets_vendor_data:/app/assets/vendor
+      - extractor_runtime:/run/cv-extractor:ro
     depends_on:
       database:
         condition: service_healthy
@@ -56,6 +58,36 @@ services:
         condition: service_healthy
       clamav:
         condition: service_healthy
+      extractor:
+        condition: service_healthy
+
+  extractor:
+    image: job-matcher-php:dev
+    build:
+      context: .
+    command: php bin/cv-extractor-server.php
+    user: "82:82"
+    read_only: true
+    network_mode: none
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 32
+    mem_limit: 128m
+    cpus: 0.50
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+    volumes:
+      - ./:/app:ro
+      - vendor_data:/app/vendor:ro
+      - extractor_runtime:/run/cv-extractor
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(file_exists('/run/cv-extractor/extractor.sock') ? 0 : 1);"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+    restart: unless-stopped
 
   clamav:
     image: clamav/clamav-debian:1.4
@@ -102,3 +134,4 @@ volumes:
   vendor_data:
   assets_vendor_data:
   clamav_data:
+  extractor_runtime:

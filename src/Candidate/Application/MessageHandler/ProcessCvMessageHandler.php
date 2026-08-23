@@ -86,7 +86,11 @@ final readonly class ProcessCvMessageHandler
             $document->fail($exception->getMessage());
             $this->entityManager->flush();
 
-            throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
+            if (!$exception->retryable) {
+                throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
+            }
+
+            throw $exception;
         } catch (CvAnalysisException $exception) {
             $document->fail($exception->getMessage());
             $this->entityManager->flush();

@@ -114,10 +114,10 @@ sed -i "s|^PHP_IMAGE=.*$|PHP_IMAGE=ghcr.io/sauvank/job-matcher-php:sha-$deploy_s
 sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=ghcr.io/sauvank/job-matcher-nginx:sha-$deploy_sha|" .env.prod.local
 
 "${compose[@]}" config --quiet
-"${compose[@]}" pull php worker nginx clamav
+"${compose[@]}" pull php worker nginx clamav extractor
 "${compose[@]}" run --rm php \
     php bin/console doctrine:migrations:migrate --no-interaction
-"${compose[@]}" up -d --wait clamav
+"${compose[@]}" up -d --wait clamav extractor
 "${compose[@]}" up -d --force-recreate --no-deps php worker
 "${compose[@]}" up -d --force-recreate --no-deps nginx
 
