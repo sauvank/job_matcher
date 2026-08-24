@@ -11,6 +11,7 @@ use App\Job\Enum\JobProviderType;
 use App\Job\Message\ImportJobSourceMessage;
 use App\Job\Message\RefreshJobSourcesMessage;
 use App\Job\MessageHandler\RefreshJobSourcesMessageHandler;
+use App\Job\Service\SchedulerExecutionTracker;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
@@ -45,14 +46,16 @@ final class RefreshJobSourcesMessageHandlerTest extends TestCase
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::once())->method('flush');
+        $entityManager->expects(self::exactly(3))->method('flush');
         $messageBus = $this->createMock(MessageBusInterface::class);
         $messageBus->expects(self::once())
             ->method('dispatch')
             ->with(self::callback(static fn (object $message): bool => $message instanceof ImportJobSourceMessage && $message->jobSourceId === 12))
             ->willReturnCallback(static fn (object $message): Envelope => new Envelope($message));
 
-        (new RefreshJobSourcesMessageHandler($repository, $entityManager, $messageBus))(new RefreshJobSourcesMessage());
+        $tracker = new SchedulerExecutionTracker($entityManager);
+
+        (new RefreshJobSourcesMessageHandler($repository, $entityManager, $messageBus, $tracker))(new RefreshJobSourcesMessage());
 
         self::assertTrue($readySource->isSyncPending());
     }

@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Administration — Job Matcher{% endblock %}
+
+{% block body %}
+    {% set adminRoute = app.request.attributes.get('_route') ?? '' %}
+    <div class="admin-shell">
+        <header class="admin-subnav-header">
+            <div class="admin-title-wrap">
+                <span class="eyebrow">Espace d'administration</span>
+                <h1 class="admin-main-title">{% block admin_title %}Administration{% endblock %}</h1>
+            </div>
+            <nav class="admin-nav" aria-label="Menu d'administration">
+                <a class="{{ adminRoute == 'app_admin_dashboard' ? 'active' : '' }}" href="{{ path('app_admin_dashboard') }}">
+                    <span class="admin-nav-icon">📊</span>
+                    <span>Tableau de bord</span>
+                </a>
+                <a class="{{ adminRoute starts with 'app_admin_user' ? 'active' : '' }}" href="{{ path('app_admin_users') }}">
+                    <span class="admin-nav-icon">👥</span>
+                    <span>Utilisateurs</span>
+                </a>
+                <a class="{{ adminRoute starts with 'app_admin_cron' ? 'active' : '' }}" href="{{ path('app_admin_cron') }}">
+                    <span class="admin-nav-icon">⏱️</span>
+                    <span>Tâches & Cron</span>
+                </a>
+            </nav>
+        </header>
+
+        <div class="admin-content">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

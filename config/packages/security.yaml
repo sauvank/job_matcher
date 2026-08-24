@@ -3,6 +3,9 @@ security:
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_USER, ROLE_ALLOWED_TO_SWITCH]
+
     providers:
         app_accounts:
             entity:
@@ -31,11 +34,15 @@ security:
                 path: app_logout
                 target: app_home
                 enable_csrf: true
+            switch_user:
+                role: ROLE_ALLOWED_TO_SWITCH
+                parameter: _switch_user
 
     access_control:
         - { path: ^/health$, roles: PUBLIC_ACCESS }
         - { path: ^/(connexion|inscription|verification-email), roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/, roles: ROLE_USER }
 
 when@test:

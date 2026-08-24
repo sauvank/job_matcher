@@ -1,0 +1,169 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block admin_title %}Tableau de bord{% endblock %}
+
+{% block admin_content %}
+    <section class="admin-stats-grid" aria-label="Statistiques globales">
+        <div class="admin-stat-card">
+            <div class="stat-top">
+                <span class="stat-label">Utilisateurs</span>
+                <span class="stat-icon">👥</span>
+            </div>
+            <strong class="stat-number">{{ stats.total_users }}</strong>
+            <div class="stat-footer">
+                <span class="text-success">{{ stats.verified_users }} vérifié(s)</span>
+                {% if stats.unverified_users > 0 %}
+                    <span class="text-warning"> · {{ stats.unverified_users }} en attente</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="stat-top">
+                <span class="stat-label">CVs Importés</span>
+                <span class="stat-icon">📄</span>
+            </div>
+            <strong class="stat-number">{{ stats.total_cvs }}</strong>
+            <div class="stat-footer">
+                <span>Profils & analyses</span>
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="stat-top">
+                <span class="stat-label">Sources & Offres</span>
+                <span class="stat-icon">🔍</span>
+            </div>
+            <strong class="stat-number">{{ stats.total_offers }}</strong>
+            <div class="stat-footer">
+                <span>{{ stats.total_sources }} source(s) · {{ stats.total_matches }} match(s)</span>
+            </div>
+        </div>
+
+        <div class="admin-stat-card">
+            <div class="stat-top">
+                <span class="stat-label">Passages Cron</span>
+                <span class="stat-icon">⏱️</span>
+            </div>
+            <strong class="stat-number">{{ stats.cron_status_counts.total }}</strong>
+            <div class="stat-footer">
+                <span class="text-success">{{ stats.cron_status_counts.success }} succès</span>
+                {% if stats.cron_status_counts.failed > 0 %}
+                    <span class="text-danger"> · {{ stats.cron_status_counts.failed }} échec(s)</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <div class="admin-split-grid">
+        <section class="card" aria-labelledby="heading-recent-users">
+            <div class="section-heading">
+                <h2 id="heading-recent-users">Derniers utilisateurs</h2>
+                <a class="button button-compact secondary" href="{{ path('app_admin_users') }}">Voir tous ({{ stats.total_users }})</a>
+            </div>
+
+            {% if recent_users is empty %}
+                <p class="help-text">Aucun utilisateur enregistré pour le moment.</p>
+            {% else %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Statut</th>
+                                <th>Inscription</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ user.email }}</strong>
+                                            {% if user.admin %}
+                                                <span class="badge" style="font-size: 0.65rem; margin-left: 0.3rem;">Admin</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if user.candidateProfile.title %}
+                                            <small class="help-text">{{ user.candidateProfile.title }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.emailVerified %}
+                                            <span class="badge badge-success">Vérifié</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">En attente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ user.createdAt|date('d/m/Y H:i') }}</small>
+                                    </td>
+                                    <td class="table-actions">
+                                        <a class="button button-compact" href="{{ path('app_candidate_profile', {'_switch_user': user.email}) }}" title="Se connecter en tant que cet utilisateur">
+                                            <span>Se connecter</span>
+                                        </a>
+                                        <a class="button button-compact secondary" href="{{ path('app_admin_user_show', {'id': user.id}) }}" title="Voir les détails">
+                                            <span>Détails</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="card" aria-labelledby="heading-recent-cron">
+            <div class="section-heading">
+                <h2 id="heading-recent-cron">Derniers passages Cron</h2>
+                <a class="button button-compact secondary" href="{{ path('app_admin_cron') }}">Voir l'historique</a>
+            </div>
+
+            {% if recent_cron_logs is empty %}
+                <p class="help-text">Aucun passage de tâche cron enregistré pour le moment.</p>
+            {% else %}
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tâche</th>
+                                <th>Statut</th>
+                                <th>Début</th>
+                                <th>Durée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_cron_logs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ log.scheduleName }}</strong>
+                                        <div class="help-text" style="font-size: 0.72rem;">{{ log.triggeredBy }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ log.status.badgeClass }}">{{ log.status.label }}</span>
+                                    </td>
+                                    <td>
+                                        <small>{{ log.startedAt|date('d/m/Y H:i:s') }}</small>
+                                    </td>
+                                    <td>
+                                        <small>{{ log.durationFormatted }}</small>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+
+            <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span class="help-text">Tâche planifiée : <strong>job_sync</strong> (04:00 Europe/Paris)</span>
+                <form method="post" action="{{ path('app_admin_cron_trigger', {'scheduleName': 'job_sync'}) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('trigger_cron_job_sync') }}">
+                    <button class="button button-compact" type="submit">Déclencher maintenant</button>
+                </form>
+            </div>
+        </section>
+    </div>
+{% endblock %}

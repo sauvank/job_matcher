@@ -6,6 +6,7 @@ namespace App\Security\Entity;
 
 use App\Candidate\Entity\CandidateProfile;
 use App\Security\Repository\AccountRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -34,6 +35,10 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $emailVerifiedAt = null;
 
+    /** @var list<string> */
+    #[ORM\Column(type: Types::JSON)]
+    private array $roles = [];
+
     #[ORM\OneToOne(cascade: ['persist'], orphanRemoval: true)]
     #[ORM\JoinColumn(nullable: false)]
     private CandidateProfile $candidateProfile;
@@ -51,6 +56,7 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $normalizedEmail;
         $this->candidateProfile = new CandidateProfile();
         $this->createdAt = new \DateTimeImmutable();
+        $this->roles = [];
     }
 
     public function getId(): ?int
@@ -71,7 +77,50 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     /** @return list<string> */
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+
+        return array_values(array_unique($roles));
+    }
+
+    /** @param list<string> $roles */
+    public function setRoles(array $roles): void
+    {
+        $cleaned = array_values(array_filter(
+            array_unique($roles),
+            static fn (string $role): bool => $role !== 'ROLE_USER' && trim($role) !== ''
+        ));
+        $this->roles = $cleaned;
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array('ROLE_ADMIN', $this->getRoles(), true);
+    }
+
+    public function grantAdmin(): void
+    {
+        if (!$this->isAdmin()) {
+            $this->roles[] = 'ROLE_ADMIN';
+            $this->roles = array_values(array_unique($this->roles));
+        }
+    }
+
+    public function revokeAdmin(): void
+    {
+        $this->roles = array_values(array_filter(
+            $this->roles,
+            static fn (string $role): bool => $role !== 'ROLE_ADMIN'
+        ));
+    }
+
+    public function toggleAdmin(): void
+    {
+        if ($this->isAdmin()) {
+            $this->revokeAdmin();
+        } else {
+            $this->grantAdmin();
+        }
     }
 
     public function getPassword(): ?string
@@ -82,6 +131,16 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     public function getCandidateProfile(): CandidateProfile
     {
         return $this->candidateProfile;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getEmailVerifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->emailVerifiedAt;
     }
 
     public function setPassword(string $password): void
@@ -111,6 +170,11 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     public function verifyEmail(): void
     {
         $this->emailVerifiedAt ??= new \DateTimeImmutable();
+    }
+
+    public function unverifyEmail(): void
+    {
+        $this->emailVerifiedAt = null;
     }
 
     public function eraseCredentials(): void

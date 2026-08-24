@@ -1,0 +1,150 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block admin_title %}Tâches Planifiées & Cron{% endblock %}
+
+{% block admin_content %}
+    <section class="card" style="margin-bottom: 2rem;" aria-labelledby="heading-schedules">
+        <div class="section-heading">
+            <h2 id="heading-schedules">Tâches récurrentes configurées</h2>
+            <span class="badge badge-info">Symfony Scheduler</span>
+        </div>
+
+        <div class="admin-schedules-grid">
+            {% for schedule in schedules %}
+                <div class="schedule-card">
+                    <div class="schedule-card-header">
+                        <div>
+                            <h3>{{ schedule.title }}</h3>
+                            <div class="help-text" style="margin-top: 0.2rem;">Identifiant : <code>{{ schedule.name }}</code></div>
+                        </div>
+                        <form method="post" action="{{ path('app_admin_cron_trigger', {'scheduleName': schedule.name}) }}" onsubmit="return confirm('Déclencher immédiatement cette tâche ?');">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('trigger_cron_' ~ schedule.name) }}">
+                            <button type="submit" class="button button-compact">Déclencher maintenant</button>
+                        </form>
+                    </div>
+
+                    <p style="margin: 0.75rem 0; font-size: 0.88rem;">{{ schedule.description }}</p>
+
+                    <div class="schedule-meta-grid">
+                        <div>
+                            <span class="field-label">Planification</span>
+                            <strong>{{ schedule.cronHuman }}</strong>
+                            <small class="help-text"><code>{{ schedule.cronExpression }}</code> ({{ schedule.timezone }})</small>
+                        </div>
+
+                        <div>
+                            <span class="field-label">Prochaine exécution</span>
+                            {% if schedule.nextRun %}
+                                <strong>{{ schedule.nextRun|date('d/m/Y à H:i:s') }}</strong>
+                            {% else %}
+                                <span class="help-text">Non calculée</span>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <span class="field-label">Dernier passage</span>
+                            {% if schedule.lastRun %}
+                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span class="badge {{ schedule.lastRun.status.badgeClass }}">{{ schedule.lastRun.status.label }}</span>
+                                    <small>{{ schedule.lastRun.startedAt|date('d/m/Y H:i') }}</small>
+                                </div>
+                                <small class="help-text">Durée : {{ schedule.lastRun.durationFormatted }}</small>
+                            {% else %}
+                                <span class="help-text">Aucun enregistrement</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="card" aria-labelledby="heading-cron-history">
+        <div class="section-heading">
+            <h2 id="heading-cron-history">Historique des passages</h2>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <form method="post" action="{{ path('app_admin_cron_purge') }}" onsubmit="return confirm('Purger les journaux de plus de 30 jours ?');" style="margin: 0;">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('purge_cron_logs') }}">
+                    <input type="hidden" name="days" value="30">
+                    <button type="submit" class="button button-compact secondary" title="Supprimer les journaux anciens">Purger > 30 jours</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="admin-cron-status-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+            <a class="button button-compact {{ filters.status == 'all' ? '' : 'secondary' }}" href="{{ path('app_admin_cron', {'status': 'all'}) }}">
+                Tous ({{ status_counts.total }})
+            </a>
+            <a class="button button-compact {{ filters.status == 'success' ? '' : 'secondary' }}" href="{{ path('app_admin_cron', {'status': 'success'}) }}">
+                Succès ({{ status_counts.success }})
+            </a>
+            <a class="button button-compact {{ filters.status == 'failed' ? '' : 'secondary' }}" href="{{ path('app_admin_cron', {'status': 'failed'}) }}">
+                Échecs ({{ status_counts.failed }})
+            </a>
+            {% if status_counts.running > 0 %}
+                <a class="button button-compact {{ filters.status == 'running' ? '' : 'secondary' }}" href="{{ path('app_admin_cron', {'status': 'running'}) }}">
+                    En cours ({{ status_counts.running }})
+                </a>
+            {% endif %}
+        </div>
+
+        {% if logs is empty %}
+            <div class="empty-state">
+                <div class="empty-state-icon">⏱️</div>
+                <h3>Aucun passage enregistré</h3>
+                <p class="help-text">Les prochaines exécutions de l'ordonnanceur apparaîtront ici automatiquement.</p>
+            </div>
+        {% else %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Début</th>
+                            <th>Tâche</th>
+                            <th>Déclenché par</th>
+                            <th>Durée</th>
+                            <th>Statut</th>
+                            <th>Détails & Résultat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td>
+                                    <strong>{{ log.startedAt|date('d/m/Y') }}</strong>
+                                    <div class="help-text" style="font-size: 0.75rem;">{{ log.startedAt|date('H:i:s') }}</div>
+                                </td>
+                                <td>
+                                    <strong>{{ log.scheduleName }}</strong>
+                                    <div class="help-text" style="font-size: 0.72rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ log.commandOrMessage }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-neutral" style="font-size: 0.7rem;">{{ log.triggeredBy }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ log.durationFormatted }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge {{ log.status.badgeClass }}">{{ log.status.label }}</span>
+                                </td>
+                                <td>
+                                    {% if log.details %}
+                                        <div style="font-size: 0.85rem;">{{ log.details }}</div>
+                                    {% endif %}
+                                    {% if log.errorMessage %}
+                                        <div class="text-error" style="font-size: 0.75rem; margin-top: 0.25rem; font-family: monospace; background: var(--danger-soft); padding: 0.4rem 0.6rem; border-radius: 0.4rem; max-width: 450px; overflow-x: auto; white-space: pre-wrap;">{{ log.errorMessage }}</div>
+                                    {% endif %}
+                                    {% if not log.details and not log.errorMessage %}
+                                        <span class="help-text">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

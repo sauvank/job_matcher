@@ -1,0 +1,185 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block admin_title %}Fiche utilisateur : {{ account.email }}{% endblock %}
+
+{% block admin_content %}
+    <a class="back-link" href="{{ path('app_admin_users') }}">&larr; Retour à la liste des utilisateurs</a>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="section-heading">
+            <div>
+                <h2>{{ account.email }}</h2>
+                <div style="display: flex; gap: 0.4rem; align-items: center; margin-top: 0.25rem;">
+                    {% if account.admin %}
+                        <span class="badge badge-info">Administrateur</span>
+                    {% else %}
+                        <span class="badge badge-neutral">Utilisateur</span>
+                    {% endif %}
+                    {% if account.emailVerified %}
+                        <span class="badge badge-success">Email Vérifié</span>
+                    {% else %}
+                        <span class="badge badge-warning">Email Non Vérifié</span>
+                    {% endif %}
+                    {% if account.googleConnected %}
+                        <span class="badge badge-neutral">Google lié</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="button-row" style="margin-top: 0;">
+                <a class="button" href="{{ path('app_candidate_profile', {'_switch_user': account.email}) }}">
+                    <span>Se connecter à ce compte</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="profile-grid" style="margin-top: 1.5rem;">
+            <div>
+                <span>Identifiant interne</span>
+                <strong>#{{ account.id }}</strong>
+            </div>
+            <div>
+                <span>Date d'inscription</span>
+                <strong>{{ account.createdAt|date('d/m/Y H:i:s') }}</strong>
+            </div>
+            <div>
+                <span>Vérification email</span>
+                <strong>{{ account.emailVerifiedAt ? account.emailVerifiedAt|date('d/m/Y H:i') : 'Non vérifié' }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-split-grid" style="margin-bottom: 1.5rem;">
+        <section class="card" aria-labelledby="heading-profile">
+            <h2 id="heading-profile">Profil Candidat</h2>
+            <div class="profile-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 1rem;">
+                <div>
+                    <span>Intitulé du poste</span>
+                    <strong>{{ profile.title ?? 'Non renseigné' }}</strong>
+                </div>
+                <div>
+                    <span>Localisation</span>
+                    <strong>{{ profile.location ?? 'Non renseignée' }}</strong>
+                </div>
+                <div>
+                    <span>Expérience</span>
+                    <strong>{{ profile.yearsOfExperience is not null ? profile.yearsOfExperience ~ ' an(s)' : 'Non renseignée' }}</strong>
+                </div>
+                <div>
+                    <span>Télétravail</span>
+                    <strong>{{ profile.preferredRemotePolicy.label() }}</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="heading-cvs">
+            <h2 id="heading-cvs">CVs Importés ({{ cv_documents|length }})</h2>
+            {% if cv_documents is empty %}
+                <p class="help-text">Aucun CV importé pour ce compte.</p>
+            {% else %}
+                <div class="document-list" style="margin-top: 1rem;">
+                    {% for doc in cv_documents %}
+                        <div class="document-row">
+                            <div>
+                                <strong>{{ doc.originalFilename }}</strong>
+                                <div class="help-text" style="font-size: 0.75rem;">
+                                    {{ doc.createdAt|date('d/m/Y H:i') }} · {{ doc.fileSizeFormatted }}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                <span class="badge {{ doc.status.badgeClass }}">{{ doc.status.label }}</span>
+                                {% if profile.activeCvDocument and profile.activeCvDocument.id == doc.id %}
+                                    <span class="badge badge-success">Actif</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <section class="card" style="margin-bottom: 1.5rem;" aria-labelledby="heading-sources">
+        <h2 id="heading-sources">Sources de recherche d'offres ({{ job_sources|length }})</h2>
+        {% if job_sources is empty %}
+            <p class="help-text">Aucune source de recherche configurée.</p>
+        {% else %}
+            <div class="table-wrapper" style="margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Fournisseur</th>
+                            <th>Statut Sync</th>
+                            <th>Offres traitées</th>
+                            <th>Dernière synchro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for source in job_sources %}
+                            <tr>
+                                <td>
+                                    <strong>{{ source.name }}</strong>
+                                    <div class="help-text" style="font-size: 0.72rem; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ source.url }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-neutral">{{ source.provider.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ source.syncStatus.badgeClass }}">{{ source.syncStatus.label }}</span>
+                                    {% if source.lastError %}
+                                        <div class="text-error" style="font-size: 0.72rem; margin-top: 0.2rem;">{{ source.lastError|slice(0, 80) }}...</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ source.processedOfferCount }}</strong>
+                                </td>
+                                <td>
+                                    <small>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if recent_offers is not empty %}
+        <section class="card" aria-labelledby="heading-offers">
+            <h2 id="heading-offers">Dernières offres collectées ({{ recent_offers|length }})</h2>
+            <div class="table-wrapper" style="margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Entreprise</th>
+                            <th>Localisation</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for offer in recent_offers %}
+                            <tr>
+                                <td>
+                                    <strong>{{ offer.title }}</strong>
+                                </td>
+                                <td>{{ offer.company ?? '-' }}</td>
+                                <td>{{ offer.location ?? '-' }}</td>
+                                <td>
+                                    <span class="badge {{ offer.status.badgeClass }}">{{ offer.status.label }}</span>
+                                </td>
+                                <td>
+                                    <small>{{ offer.publishedAt ? offer.publishedAt|date('d/m/Y') : offer.firstSeenAt|date('d/m/Y H:i') }}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block admin_title %}Gestion des Utilisateurs{% endblock %}
+
+{% block admin_content %}
+    <section class="card" style="margin-bottom: 1.5rem;" aria-label="Filtres de recherche">
+        <form method="get" action="{{ path('app_admin_users') }}" class="admin-filter-bar">
+            <div class="filter-field-grow">
+                <label for="filter-q" class="field-label">Rechercher</label>
+                <input id="filter-q" type="text" name="q" value="{{ filters.q }}" placeholder="Email ou titre de profil...">
+            </div>
+
+            <div class="filter-field">
+                <label for="filter-verified" class="field-label">Email vérifié</label>
+                <select id="filter-verified" name="verified">
+                    <option value="all" {{ filters.verified == 'all' ? 'selected' : '' }}>Tous</option>
+                    <option value="yes" {{ filters.verified == 'yes' ? 'selected' : '' }}>Vérifiés uniquement</option>
+                    <option value="no" {{ filters.verified == 'no' ? 'selected' : '' }}>Non vérifiés</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label for="filter-role" class="field-label">Rôle</label>
+                <select id="filter-role" name="role">
+                    <option value="all" {{ filters.role == 'all' ? 'selected' : '' }}>Tous les rôles</option>
+                    <option value="admin" {{ filters.role == 'admin' ? 'selected' : '' }}>Administrateurs</option>
+                    <option value="user" {{ filters.role == 'user' ? 'selected' : '' }}>Utilisateurs standards</option>
+                </select>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="button button-compact">Filtrer</button>
+                {% if filters.q or filters.verified != 'all' or filters.role != 'all' %}
+                    <a href="{{ path('app_admin_users') }}" class="button button-compact secondary">Réinitialiser</a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <section class="card" aria-labelledby="heading-users-list">
+        <div class="section-heading">
+            <h2 id="heading-users-list">{{ total_count }} utilisateur(s) trouvé(s)</h2>
+        </div>
+
+        {% if accounts is empty %}
+            <div class="empty-state">
+                <div class="empty-state-icon">👥</div>
+                <h3>Aucun utilisateur trouvé</h3>
+                <p class="help-text">Essayez de modifier vos filtres de recherche.</p>
+            </div>
+        {% else %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Compte</th>
+                            <th>Email vérifié</th>
+                            <th>Profil / CV</th>
+                            <th>Données</th>
+                            <th>Inscription</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for account in accounts %}
+                            {% set stats = account_stats[account.id] ?? {'cv_count': 0, 'source_count': 0, 'skill_count': 0} %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ account.email }}</strong>
+                                        {% if account.admin %}
+                                            <span class="badge badge-info" style="font-size: 0.65rem; margin-left: 0.25rem;">Admin</span>
+                                        {% endif %}
+                                        {% if account.googleConnected %}
+                                            <span class="badge badge-neutral" style="font-size: 0.65rem; margin-left: 0.25rem;">Google</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="help-text">ID #{{ account.id }}</small>
+                                </td>
+                                <td>
+                                    {% if account.emailVerified %}
+                                        <span class="badge badge-success">Vérifié</span>
+                                        {% if account.emailVerifiedAt %}
+                                            <div class="help-text" style="font-size: 0.72rem;">{{ account.emailVerifiedAt|date('d/m/Y') }}</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge badge-warning">Non vérifié</span>
+                                        <form method="post" action="{{ path('app_admin_user_verify_email', {'id': account.id}) }}" style="display: inline-block; margin-top: 0.25rem;">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('verify_email_' ~ account.id) }}">
+                                            <button type="submit" class="button button-compact secondary" style="font-size: 0.7rem; padding: 0.2rem 0.45rem; min-height: auto;">Valider</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if account.candidateProfile.title %}
+                                        <strong>{{ account.candidateProfile.title }}</strong>
+                                    {% else %}
+                                        <span class="help-text">Non renseigné</span>
+                                    {% endif %}
+                                    {% if account.candidateProfile.location %}
+                                        <div class="help-text" style="font-size: 0.76rem;">📍 {{ account.candidateProfile.location }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="help-text" style="font-size: 0.8rem; line-height: 1.4;">
+                                        <span>📄 {{ stats.cv_count }} CV(s)</span><br>
+                                        <span>💡 {{ stats.skill_count }} compétence(s)</span><br>
+                                        <span>🔍 {{ stats.source_count }} source(s)</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small>{{ account.createdAt|date('d/m/Y') }}</small>
+                                    <div class="help-text" style="font-size: 0.72rem;">{{ account.createdAt|date('H:i') }}</div>
+                                </td>
+                                <td class="table-actions">
+                                    {# Direct Impersonation link #}
+                                    <a class="button button-compact" href="{{ path('app_candidate_profile', {'_switch_user': account.email}) }}" title="Se connecter et naviguer en tant que {{ account.email }}">
+                                        <span>Se connecter</span>
+                                    </a>
+
+                                    <a class="button button-compact secondary" href="{{ path('app_admin_user_show', {'id': account.id}) }}" title="Consulter la fiche détaillée">
+                                        <span>Détails</span>
+                                    </a>
+
+                                    <form method="post" action="{{ path('app_admin_user_toggle_admin', {'id': account.id}) }}" style="display: inline;" onsubmit="return confirm('Confirmer la modification du rôle admin ?');">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('toggle_admin_' ~ account.id) }}">
+                                        {% if account.admin %}
+                                            <button type="submit" class="button button-compact secondary" title="Retirer les droits administrateur">Rétrograder</button>
+                                        {% else %}
+                                            <button type="submit" class="button button-compact secondary" title="Promouvoir en administrateur">Promouvoir Admin</button>
+                                        {% endif %}
+                                    </form>
+
+                                    {% if app.user and app.user.id != account.id %}
+                                        <form method="post" action="{{ path('app_admin_user_delete', {'id': account.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous certain de vouloir supprimer définitivement cet utilisateur et toutes ses données ?');">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('delete_user_' ~ account.id) }}">
+                                            <button type="submit" class="button button-compact danger" title="Supprimer définitivement l'utilisateur">Supprimer</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

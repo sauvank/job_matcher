@@ -23,6 +23,7 @@ final class CandidateProfileFixtures extends Fixture
     {
         $account = new Account('demo@example.test');
         $account->setPassword($this->passwordHasher->hashPassword($account, 'demo-password-change-me'));
+        $account->verifyEmail();
         $profile = $account->getCandidateProfile();
         $profile->updateFromCv('Développeur backend PHP/Symfony', 'Paris', 6, 'CV de démonstration PHP Symfony Docker PostgreSQL PHPUnit.');
 
@@ -37,7 +38,13 @@ final class CandidateProfileFixtures extends Fixture
             $manager->persist($skill);
         }
 
+        $admin = new Account('admin@example.test');
+        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin-password-change-me'));
+        $admin->verifyEmail();
+        $admin->grantAdmin();
+
         $manager->persist($account);
+        $manager->persist($admin);
         $manager->flush();
     }
 }

@@ -33,4 +33,64 @@ final class AccountRepository extends ServiceEntityRepository implements Passwor
     {
         return $this->findOneBy(['email' => mb_strtolower(trim($identifier))]);
     }
+
+    /** @return list<Account> */
+    public function findAllOrderedByCreatedAt(): array
+    {
+        /* @var list<Account> */
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.candidateProfile', 'cp')
+            ->addSelect('cp')
+            ->orderBy('a.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countTotal(): int
+    {
+        return (int) $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countVerified(): int
+    {
+        return (int) $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->where('a.emailVerifiedAt IS NOT NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /** @return list<Account> */
+    public function findWithFilters(?string $query = null, ?string $verified = null, ?string $role = null): array
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->leftJoin('a.candidateProfile', 'cp')
+            ->addSelect('cp')
+            ->orderBy('a.createdAt', 'DESC');
+
+        if ($query !== null && trim($query) !== '') {
+            $qb->andWhere('LOWER(a.email) LIKE :query OR LOWER(cp.title) LIKE :query')
+                ->setParameter('query', '%'.mb_strtolower(trim($query)).'%');
+        }
+
+        if ($verified === 'yes') {
+            $qb->andWhere('a.emailVerifiedAt IS NOT NULL');
+        } elseif ($verified === 'no') {
+            $qb->andWhere('a.emailVerifiedAt IS NULL');
+        }
+
+        /** @var list<Account> $results */
+        $results = $qb->getQuery()->getResult();
+
+        if ($role === 'admin') {
+            $results = array_values(array_filter($results, static fn (Account $a): bool => $a->isAdmin()));
+        } elseif ($role === 'user') {
+            $results = array_values(array_filter($results, static fn (Account $a): bool => !$a->isAdmin()));
+        }
+
+        return $results;
+    }
 }

@@ -8,6 +8,19 @@
         {% block importmap %}{{ importmap('app') }}{% endblock %}
     </head>
     <body>
+        {% if is_granted('IS_IMPERSONATOR') %}
+            <aside class="impersonation-bar" role="alert" aria-label="Session d'usurpation active">
+                <div class="impersonation-inner">
+                    <span class="impersonation-text">
+                        <span class="impersonation-icon" aria-hidden="true">⚠️</span>
+                        Connecté en tant que <strong>{{ app.user.userIdentifier }}</strong> (Session usurpée)
+                    </span>
+                    <a class="button button-compact secondary impersonation-exit" href="{{ path('app_admin_users', {'_switch_user': '_exit'}) }}">
+                        Quitter l'impersonation &rarr;
+                    </a>
+                </div>
+            </aside>
+        {% endif %}
         <header class="site-header">
             {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
             <div class="header-inner">
@@ -22,6 +35,9 @@
                         <a class="{{ currentRoute == 'app_candidate_cv_optimization' ? 'active' : '' }}" href="{{ path('app_candidate_cv_optimization') }}">Optimiser mon CV</a>
                         <a class="{{ currentRoute starts with 'app_job_source' ? 'active' : '' }}" href="{{ path('app_job_sources') }}">Sources</a>
                         <a class="{{ currentRoute starts with 'app_job_offer' ? 'active' : '' }}" href="{{ path('app_job_offers') }}">Offres</a>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <a class="{{ currentRoute starts with 'app_admin' ? 'active' : '' }}" href="{{ path('app_admin_dashboard') }}">Administration</a>
+                        {% endif %}
                         <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
                             <button class="nav-logout" type="submit">Déconnexion</button>
