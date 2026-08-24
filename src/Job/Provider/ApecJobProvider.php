@@ -27,17 +27,58 @@ final readonly class ApecJobProvider implements JobProviderInterface
 
     public function fetch(JobSource $source): iterable
     {
+        $url = $source->getUrl();
+        $queryParts = [];
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $queryParts);
+        $motsCles = isset($queryParts['motsCles']) && is_string($queryParts['motsCles']) ? trim($queryParts['motsCles']) : '';
+        $lieux = isset($queryParts['lieux']) && is_string($queryParts['lieux']) ? trim($queryParts['lieux']) : '';
+        $searchKeyword = trim(sprintf('%s %s', $motsCles, $lieux));
+
+        if ($searchKeyword !== '') {
+            try {
+                $response = $this->httpClient->request('POST', 'https://www.apec.fr/cms/webservices/rechercheOffre', [
+                    'headers' => [
+                        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => [
+                        'motsCles' => $searchKeyword,
+                        'pagination' => ['range' => $this->maxOffers, 'startIndex' => 0],
+                        'activeFiltre' => false,
+                        'typeClient' => 'CADRE',
+                    ],
+                    'timeout' => 15,
+                ]);
+
+                if ($response->getStatusCode() === 200) {
+                    $payload = $response->toArray(false);
+                    $results = $payload['resultats'] ?? [];
+                    if (is_array($results) && $results !== []) {
+                        foreach ($results as $item) {
+                            if (is_array($item)) {
+                                yield $this->parser->parseOfferFromApi($item);
+                            }
+                        }
+
+                        return;
+                    }
+                }
+            } catch (\Throwable) {
+                // Fallback to web scraping
+            }
+        }
+
         $listingContent = $this->fetchContent($source->getUrl());
         $offerUrls = $this->parser->extractOfferUrls($listingContent, $this->maxOffers);
 
-        foreach ($offerUrls as $index => $url) {
+        foreach ($offerUrls as $index => $offerUrl) {
             if ($index > 0) {
                 usleep(250_000);
             }
 
             try {
-                $offerHtml = $this->fetchContent($url);
-                yield $this->parser->parseOffer($offerHtml, $url);
+                $offerHtml = $this->fetchContent($offerUrl);
+                yield $this->parser->parseOffer($offerHtml, $offerUrl);
             } catch (\Throwable) {
                 continue;
             }

@@ -46,6 +46,50 @@ final class ApecJobPostingParser
         return $urls;
     }
 
+    /** @param array<string, mixed> $data */
+    public function parseOfferFromApi(array $data): NormalizedJobOffer
+    {
+        $externalId = (string) ($data['numeroOffre'] ?? $data['id'] ?? '');
+        if ($externalId === '') {
+            throw new \RuntimeException(JobMessage::JOB_POSTING_NOT_FOUND);
+        }
+
+        $url = sprintf('https://www.apec.fr/candidat/recherche-emploi.html/emploi/detail-offre/%s', $externalId);
+        $title = (string) ($data['intitule'] ?? '');
+        if ($title === '') {
+            throw new \RuntimeException(JobMessage::JOB_POSTING_NOT_FOUND);
+        }
+
+        $minSalary = null;
+        $maxSalary = null;
+        $salaryText = (string) ($data['salaireTexte'] ?? '');
+        if (preg_match('/(\d+)\s*-\s*(\d+)\s*k€/i', $salaryText, $salaryMatches)) {
+            $minSalary = (int) $salaryMatches[1] * 1000;
+            $maxSalary = (int) $salaryMatches[2] * 1000;
+        } elseif (preg_match('/(?:partir de|minimum)\s*(\d+)\s*k€/i', $salaryText, $salaryMatches)) {
+            $minSalary = (int) $salaryMatches[1] * 1000;
+        }
+
+        $description = $this->cleanHtml($data['texteOffre'] ?? null);
+
+        return new NormalizedJobOffer(
+            externalId: $externalId,
+            url: $url,
+            title: $title,
+            company: $this->stringValue($data, 'nomCommercial'),
+            location: $this->stringValue($data, 'lieuTexte'),
+            contractType: 'CDI',
+            minimumSalary: $minSalary,
+            maximumSalary: $maxSalary,
+            remotePolicy: preg_match('/télétravail|remote/i', (string) ($data['texteOffre'] ?? '')) === 1 ? 'REMOTE_AVAILABLE' : null,
+            yearsOfExperience: $this->extractYearsOfExperience(null, $description),
+            description: $description,
+            publishedAt: $this->dateValue($data['datePublication'] ?? null),
+            validThrough: null,
+            rawPayload: $data,
+        );
+    }
+
     public function parseOffer(string $html, string $url): NormalizedJobOffer
     {
         if (preg_match('~/detail-offre/([a-zA-Z0-9]+)~', $url, $matches) !== 1) {
