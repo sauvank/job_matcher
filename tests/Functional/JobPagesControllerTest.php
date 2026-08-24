@@ -75,7 +75,6 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorCount(1, sprintf('.source-filter-tab[data-source-filter-value="%s"]', $frontendLabel));
         self::assertSelectorCount(2, sprintf('tr[data-source-filter-value="%s"]', $backendLabel));
         self::assertSelectorCount(1, sprintf('tr[data-source-filter-value="%s"]', $frontendLabel));
-        self::assertSelectorTextContains('.external-search-links', 'LinkedIn — '.$backendLabel);
     }
 
     public function testAJobSourceCanBeDeleted(): void

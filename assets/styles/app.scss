@@ -131,8 +131,6 @@ p { color: var(--muted); }
 .source-filter-tab:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; box-shadow: none; transform: none; }
 .source-filter-tab.active { border-color: var(--primary); background: var(--primary); color: white !important; }
 .source-filter-empty { padding: 1rem; border-radius: .75rem; background: var(--surface-soft); color: var(--muted); }
-.external-searches { margin-bottom: 1.5rem; }
-.external-search-links { display: flex; flex-wrap: wrap; gap: .65rem; }
 
 .upload-card { max-width: 760px; margin-inline: auto; }
 .upload-field { margin: 0; }

@@ -6,7 +6,7 @@
     <div class="page-heading">
         <p class="eyebrow">Collecte</p>
         <h1>Sources d’offres</h1>
-        <p>HelloWork, Apec, France Travail et Welcome to the Jungle sont synchronisés automatiquement. LinkedIn est proposé en recherche externe. Indeed peut refuser les connexions du serveur ; son état indique alors clairement le blocage.</p>
+        <p>HelloWork, Apec, France Travail et Welcome to the Jungle sont synchronisés automatiquement. Indeed peut refuser les connexions du serveur ; son état indique alors clairement le blocage.</p>
     </div>
 
     <section class="card form-card">
@@ -21,21 +21,6 @@
             <p>Validez d’abord la localisation de votre profil depuis un CV.</p>
         {% endif %}
     </section>
-
-    {% if linkedinSearches is not empty %}
-        <section class="card external-searches">
-            <div class="section-heading">
-                <h2>Recherches LinkedIn</h2>
-                <span class="badge badge-info">Liens externes</span>
-            </div>
-            <p>LinkedIn ne fournit pas d’accès public à la recherche d’offres pour une synchronisation automatique. Ouvrez directement la recherche correspondant à chaque intitulé.</p>
-            <div class="external-search-links">
-                {% for label, url in linkedinSearches %}
-                    <a class="button secondary" href="{{ url }}" target="_blank" rel="noopener noreferrer">LinkedIn — {{ label }}</a>
-                {% endfor %}
-            </div>
-        </section>
-    {% endif %}
 
     <turbo-frame id="job-sources-list" {% if hasActiveSync %}data-controller="poll" data-poll-interval-value="2000" data-poll-url-value="{{ path('app_job_sources') }}"{% endif %}>
         <section class="card">
