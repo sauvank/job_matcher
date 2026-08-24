@@ -19,6 +19,7 @@ final class JobMessage
     public const SYNC_FAILED = 'job.source.sync_failed';
     public const INVALID_RESPONSE = 'job.provider.invalid_response';
     public const JOB_POSTING_NOT_FOUND = 'job.provider.job_posting_not_found';
+    public const INDEED_BLOCKED = 'job.provider.indeed_blocked';
 
     private function __construct()
     {

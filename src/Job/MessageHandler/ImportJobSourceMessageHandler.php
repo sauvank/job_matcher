@@ -119,14 +119,13 @@ final readonly class ImportJobSourceMessageHandler
                 'offerCount' => $importedCount,
             ]);
         } catch (\Throwable $exception) {
-            $source->failSync(JobMessage::SYNC_FAILED);
+            $errorMessage = $exception->getMessage();
+            $source->failSync($errorMessage !== '' ? $errorMessage : JobMessage::SYNC_FAILED);
             $this->entityManager->flush();
             $this->logger->error(JobMessage::SYNC_FAILED, [
                 'jobSourceId' => $message->jobSourceId,
                 'exception' => $exception,
             ]);
-
-            throw $exception;
         } finally {
             $lock->release();
         }

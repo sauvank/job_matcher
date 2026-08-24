@@ -85,7 +85,12 @@ final readonly class IndeedJobProvider implements JobProviderInterface
             'max_redirects' => 5,
         ]);
 
-        if ($response->getStatusCode() !== 200) {
+        $statusCode = $response->getStatusCode();
+        if ($statusCode === 403) {
+            throw new \RuntimeException(JobMessage::INDEED_BLOCKED);
+        }
+
+        if ($statusCode !== 200) {
             throw new \RuntimeException(JobMessage::INVALID_RESPONSE);
         }
 

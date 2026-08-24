@@ -96,6 +96,7 @@ job:
   provider:
     invalid_response: "La plateforme a retourné une réponse inattendue."
     job_posting_not_found: "La fiche ne contient aucune offre structurée exploitable."
+    indeed_blocked: "Indeed bloque l’accès automatique (protection anti-bot Cloudflare)."
 matching:
   analysis:
     match_not_found: "La correspondance demandée est introuvable."
