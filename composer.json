@@ -53,6 +53,7 @@
             "symfony/runtime": true
         },
         "bump-after-update": true,
+        "process-timeout": 600,
         "sort-packages": true,
         "platform": {
             "php": "8.4.0",

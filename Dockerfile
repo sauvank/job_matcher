@@ -16,17 +16,18 @@ RUN mkdir -p /run/cv-extractor \
 
 FROM php_base AS php_prod
 
+ARG COMPOSER_AUTH
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
 
 COPY docker/php/prod.ini /usr/local/etc/php/conf.d/zz-app-prod.ini
 
 COPY composer.json composer.lock symfony.lock ./
-RUN composer install --prefer-dist --no-dev --no-interaction --no-progress --no-scripts
+RUN COMPOSER_AUTH=$COMPOSER_AUTH composer install --prefer-dist --no-dev --no-interaction --no-progress --no-scripts
 
 COPY . .
-RUN composer dump-autoload --classmap-authoritative --no-dev --no-interaction \
-    && composer run-script post-install-cmd \
+RUN COMPOSER_AUTH=$COMPOSER_AUTH composer dump-autoload --classmap-authoritative --no-dev --no-interaction \
+    && COMPOSER_AUTH=$COMPOSER_AUTH composer run-script post-install-cmd \
     && php bin/console sass:build \
     && php bin/console asset-map:compile \
     && mkdir -p var/cache var/log var/cv \
@@ -41,11 +42,13 @@ COPY --from=php_prod /app/public /app/public
 
 FROM php_base AS php_dev
 
+ARG COMPOSER_AUTH
+
 COPY composer.json composer.lock symfony.lock ./
-RUN composer install --prefer-dist --no-interaction --no-progress --no-scripts
+RUN COMPOSER_AUTH=$COMPOSER_AUTH composer install --prefer-dist --no-interaction --no-progress --no-scripts
 
 COPY . .
-RUN composer run-script post-install-cmd \
+RUN COMPOSER_AUTH=$COMPOSER_AUTH composer run-script post-install-cmd \
     && php bin/console sass:build
 
 CMD ["php-fpm"]
