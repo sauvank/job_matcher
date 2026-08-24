@@ -114,7 +114,7 @@
                                 </td>
                                 <td class="table-actions">
                                     {# Direct Impersonation link #}
-                                    <a class="button button-compact" href="{{ path('app_candidate_profile', {'_switch_user': account.email}) }}" title="Se connecter et naviguer en tant que {{ account.email }}">
+                                    <a class="button button-compact" data-turbo="false" href="{{ path('app_candidate_profile', {'_switch_user': account.email}) }}" title="Se connecter et naviguer en tant que {{ account.email }}">
                                         <span>Se connecter</span>
                                     </a>
 

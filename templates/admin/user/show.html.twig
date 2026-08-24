@@ -27,7 +27,7 @@
             </div>
 
             <div class="button-row" style="margin-top: 0;">
-                <a class="button" href="{{ path('app_candidate_profile', {'_switch_user': account.email}) }}">
+                <a class="button" data-turbo="false" href="{{ path('app_candidate_profile', {'_switch_user': account.email}) }}">
                     <span>Se connecter à ce compte</span>
                 </a>
             </div>

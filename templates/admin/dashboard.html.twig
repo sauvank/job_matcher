@@ -100,7 +100,7 @@
                                         <small>{{ user.createdAt|date('d/m/Y H:i') }}</small>
                                     </td>
                                     <td class="table-actions">
-                                        <a class="button button-compact" href="{{ path('app_candidate_profile', {'_switch_user': user.email}) }}" title="Se connecter en tant que cet utilisateur">
+                                        <a class="button button-compact" data-turbo="false" href="{{ path('app_candidate_profile', {'_switch_user': user.email}) }}" title="Se connecter en tant que cet utilisateur">
                                             <span>Se connecter</span>
                                         </a>
                                         <a class="button button-compact secondary" href="{{ path('app_admin_user_show', {'id': user.id}) }}" title="Voir les détails">
