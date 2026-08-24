@@ -23,7 +23,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Sources d’offres');
-        self::assertSelectorTextContains('.page-heading', 'générée automatiquement');
+        self::assertSelectorTextContains('.page-heading', 'générées automatiquement');
         self::assertSelectorTextContains('.form-card h2', 'Ajouter une recherche');
     }
 

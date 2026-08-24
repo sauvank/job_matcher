@@ -8,4 +8,5 @@ enum JobProviderType: string
 {
     case FAKE = 'FAKE';
     case HELLOWORK = 'HELLOWORK';
+    case INDEED = 'INDEED';
 }

@@ -14,6 +14,7 @@ parameters:
     app.cv_max_docx_uncompressed_bytes: 52428800
     app.cv_max_extracted_text_bytes: 2097152
     app.hellowork.max_offers: 10
+    app.indeed.max_offers: 10
     app.matching.weights:
         stack: 35
         experience: 15
@@ -130,6 +131,10 @@ services:
     App\Job\Provider\HelloWorkJobProvider:
         arguments:
             $maxOffers: '%app.hellowork.max_offers%'
+
+    App\Job\Provider\IndeedJobProvider:
+        arguments:
+            $maxOffers: '%app.indeed.max_offers%'
 
     App\Job\Scheduler\JobSyncSchedule:
         arguments:
