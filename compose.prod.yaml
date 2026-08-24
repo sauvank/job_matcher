@@ -45,6 +45,7 @@ services:
       APP_DEBUG: 0
       CLAMAV_DSN: tcp://clamav:3310
       CV_EXTRACTOR_DSN: unix:///run/cv-extractor/extractor.sock
+      BROWSER_DSN: http://browser:3000
     command: php bin/console messenger:consume async scheduler_job_sync --time-limit=3600 --memory-limit=128M --no-interaction
     volumes:
       - cv_data:/app/var/cv
@@ -55,6 +56,8 @@ services:
       redis:
         condition: service_healthy
       extractor:
+        condition: service_healthy
+      browser:
         condition: service_healthy
     restart: unless-stopped
 
@@ -82,6 +85,21 @@ services:
       timeout: 2s
       retries: 5
     restart: unless-stopped
+
+  browser:
+    image: ${BROWSER_IMAGE:-job-matcher-browser:prod}
+    build:
+      context: .
+      dockerfile: docker/browser/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "http.get('http://localhost:3000/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); });"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    mem_limit: 350m
 
   clamav:
     image: clamav/clamav-debian:1.4

@@ -13,7 +13,6 @@ use App\Job\Provider\ApecSearchUrlBuilder;
 use App\Job\Provider\FranceTravailSearchUrlBuilder;
 use App\Job\Provider\HelloWorkSearchUrlBuilder;
 use App\Job\Provider\IndeedSearchUrlBuilder;
-use App\Job\Provider\WelcomeToTheJungleSearchUrlBuilder;
 use App\Job\Translation\JobMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -26,7 +25,6 @@ final readonly class ConfigureCandidateJobSearchService
         private IndeedSearchUrlBuilder $indeedUrlBuilder,
         private ApecSearchUrlBuilder $apecUrlBuilder,
         private FranceTravailSearchUrlBuilder $franceTravailUrlBuilder,
-        private WelcomeToTheJungleSearchUrlBuilder $wttjUrlBuilder,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
     ) {
@@ -59,7 +57,6 @@ final readonly class ConfigureCandidateJobSearchService
         $sources[] = $this->configureProviderSource($profile, $title, $location, JobProviderType::HELLOWORK);
         $sources[] = $this->configureProviderSource($profile, $title, $location, JobProviderType::APEC);
         $sources[] = $this->configureProviderSource($profile, $title, $location, JobProviderType::FRANCE_TRAVAIL);
-        $sources[] = $this->configureProviderSource($profile, $title, $location, JobProviderType::WELCOME_TO_THE_JUNGLE);
         $sources[] = $this->configureProviderSource($profile, $title, $location, JobProviderType::INDEED);
 
         return $sources;
@@ -81,7 +78,6 @@ final readonly class ConfigureCandidateJobSearchService
             JobProviderType::HELLOWORK => $this->helloWorkUrlBuilder->build($title, $location),
             JobProviderType::APEC => $this->apecUrlBuilder->build($title, $location),
             JobProviderType::FRANCE_TRAVAIL => $this->franceTravailUrlBuilder->build($title, $location),
-            JobProviderType::WELCOME_TO_THE_JUNGLE => $this->wttjUrlBuilder->build($title, $location),
             JobProviderType::INDEED => $this->indeedUrlBuilder->build($title, $location),
             JobProviderType::FAKE => throw new \InvalidArgumentException('Unsupported provider type: '.$provider->value),
         };
@@ -90,7 +86,6 @@ final readonly class ConfigureCandidateJobSearchService
             JobProviderType::HELLOWORK => 'HelloWork',
             JobProviderType::APEC => 'Apec',
             JobProviderType::FRANCE_TRAVAIL => 'France Travail',
-            JobProviderType::WELCOME_TO_THE_JUNGLE => 'Welcome to the Jungle',
             JobProviderType::INDEED => 'Indeed',
         };
 

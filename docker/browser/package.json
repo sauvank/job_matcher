@@ -1,0 +1,12 @@
+{
+  "name": "job-matcher-browser",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.49.0"
+  }
+}

@@ -9,6 +9,8 @@
 parameters:
     env(DEFAULT_URI): 'http://localhost'
     default_routing_uri: 'http://localhost'
+    env(BROWSER_DSN): ''
+    default_browser_dsn: ''
     app.cv_storage_directory: '%kernel.project_dir%/var/cv'
     app.cv_max_file_bytes: 10485760
     app.cv_max_docx_entries: 1000
@@ -19,7 +21,6 @@ parameters:
     app.indeed.max_offers: 10
     app.apec.max_offers: 10
     app.francetravail.max_offers: 10
-    app.wttj.max_offers: 10
     app.matching.weights:
         stack: 35
         experience: 15
@@ -137,9 +138,14 @@ services:
         arguments:
             $maxOffers: '%app.hellowork.max_offers%'
 
+    App\Job\Provider\BrowserScraperClient:
+        arguments:
+            $browserDsn: '%env(default:default_browser_dsn:BROWSER_DSN)%'
+
     App\Job\Provider\IndeedJobProvider:
         arguments:
             $maxOffers: '%app.indeed.max_offers%'
+            $browserClient: '@App\Job\Provider\BrowserScraperClient'
 
     App\Job\Provider\ApecJobProvider:
         arguments:
@@ -148,10 +154,6 @@ services:
     App\Job\Provider\FranceTravailJobProvider:
         arguments:
             $maxOffers: '%app.francetravail.max_offers%'
-
-    App\Job\Provider\WelcomeToTheJungleJobProvider:
-        arguments:
-            $maxOffers: '%app.wttj.max_offers%'
 
     App\Job\Scheduler\JobSyncSchedule:
         arguments:

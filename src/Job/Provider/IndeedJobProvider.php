@@ -17,6 +17,7 @@ final readonly class IndeedJobProvider implements JobProviderInterface
         private HttpClientInterface $httpClient,
         private IndeedJobPostingParser $parser,
         private int $maxOffers,
+        private ?BrowserScraperClient $browserClient = null,
     ) {
     }
 
@@ -28,6 +29,16 @@ final readonly class IndeedJobProvider implements JobProviderInterface
     public function fetch(JobSource $source): iterable
     {
         $listingContent = $this->fetchContent($source->getUrl());
+
+        $embeddedOffers = $this->parser->parseOffersFromListing($listingContent, $this->maxOffers);
+        if ($embeddedOffers !== []) {
+            foreach ($embeddedOffers as $offer) {
+                yield $offer;
+            }
+
+            return;
+        }
+
         $offerUrls = $this->parser->extractOfferUrls($listingContent, $this->maxOffers);
 
         foreach ($offerUrls as $index => $url) {
@@ -47,22 +58,27 @@ final readonly class IndeedJobProvider implements JobProviderInterface
     public function checkAvailability(JobOffer $offer): JobOfferAvailability
     {
         try {
-            $response = $this->httpClient->request('GET', $offer->getUrl(), [
-                'headers' => $this->headers(),
-                'timeout' => 20,
-                'max_redirects' => 3,
-            ]);
-            $statusCode = $response->getStatusCode();
+            if ($this->browserClient === null || !$this->browserClient->isAvailable()) {
+                $response = $this->httpClient->request('GET', $offer->getUrl(), [
+                    'headers' => $this->headers(),
+                    'timeout' => 20,
+                    'max_redirects' => 3,
+                ]);
+                $statusCode = $response->getStatusCode();
 
-            if (in_array($statusCode, [404, 410], true)) {
-                return JobOfferAvailability::EXPIRED;
+                if (in_array($statusCode, [404, 410], true)) {
+                    return JobOfferAvailability::EXPIRED;
+                }
+
+                if ($statusCode !== 200) {
+                    return JobOfferAvailability::UNKNOWN;
+                }
+
+                $content = $response->getContent();
+            } else {
+                $content = $this->browserClient->scrape($offer->getUrl());
             }
 
-            if ($statusCode !== 200) {
-                return JobOfferAvailability::UNKNOWN;
-            }
-
-            $content = $response->getContent();
             if (preg_match('/Cette offre d[\'’]emploi a expiré|Cette offre n[\'’]est plus disponible|Job has expired/iu', $content) === 1) {
                 return JobOfferAvailability::EXPIRED;
             }
@@ -79,6 +95,10 @@ final readonly class IndeedJobProvider implements JobProviderInterface
 
     private function fetchContent(string $url): string
     {
+        if ($this->browserClient !== null && $this->browserClient->isAvailable()) {
+            return $this->browserClient->scrape($url);
+        }
+
         $response = $this->httpClient->request('GET', $url, [
             'headers' => $this->headers(),
             'timeout' => 20,

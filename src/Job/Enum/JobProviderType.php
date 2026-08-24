@@ -11,5 +11,4 @@ enum JobProviderType: string
     case INDEED = 'INDEED';
     case APEC = 'APEC';
     case FRANCE_TRAVAIL = 'FRANCE_TRAVAIL';
-    case WELCOME_TO_THE_JUNGLE = 'WELCOME_TO_THE_JUNGLE';
 }

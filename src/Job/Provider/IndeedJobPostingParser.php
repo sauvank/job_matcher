@@ -73,6 +73,35 @@ final class IndeedJobPostingParser
         return $urls;
     }
 
+    /** @return list<NormalizedJobOffer> */
+    public function parseOffersFromListing(string $content, int $limit): array
+    {
+        $offers = [];
+
+        if (preg_match('/window\.mosaic\.providerData\["mosaic-provider-jobcards"\]\s*=\s*(.+?);\s*window\.mosaic/s', $content, $matches)) {
+            $data = json_decode($matches[1], true);
+            if (is_array($data)) {
+                $results = $data['metaData']['mosaicProviderJobCardsModel']['results'] ?? [];
+                if (is_array($results)) {
+                    foreach ($results as $job) {
+                        if (!is_array($job)) {
+                            continue;
+                        }
+                        $offer = $this->buildOfferFromJobCard($job);
+                        if ($offer !== null) {
+                            $offers[] = $offer;
+                            if (count($offers) >= $limit) {
+                                return $offers;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $offers;
+    }
+
     public function parseOffer(string $html, string $url): NormalizedJobOffer
     {
         if (preg_match('~jk=([a-zA-Z0-9]+)~', $url, $matches) !== 1) {
@@ -316,5 +345,74 @@ final class IndeedJobPostingParser
         }
 
         return (int) round($value[$key]);
+    }
+
+    /** @param array<string, mixed> $job */
+    private function buildOfferFromJobCard(array $job): ?NormalizedJobOffer
+    {
+        $jobkey = isset($job['jobkey']) && is_string($job['jobkey']) ? trim($job['jobkey']) : '';
+        if ($jobkey === '') {
+            return null;
+        }
+
+        $title = isset($job['displayTitle']) && is_string($job['displayTitle'])
+            ? trim($job['displayTitle'])
+            : (isset($job['title']) && is_string($job['title']) ? trim($job['title']) : '');
+
+        if ($title === '') {
+            return null;
+        }
+
+        $company = isset($job['company']) && is_string($job['company']) ? trim($job['company']) : null;
+        $location = isset($job['formattedLocation']) && is_string($job['formattedLocation']) ? trim($job['formattedLocation']) : null;
+        $snippet = isset($job['snippet']) && is_string($job['snippet']) ? $this->cleanHtml($job['snippet']) : null;
+
+        $contractType = null;
+        if (isset($job['jobTypes']) && is_array($job['jobTypes'])) {
+            foreach ($job['jobTypes'] as $type) {
+                if (is_string($type) && preg_match('/(CDI|CDD|Stage|Alternance|Freelance|Intérim)/i', $type, $cm)) {
+                    $contractType = mb_strtoupper($cm[1]);
+                    break;
+                }
+            }
+        }
+        if ($contractType === null && $snippet !== null && preg_match('/(CDI|CDD|Stage|Alternance|Freelance|Intérim)/i', $snippet, $cm)) {
+            $contractType = mb_strtoupper($cm[1]);
+        }
+
+        $minSalary = null;
+        $maxSalary = null;
+        $salaryData = $job['extractedSalary'] ?? ($job['estimatedSalary'] ?? null);
+        if (is_array($salaryData)) {
+            $min = $salaryData['min'] ?? null;
+            $max = $salaryData['max'] ?? null;
+            $minSalary = is_numeric($min) ? (int) round((float) $min) : null;
+            $maxSalary = is_numeric($max) ? (int) round((float) $max) : null;
+        }
+
+        $publishedAt = null;
+        if (isset($job['pubDate']) && is_numeric($job['pubDate'])) {
+            $seconds = (int) ($job['pubDate'] / 1000);
+            $publishedAt = (new \DateTimeImmutable())->setTimestamp($seconds);
+        }
+
+        $url = sprintf('https://fr.indeed.com/viewjob?jk=%s', $jobkey);
+
+        return new NormalizedJobOffer(
+            externalId: $jobkey,
+            url: $url,
+            title: $title,
+            company: $company,
+            location: $location,
+            contractType: $contractType,
+            minimumSalary: $minSalary,
+            maximumSalary: $maxSalary,
+            remotePolicy: ($job['remoteLocation'] ?? false) === true ? 'REMOTE_AVAILABLE' : null,
+            yearsOfExperience: $this->extractYearsOfExperience(null, $snippet),
+            description: $snippet,
+            publishedAt: $publishedAt,
+            validThrough: null,
+            rawPayload: $job,
+        );
     }
 }
