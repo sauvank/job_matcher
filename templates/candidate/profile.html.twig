@@ -18,25 +18,6 @@
             <div class="card"><span>Expérience</span><strong>{{ profile.yearsOfExperience is not null ? profile.yearsOfExperience ~ ' ans' : 'À renseigner' }}</strong></div>
         </section>
 
-        <section class="section" id="security">
-            <div class="section-heading">
-                <div>
-                    <p class="eyebrow">Sécurité</p>
-                    <h2>Connexion Google</h2>
-                </div>
-            </div>
-            <div class="card">
-                {% if googleConnected %}
-                    <p>Votre compte Google est associé à ce profil.</p>
-                {% elseif googleEnabled %}
-                    <p>Associez Google uniquement après vous être connecté avec votre mot de passe. L'adresse Google devra correspondre à celle du compte.</p>
-                    <a class="button google-button" href="{{ path('app_google_link') }}"><span class="google-mark" aria-hidden="true">G</span> Associer mon compte Google</a>
-                {% else %}
-                    <p>La connexion Google n'est pas configurée.</p>
-                {% endif %}
-            </div>
-        </section>
-
         <section class="section skills-section" id="skills" data-controller="skill-filter">
             <div class="section-heading skills-heading">
                 <div>

@@ -38,6 +38,22 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         self::assertResponseRedirects('/connexion');
     }
 
+    public function testGoogleSecuritySettingsAreShownOnAccountSettingsOnly(): void
+    {
+        $client = self::createClient();
+        $this->loginOwner($client);
+
+        $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('#security');
+        self::assertSelectorExists('nav a[href="/compte/parametres"]');
+
+        $client->request('GET', '/compte/parametres');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Paramètres du compte');
+        self::assertSelectorTextContains('#security h2', 'Connexion Google');
+    }
+
     public function testLoginPageIsAvailable(): void
     {
         $client = self::createClient();
@@ -253,7 +269,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         $client->loginUser($account);
         self::getContainer()->set(GoogleOAuthClient::class, $this->googleClient($email, 'google-link-'.$uniqueId));
 
-        $client->request('GET', '/profile/google');
+        $client->request('GET', '/compte/parametres/google');
         $state = $client->getRequest()->getSession()->get('google_oauth_state');
         self::assertIsString($state);
         $client->request('GET', '/connexion/google/retour?'.http_build_query([
@@ -261,7 +277,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
             'code' => 'authorization-code',
         ]));
 
-        self::assertResponseRedirects('/profile#security');
+        self::assertResponseRedirects('/compte/parametres#security');
         self::assertTrue($this->reloadAccount($email)->isGoogleConnected());
     }
 
@@ -275,7 +291,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         $client->loginUser($account);
         self::getContainer()->set(GoogleOAuthClient::class, $this->googleClient('other-'.$uniqueId.'@example.test', 'google-other-'.$uniqueId));
 
-        $client->request('GET', '/profile/google');
+        $client->request('GET', '/compte/parametres/google');
         $state = $client->getRequest()->getSession()->get('google_oauth_state');
         self::assertIsString($state);
         $client->request('GET', '/connexion/google/retour?'.http_build_query([
@@ -283,7 +299,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
             'code' => 'authorization-code',
         ]));
 
-        self::assertResponseRedirects('/profile#security');
+        self::assertResponseRedirects('/compte/parametres#security');
         self::assertFalse($this->reloadAccount($email)->isGoogleConnected());
     }
 
@@ -304,7 +320,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         $client->loginUser($account);
         self::getContainer()->set(GoogleOAuthClient::class, $this->googleClient($email, $subject));
 
-        $client->request('GET', '/profile/google');
+        $client->request('GET', '/compte/parametres/google');
         $state = $client->getRequest()->getSession()->get('google_oauth_state');
         self::assertIsString($state);
         $client->request('GET', '/connexion/google/retour?'.http_build_query([
@@ -312,7 +328,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
             'code' => 'authorization-code',
         ]));
 
-        self::assertResponseRedirects('/profile#security');
+        self::assertResponseRedirects('/compte/parametres#security');
         self::assertFalse($this->reloadAccount($email)->isGoogleConnected());
     }
 

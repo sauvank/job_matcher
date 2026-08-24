@@ -157,7 +157,7 @@ final class SecurityController extends AbstractController
     public function googleStart(Request $request, GoogleOAuthClient $google): RedirectResponse
     {
         if ($this->getUser() !== null) {
-            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+            return $this->redirectToRoute('app_account_settings', ['_fragment' => 'security']);
         }
         if (!$google->isConfigured()) {
             $this->addFlash('error', 'La connexion Google n’est pas encore configurée.');
@@ -168,7 +168,7 @@ final class SecurityController extends AbstractController
         return $this->beginGoogleOAuth($request, $google, self::GOOGLE_INTENT_LOGIN);
     }
 
-    #[Route('/profile/google', name: 'app_google_link', methods: ['GET'])]
+    #[Route('/compte/parametres/google', name: 'app_google_link', methods: ['GET'])]
     public function googleLink(
         Request $request,
         #[CurrentUser] Account $account,
@@ -177,12 +177,12 @@ final class SecurityController extends AbstractController
         if (!$google->isConfigured()) {
             $this->addFlash('error', 'La connexion Google n’est pas encore configurée.');
 
-            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+            return $this->redirectToRoute('app_account_settings', ['_fragment' => 'security']);
         }
         if ($account->isGoogleConnected()) {
             $this->addFlash('info', 'Votre compte Google est déjà associé.');
 
-            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+            return $this->redirectToRoute('app_account_settings', ['_fragment' => 'security']);
         }
 
         return $this->beginGoogleOAuth($request, $google, self::GOOGLE_INTENT_LINK);
@@ -231,27 +231,27 @@ final class SecurityController extends AbstractController
             if ($identity['email'] !== $account->getEmail()) {
                 $this->addFlash('error', 'L’adresse du compte Google doit correspondre à celle de votre profil.');
 
-                return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+                return $this->redirectToRoute('app_account_settings', ['_fragment' => 'security']);
             }
 
             $subjectOwner = $accounts->findOneBy(['googleSubject' => $identity['subject']]);
             if ($subjectOwner instanceof Account && $subjectOwner->getId() !== $account->getId()) {
                 $this->addFlash('error', 'Ce compte Google est déjà associé à un autre profil.');
 
-                return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+                return $this->redirectToRoute('app_account_settings', ['_fragment' => 'security']);
             }
 
             $account->connectGoogle($identity['subject']);
             $entityManager->flush();
             $this->addFlash('success', 'Votre compte Google est maintenant associé.');
 
-            return $this->redirectToRoute('app_candidate_profile', ['_fragment' => 'security']);
+            return $this->redirectToRoute('app_account_settings', ['_fragment' => 'security']);
         }
 
         $account = $accounts->findOneBy(['googleSubject' => $identity['subject']]);
         if (!$account instanceof Account) {
             if ($accounts->findOneBy(['email' => $identity['email']]) instanceof Account) {
-                $this->addFlash('error', 'Un compte local utilise déjà cette adresse. Connectez-vous avec votre mot de passe, puis associez Google depuis votre profil.');
+                $this->addFlash('error', 'Un compte local utilise déjà cette adresse. Connectez-vous avec votre mot de passe, puis associez Google depuis les paramètres du compte.');
 
                 return $this->redirectToRoute('app_login');
             }

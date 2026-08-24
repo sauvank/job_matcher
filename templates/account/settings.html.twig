@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Paramètres du compte · Job Matcher{% endblock %}
+
+{% block body %}
+    <div class="page-heading">
+        <p class="eyebrow">Mon compte</p>
+        <h1>Paramètres du compte</h1>
+    </div>
+
+    <section class="section" id="security">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Sécurité</p>
+                <h2>Connexion Google</h2>
+            </div>
+        </div>
+        <div class="card">
+            {% if googleConnected %}
+                <p>Votre compte Google est associé à ce compte.</p>
+            {% elseif googleEnabled %}
+                <p>Associez Google uniquement après vous être connecté avec votre mot de passe. L'adresse Google devra correspondre à celle du compte.</p>
+                <a class="button google-button" href="{{ path('app_google_link') }}"><span class="google-mark" aria-hidden="true">G</span> Associer mon compte Google</a>
+            {% else %}
+                <p>La connexion Google n'est pas configurée.</p>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
