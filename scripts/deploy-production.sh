@@ -63,9 +63,13 @@ healthcheck_url="http://127.0.0.1:$app_http_port/health"
 wait_for_application() {
     local max_attempts=${1:-30}
     local attempt
+    local http_code=""
 
+    echo "Checking application health at $healthcheck_url (max $max_attempts attempts)..." >&2
     for ((attempt = 1; attempt <= max_attempts; attempt++)); do
-        if curl --fail --silent --connect-timeout 2 --max-time 5 "$healthcheck_url" >/dev/null 2>&1; then
+        http_code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "$healthcheck_url" 2>/dev/null || true)
+        if [[ "$http_code" == "200" ]]; then
+            echo "Health check succeeded on attempt $attempt (HTTP 200)." >&2
             return 0
         fi
 
@@ -74,32 +78,33 @@ wait_for_application() {
         fi
     done
 
-    echo "The local application health check failed after $max_attempts attempts." >&2
-    curl --fail --silent --show-error --connect-timeout 2 --max-time 5 \
-        "$healthcheck_url" >/dev/null
+    echo "The local application health check failed after $max_attempts attempts (Last HTTP code: ${http_code:-none})." >&2
+    echo "Raw response from $healthcheck_url:" >&2
+    curl -v --connect-timeout 2 --max-time 5 "$healthcheck_url" >&2 || true
+    return 1
 }
 
 print_security_service_diagnostics() {
     local service
     local container_id
 
-    echo "Security service diagnostics before rollback:" >&2
-    "${compose[@]}" ps -a clamav extractor >&2 || true
-    echo "Host memory:" >&2
+    echo "=== Service states before rollback ===" >&2
+    "${compose[@]}" ps -a >&2 || true
+    echo "=== Host memory ===" >&2
     free -m >&2 || true
 
-    for service in clamav extractor; do
+    for service in php nginx worker clamav extractor database redis; do
         container_id=$("${compose[@]}" ps -a -q "$service" 2>/dev/null || true)
         if [[ -z $container_id ]]; then
             continue
         fi
 
-        echo "State for $service:" >&2
+        echo "--- State for $service ---" >&2
         docker inspect \
             --format 'status={{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} restarts={{.RestartCount}}{{if .State.Health}} health={{.State.Health.Status}}{{end}} error={{.State.Error}}' \
             "$container_id" >&2 || true
-        echo "Last logs for $service:" >&2
-        "${compose[@]}" logs --no-color --tail=150 "$service" >&2 || true
+        echo "--- Last logs for $service ---" >&2
+        "${compose[@]}" logs --no-color --tail=50 "$service" >&2 || true
     done
 }
 
@@ -116,7 +121,7 @@ restore_previous_release() {
         "${rollback_compose[@]}" pull php worker nginx
         "${rollback_compose[@]}" up -d --force-recreate --no-deps --remove-orphans php worker
         "${rollback_compose[@]}" up -d --force-recreate --no-deps nginx
-        wait_for_application 20
+        wait_for_application 20 || true
         set -e
     fi
 
