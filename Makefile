@@ -20,7 +20,7 @@ help:
 	@echo "make test              Run PHPUnit"
 	@echo "make qa                Run coding style, PHPStan and tests"
 	@echo "make prod-config       Validate the production Compose configuration"
-	@echo "make prod-build        Build the production PHP and nginx images"
+	@echo "make prod-build        Build all production images"
 
 setup: build up install migrate sass
 
@@ -88,4 +88,4 @@ prod-config:
 	docker compose --env-file .env.prod.example -f compose.prod.yaml config --quiet
 
 prod-build: prod-config
-	docker compose --env-file .env.prod.example -f compose.prod.yaml build php nginx
+	docker compose --env-file .env.prod.example -f compose.prod.yaml build php nginx browser

@@ -129,7 +129,7 @@ jobs:
           DEPLOY_SHA: ${{ github.sha }}
         run: |
           package="$RUNNER_TEMP/job-matcher-deployment-$DEPLOY_SHA.tar.gz"
-          tar -czf "$package" compose.prod.yaml scripts/deploy-production.sh
+          tar -czf "$package" compose.prod.yaml scripts/deploy-production.sh docker/browser
           ssh \
             -i "$HOME/.ssh/job-matcher-production" \
             -o IdentitiesOnly=yes \

@@ -62,7 +62,7 @@ Le workflow GitHub Actions `.github/workflows/ci.yaml` s’exécute à chaque pu
 
 ## Image de production
 
-Le fichier `compose.prod.yaml` décrit une exécution sans montage du code source et sans exposition publique de PostgreSQL ou Redis. Deux cibles sont construites depuis le même `Dockerfile` : `php_prod`, utilisée par PHP-FPM et le worker, et `nginx_prod`, qui contient les fichiers publics compilés. Les CV privés résident dans un volume monté sur `/app/var/cv` et les sessions de production sont conservées dans Redis.
+Le fichier `compose.prod.yaml` décrit une exécution sans montage du code source et sans exposition publique de PostgreSQL ou Redis. PHP-FPM, le worker et nginx utilisent des images GHCR immuables. Le sidecar `browser`, qui embarque Chromium et Playwright, est construit sur le VPS depuis le contexte versionné de chaque release et reçoit lui aussi une étiquette liée au SHA Git. Les CV privés résident dans un volume monté sur `/app/var/cv` et les sessions de production sont conservées dans Redis.
 
 Avant toute extraction, le worker vérifie la signature et la structure du fichier. Un PDF doit posséder un en-tête, une fin et une table de références cohérents. Un DOCX doit être un paquet OpenXML non chiffré contenant ses composants obligatoires, sans chemin dangereux ni doublon. Les archives sont limitées à 1 000 entrées, 10 Mo par entrée et 50 Mo au total après décompression afin de bloquer les bombes ZIP.
 
@@ -110,7 +110,7 @@ Créer l'environnement **Settings → Environments → production**, limiter ses
 - `VPS_SSH_PRIVATE_KEY` : clé privée SSH dédiée au déploiement ;
 - `VPS_KNOWN_HOSTS` : ligne `known_hosts` du serveur, dont l'empreinte a été vérifiée avant enregistrement.
 
-Le serveur conserve seul `.env.prod.local` et tous les secrets applicatifs ; son dossier de production n'a pas besoin d'être un clone Git. Le workflow transfère uniquement `compose.prod.yaml` et `scripts/deploy-production.sh` dans `.deploy/releases/<sha>`. Le script verrouille les déploiements concurrents, sauvegarde PostgreSQL dans `.deploy/backups`, applique les migrations, recrée les services applicatifs et contrôle `/health`. Si une étape échoue, il affiche dans les logs GitHub Actions l'état et les derniers logs de ClamAV et de l'extracteur avant de restaurer les images précédentes avec le manifeste Compose déjà en production. Une migration de schéma incompatible reste une opération à traiter manuellement depuis la sauvegarde.
+Le serveur conserve seul `.env.prod.local` et tous les secrets applicatifs ; son dossier de production n'a pas besoin d'être un clone Git. Le workflow transfère `compose.prod.yaml`, `scripts/deploy-production.sh` et le contexte minimal `docker/browser` dans `.deploy/releases/<sha>`. Le script installe ce contexte versionné, construit l'image browser avec l'étiquette du commit, verrouille les déploiements concurrents, sauvegarde PostgreSQL, applique les migrations, recrée les services applicatifs et contrôle `/health`. Si une étape échoue, il affiche dans les logs GitHub Actions l'état et les derniers logs des services avant de restaurer les images précédentes avec le manifeste Compose déjà en production. Une migration de schéma incompatible reste une opération à traiter manuellement depuis la sauvegarde.
 
 Les messages asynchrones utilisent Redis. Après trois échecs avec délai exponentiel, ils sont conservés dans une file d'échec Doctrine.
 
