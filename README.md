@@ -128,11 +128,9 @@ docker compose exec -T php php bin/console app:matches:refresh
 
 Une première extraction déterministe complète les champs HelloWork incomplets à partir des sections « Environnement technique » et « Stack technique ». La vérification de disponibilité fera l’objet d’un prochain incrément.
 
-### Import manuel et sources protégées
+### Sources protégées
 
-La page `/jobs` permet d’importer manuellement une annonce provenant d’Indeed, Welcome to the Jungle ou d’une autre plateforme. L’utilisateur renseigne l’URL, l’intitulé et le contenu visible de l’annonce ; l’offre est dédupliquée par URL, rattachée au CV actif et envoyée automatiquement à l’analyse sémantique. Cette source interne est exclue des synchronisations planifiées.
-
-Indeed peut retourner au navigateur serveur une page de contrôle HTTP 403 avec CAPTCHA alors que la même recherche reste accessible depuis un navigateur personnel. Ce cas est détecté explicitement et marque la source en échec au lieu d’afficher un faux succès avec zéro offre. L’import manuel constitue le repli fiable.
+Indeed peut retourner au navigateur serveur une page de contrôle HTTP 403 avec CAPTCHA alors que la même recherche reste accessible depuis un navigateur personnel. Ce cas est détecté explicitement et marque la source en échec au lieu d’afficher un faux succès avec zéro offre.
 
 Sur `/sources`, des onglets regroupent les fournisseurs par intitulé ou ensemble de mots-clés. Le filtre actif est conservé pendant les rafraîchissements automatiques du Turbo Frame.
 

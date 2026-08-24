@@ -81,8 +81,6 @@ candidate:
       applied: "Appliqué au profil"
       failed: "Échec"
 job:
-  offer:
-    manual_imported: "L’annonce a été importée et son analyse a été mise en attente."
   source:
     sync_dispatched: "La synchronisation de la source a été mise en attente."
     invalid_url: "Cette URL de recherche HelloWork est invalide."
@@ -98,7 +96,7 @@ job:
   provider:
     invalid_response: "La plateforme a retourné une réponse inattendue."
     job_posting_not_found: "La fiche ne contient aucune offre structurée exploitable."
-    indeed_blocked: "Indeed bloque actuellement la synchronisation automatique. Utilisez l’import manuel depuis la page Offres."
+    indeed_blocked: "Indeed bloque actuellement la synchronisation automatique depuis le serveur."
 matching:
   analysis:
     match_not_found: "La correspondance demandée est introuvable."

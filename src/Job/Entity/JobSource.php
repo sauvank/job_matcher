@@ -135,12 +135,6 @@ final class JobSource
         return $this->enabled;
     }
 
-    public function disable(): void
-    {
-        $this->enabled = false;
-        $this->updatedAt = new \DateTimeImmutable();
-    }
-
     public function getLastSyncStartedAt(): ?\DateTimeImmutable
     {
         return $this->lastSyncStartedAt;

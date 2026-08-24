@@ -7,7 +7,6 @@ namespace App\Job\Repository;
 use App\Candidate\Entity\CandidateProfile;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobSource;
-use App\Job\Enum\JobProviderType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -48,21 +47,9 @@ final class JobSourceRepository extends ServiceEntityRepository implements JobSo
     /** @return list<JobSource> */
     public function findForProfile(CandidateProfile $profile): array
     {
-        $queryBuilder = $this->createQueryBuilder('source')
-            ->andWhere('source.candidateProfile = :profile')
-            ->andWhere('source.provider != :manualProvider')
-            ->setParameter('profile', $profile)
-            ->setParameter('manualProvider', JobProviderType::MANUAL)
-            ->orderBy('source.createdAt', 'DESC');
-
-        $activeCvDocument = $profile->getActiveCvDocument();
-        if ($activeCvDocument === null) {
-            $queryBuilder->andWhere('source.cvDocument IS NULL');
-        } else {
-            $queryBuilder->andWhere('source.cvDocument = :activeCvDocument')
-                ->setParameter('activeCvDocument', $activeCvDocument);
-        }
-
-        return $queryBuilder->getQuery()->getResult();
+        return $this->findBy([
+            'candidateProfile' => $profile,
+            'cvDocument' => $profile->getActiveCvDocument(),
+        ], ['createdAt' => 'DESC']);
     }
 }

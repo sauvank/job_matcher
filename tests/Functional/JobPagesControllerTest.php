@@ -8,15 +8,10 @@ use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
-use App\Job\Repository\JobOfferRepository;
 use App\Job\Repository\JobSourceRepository;
 use App\Matching\DTO\MatchScore;
 use App\Matching\Entity\JobMatch;
-use App\Matching\Enum\SemanticAnalysisStatus;
-use App\Matching\Message\AnalyzeJobMatchMessage;
-use App\Matching\Repository\JobMatchRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 
 final class JobPagesControllerTest extends AuthenticatedWebTestCase
 {
@@ -28,7 +23,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Sources d’offres');
-        self::assertSelectorTextContains('.page-heading', 'générées automatiquement');
+        self::assertSelectorTextContains('.page-heading', 'synchronisées automatiquement');
         self::assertSelectorTextContains('.form-card h2', 'Ajouter une recherche');
     }
 
@@ -41,7 +36,6 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Offres analysées');
         self::assertSelectorTextContains('.page-heading', 'compatibilité calculée par l’IA');
-        self::assertSelectorTextContains('.manual-offer-import summary', 'Importer manuellement une annonce');
     }
 
     public function testJobSourcesExposeOneFilterTabPerSearchLabel(): void
@@ -81,59 +75,6 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorCount(1, sprintf('.source-filter-tab[data-source-filter-value="%s"]', $frontendLabel));
         self::assertSelectorCount(2, sprintf('tr[data-source-filter-value="%s"]', $backendLabel));
         self::assertSelectorCount(1, sprintf('tr[data-source-filter-value="%s"]', $frontendLabel));
-    }
-
-    public function testAJobOfferCanBeImportedManuallyAndQueuedForAnalysis(): void
-    {
-        $client = self::createClient();
-        $account = $this->loginOwner($client);
-        $uniqueId = bin2hex(random_bytes(8));
-        $url = 'https://fr.indeed.com/viewjob?jk='.$uniqueId;
-
-        $crawler = $client->request('GET', '/jobs');
-        $form = $crawler->filter('form[name="manual_job_offer"]')->form([
-            'manual_job_offer[url]' => $url,
-            'manual_job_offer[title]' => 'Développeur Symfony manuel',
-            'manual_job_offer[company]' => 'Entreprise test',
-            'manual_job_offer[location]' => 'Lyon',
-            'manual_job_offer[description]' => 'Nous recherchons un développeur Symfony en CDI avec PHP, PostgreSQL et Docker. Le télétravail hybride est possible.',
-        ]);
-        $client->submit($form);
-
-        self::assertResponseRedirects();
-        $transport = self::getContainer()->get('messenger.transport.async');
-        self::assertInstanceOf(InMemoryTransport::class, $transport);
-        self::assertTrue(array_any(
-            $transport->getSent(),
-            static fn ($envelope): bool => $envelope->getMessage() instanceof AnalyzeJobMatchMessage,
-        ));
-
-        $client->followRedirect();
-        self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Développeur Symfony manuel');
-        self::assertSelectorTextContains('.flash-success', 'mise en attente');
-
-        $sourceRepository = self::getContainer()->get(JobSourceRepository::class);
-        $offerRepository = self::getContainer()->get(JobOfferRepository::class);
-        $matchRepository = self::getContainer()->get(JobMatchRepository::class);
-        self::assertInstanceOf(JobSourceRepository::class, $sourceRepository);
-        self::assertInstanceOf(JobOfferRepository::class, $offerRepository);
-        self::assertInstanceOf(JobMatchRepository::class, $matchRepository);
-
-        $source = $sourceRepository->findOneByProfileAndUrl($account->getCandidateProfile(), 'manual://job-offers');
-        self::assertNotNull($source);
-        self::assertSame(JobProviderType::MANUAL, $source->getProvider());
-        self::assertFalse($source->isEnabled());
-
-        $offer = $offerRepository->findOneBySourceAndExternalId($source, hash('sha256', $url));
-        self::assertNotNull($offer);
-        self::assertSame('Entreprise test', $offer->getCompany());
-        self::assertSame('CDI', $offer->getContractType());
-        self::assertSame('REMOTE_AVAILABLE', $offer->getRemotePolicy());
-
-        $match = $matchRepository->findOneFor($account->getCandidateProfile(), $offer);
-        self::assertNotNull($match);
-        self::assertSame(SemanticAnalysisStatus::QUEUED, $match->getSemanticAnalysisStatus());
     }
 
     public function testAJobSourceCanBeDeleted(): void
