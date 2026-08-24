@@ -106,6 +106,20 @@ final class JobSource
         return $this->name;
     }
 
+    public function getSearchLabel(): string
+    {
+        $separator = ' — ';
+        $firstSeparator = mb_strpos($this->name, $separator);
+        $lastSeparator = mb_strrpos($this->name, $separator);
+        if ($firstSeparator === false || $lastSeparator === false || $firstSeparator === $lastSeparator) {
+            return $this->name;
+        }
+
+        $start = $firstSeparator + mb_strlen($separator);
+
+        return mb_substr($this->name, $start, $lastSeparator - $start);
+    }
+
     public function getUrl(): string
     {
         return $this->url;
@@ -119,6 +133,12 @@ final class JobSource
     public function isEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    public function disable(): void
+    {
+        $this->enabled = false;
+        $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function getLastSyncStartedAt(): ?\DateTimeImmutable

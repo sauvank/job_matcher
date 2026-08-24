@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Form\ManualJobOfferType;
+use App\Job\Application\Service\ManualJobOfferImporter;
+use App\Job\DTO\ManualJobOfferData;
+use App\Job\Translation\JobMessage;
 use App\Matching\DTO\SemanticJobAnalysis;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Message\AnalyzeJobMatchMessage;
@@ -20,12 +24,32 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class JobOfferController extends AbstractController
 {
-    #[Route('/jobs', name: 'app_job_offers', methods: ['GET'])]
-    public function index(#[CurrentUser] Account $account, JobMatchRepository $repository): Response
-    {
+    #[Route('/jobs', name: 'app_job_offers', methods: ['GET', 'POST'])]
+    public function index(
+        Request $request,
+        #[CurrentUser] Account $account,
+        JobMatchRepository $repository,
+        ManualJobOfferImporter $manualImporter,
+    ): Response {
+        $manualOffer = new ManualJobOfferData();
+        $manualImportForm = $this->createForm(ManualJobOfferType::class, $manualOffer);
+        $manualImportForm->handleRequest($request);
+
+        if ($manualImportForm->isSubmitted() && $manualImportForm->isValid()) {
+            $match = $manualImporter->importOffer($account->getCandidateProfile(), $manualOffer);
+            $matchId = $match->getId();
+            if ($matchId === null) {
+                throw new \LogicException('A persisted manual job match must have an identifier.');
+            }
+            $this->addFlash('success', JobMessage::MANUAL_OFFER_IMPORTED);
+
+            return $this->redirectToRoute('app_job_offer_show', ['id' => $matchId]);
+        }
+
         return $this->render('job/offer/index.html.twig', [
             'matches' => $repository->findRankedForProfile($account->getCandidateProfile()),
-        ]);
+            'manualImportForm' => $manualImportForm,
+        ], $manualImportForm->isSubmitted() ? new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY) : null);
     }
 
     #[Route('/jobs/{id<\d+>}', name: 'app_job_offer_show', methods: ['GET'])]

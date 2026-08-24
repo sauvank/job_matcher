@@ -12,6 +12,7 @@ final class JobMessage
     public const SEARCH_CRITERIA_REQUIRED = 'job.source.search_criteria_required';
     public const SEARCH_TITLE_REQUIRED = 'job.source.search_title_required';
     public const SEARCH_ADDED = 'job.source.search_added';
+    public const MANUAL_OFFER_IMPORTED = 'job.offer.manual_imported';
     public const SOURCE_NOT_FOUND = 'job.source.not_found';
     public const SOURCE_DELETED = 'job.source.deleted';
     public const SOURCE_DELETE_SYNC_PENDING = 'job.source.delete_sync_pending';

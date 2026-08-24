@@ -32,12 +32,26 @@
             {% if sources is empty %}
                 <p>Aucune recherche configurée. Déposez un CV, puis validez son intitulé de poste et sa localisation.</p>
             {% else %}
-                <div class="table-wrapper">
+                {% set searchLabels = [] %}
+                {% for source in sources %}
+                    {% if source.searchLabel not in searchLabels %}
+                        {% set searchLabels = searchLabels|merge([source.searchLabel]) %}
+                    {% endif %}
+                {% endfor %}
+                <div data-controller="source-filter">
+                    <div class="source-filter-tabs" role="tablist" aria-label="Filtrer les sources par recherche">
+                        <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-source-filter-target="tab" data-source-filter-value="" data-action="source-filter#select">Toutes</button>
+                        {% for searchLabel in searchLabels %}
+                            <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-source-filter-target="tab" data-source-filter-value="{{ searchLabel }}" data-action="source-filter#select">{{ searchLabel }}</button>
+                        {% endfor %}
+                    </div>
+                    <p class="source-filter-empty" data-source-filter-target="empty" hidden>Aucune source pour cette recherche.</p>
+                    <div class="table-wrapper">
                     <table>
                     <thead><tr><th>Nom</th><th>Fournisseur</th><th>Dernier succès</th><th>État</th><th></th></tr></thead>
                     <tbody>
                     {% for source in sources %}
-                        <tr id="job-source-{{ source.id }}">
+                        <tr id="job-source-{{ source.id }}" data-source-filter-target="row" data-source-filter-value="{{ source.searchLabel }}">
                             <td><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></td>
                             <td><span class="badge">{{ source.provider.value }}</span></td>
                             <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</td>
@@ -90,6 +104,7 @@
                     {% endfor %}
                     </tbody>
                     </table>
+                    </div>
                 </div>
             {% endif %}
         </section>

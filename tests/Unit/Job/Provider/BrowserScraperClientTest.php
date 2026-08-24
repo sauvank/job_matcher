@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Job\Provider;
 
 use App\Job\Provider\BrowserScraperClient;
+use App\Job\Translation\JobMessage;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -59,5 +60,24 @@ final class BrowserScraperClientTest extends TestCase
         $this->expectExceptionMessage('Timeout navigating to page');
 
         $client->scrape('https://example.com');
+    }
+
+    public function testItReportsIndeedSecurityChallengeInsteadOfEmptyResults(): void
+    {
+        $mockHttpClient = new MockHttpClient(new MockResponse(
+            json_encode([
+                'html' => '<html><head><title>Security Check - Indeed.com</title></head><body>Additional Verification Required</body></html>',
+                'status' => 403,
+                'finalUrl' => 'https://fr.indeed.com/emplois?q=php',
+            ], JSON_THROW_ON_ERROR),
+            ['http_code' => 200, 'response_headers' => ['content-type' => 'application/json']],
+        ));
+
+        $client = new BrowserScraperClient($mockHttpClient, 'http://browser:3000');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(JobMessage::INDEED_BLOCKED);
+
+        $client->scrape('https://fr.indeed.com/emplois?q=php');
     }
 }

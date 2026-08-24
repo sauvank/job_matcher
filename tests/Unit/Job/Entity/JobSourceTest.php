@@ -12,6 +12,25 @@ use PHPUnit\Framework\TestCase;
 
 final class JobSourceTest extends TestCase
 {
+    public function testItExtractsTheSearchLabelFromTheGeneratedSourceName(): void
+    {
+        $source = new JobSource(
+            new CandidateProfile(),
+            'Indeed — Développeur PHP — Symfony — Lyon',
+            'https://example.test/jobs',
+            JobProviderType::INDEED,
+        );
+
+        self::assertSame('Développeur PHP — Symfony', $source->getSearchLabel());
+    }
+
+    public function testItUsesTheWholeNameForANonGeneratedSource(): void
+    {
+        $source = new JobSource(new CandidateProfile(), 'Recherche personnalisée', 'https://example.test/jobs', JobProviderType::FAKE);
+
+        self::assertSame('Recherche personnalisée', $source->getSearchLabel());
+    }
+
     public function testItUpdatesItsGeneratedSearch(): void
     {
         $source = new JobSource(new CandidateProfile(), 'Ancienne recherche', 'https://example.test/old', JobProviderType::HELLOWORK);

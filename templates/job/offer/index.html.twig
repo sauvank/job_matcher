@@ -12,10 +12,25 @@
         <a class="button secondary" href="{{ path('app_job_sources') }}">Gérer les sources</a>
     </div>
 
+    <details class="card form-card manual-offer-import" {{ manualImportForm.vars.submitted ? 'open' : '' }}>
+        <summary>Importer manuellement une annonce</summary>
+        <p>Pour Indeed, Welcome to the Jungle ou une autre plateforme : copiez l’URL et le contenu visible de l’annonce. L’analyse IA sera lancée automatiquement.</p>
+        {{ form_start(manualImportForm) }}
+            {{ form_row(manualImportForm.url) }}
+            <div class="manual-offer-fields">
+                {{ form_row(manualImportForm.title) }}
+                {{ form_row(manualImportForm.company) }}
+                {{ form_row(manualImportForm.location) }}
+            </div>
+            {{ form_row(manualImportForm.description) }}
+            {{ form_row(manualImportForm.import) }}
+        {{ form_end(manualImportForm) }}
+    </details>
+
     {% if matches is empty %}
         <section class="card empty-state">
             <span class="empty-state-icon" aria-hidden="true">⌕</span>
-            <p>Aucune offre importée. <a href="{{ path('app_cv_upload') }}">Déposez un CV</a> pour générer une recherche HelloWork.</p>
+            <p>Aucune offre importée. Utilisez le formulaire ci-dessus ou <a href="{{ path('app_cv_upload') }}">déposez un CV</a> pour générer des recherches automatiques.</p>
         </section>
     {% else %}
         <section class="offer-list">

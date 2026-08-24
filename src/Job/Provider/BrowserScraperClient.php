@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Job\Provider;
 
+use App\Job\Translation\JobMessage;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class BrowserScraperClient
@@ -36,7 +37,7 @@ class BrowserScraperClient
         ]);
 
         $statusCode = $response->getStatusCode();
-        /** @var array{html?: string, error?: string} $data */
+        /** @var array{html?: string, error?: string, status?: int, finalUrl?: string} $data */
         $data = $response->toArray(false);
 
         if ($statusCode >= 400 || isset($data['error'])) {
@@ -49,6 +50,20 @@ class BrowserScraperClient
             throw new \RuntimeException('Browser scraping service returned empty HTML');
         }
 
+        $upstreamStatus = $data['status'] ?? null;
+        if ($upstreamStatus === 403 || $upstreamStatus === 429 || $this->isIndeedSecurityPage($html)) {
+            throw new \RuntimeException(JobMessage::INDEED_BLOCKED);
+        }
+        if (is_int($upstreamStatus) && $upstreamStatus >= 400) {
+            throw new \RuntimeException(JobMessage::INVALID_RESPONSE);
+        }
+
         return $html;
+    }
+
+    private function isIndeedSecurityPage(string $html): bool
+    {
+        return preg_match('/<title[^>]*>\s*Security Check\s*-\s*Indeed\.com\s*<\/title>/iu', $html) === 1
+            || stripos($html, 'Additional Verification Required') !== false;
     }
 }

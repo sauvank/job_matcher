@@ -122,10 +122,19 @@ p { color: var(--muted); }
 
 .form-card form > div { margin-bottom: 1.25rem; }
 .form-card label { display: block; margin-bottom: .48rem; color: var(--text); font-size: .9rem; font-weight: 700; }
-.form-card input[type="text"], .form-card input[type="number"], .form-card input[type="file"], .form-card select, .form-card textarea { width: 100%; min-height: 48px; padding: .78rem .9rem; border: 1px solid var(--border-strong); border-radius: .72rem; outline: none; background: var(--surface-soft); color: var(--text); transition: border .18s ease, box-shadow .18s ease, background .18s ease; }
+.form-card input[type="text"], .form-card input[type="url"], .form-card input[type="number"], .form-card input[type="file"], .form-card select, .form-card textarea { width: 100%; min-height: 48px; padding: .78rem .9rem; border: 1px solid var(--border-strong); border-radius: .72rem; outline: none; background: var(--surface-soft); color: var(--text); transition: border .18s ease, box-shadow .18s ease, background .18s ease; }
 .form-card input:focus, .form-card select:focus, .form-card textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgb(91 91 214 / 10%); }
 .form-card ul { color: var(--danger); }
 .form-card input[type="checkbox"] { accent-color: var(--primary); }
+.manual-offer-import { margin-bottom: 1.5rem; }
+.manual-offer-import summary { cursor: pointer; color: var(--text); font-size: 1.05rem; font-weight: 800; }
+.manual-offer-import[open] summary { margin-bottom: .7rem; }
+.manual-offer-fields { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1rem; }
+.source-filter-tabs { display: flex; margin-bottom: 1rem; padding-bottom: .35rem; overflow-x: auto; gap: .5rem; scrollbar-width: thin; }
+.source-filter-tab { padding: .55rem .85rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted); cursor: pointer; font-size: .82rem; font-weight: 750; white-space: nowrap; }
+.source-filter-tab:hover { border-color: var(--primary); color: var(--primary); }
+.source-filter-tab.active { border-color: var(--primary); background: var(--primary); color: white; }
+.source-filter-empty { padding: 1rem; border-radius: .75rem; background: var(--surface-soft); color: var(--muted); }
 
 .upload-card { max-width: 760px; margin-inline: auto; }
 .upload-field { margin: 0; }
@@ -408,6 +417,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monos
     .feature-card { border-right: 0; border-bottom: 1px solid var(--border); }
     .feature-card:last-child { border-bottom: 0; }
     .offer-hero { grid-template-columns: 1fr; }
+    .manual-offer-fields { grid-template-columns: 1fr; gap: 0; }
     .hero-score-wrap { min-width: auto; grid-row: 1; justify-self: start; }
     .evidence-grid { grid-template-columns: 1fr; }
     .skill-add-form { grid-template-columns: 1fr 1fr; }
