@@ -15,6 +15,9 @@ parameters:
     app.cv_max_extracted_text_bytes: 2097152
     app.hellowork.max_offers: 10
     app.indeed.max_offers: 10
+    app.apec.max_offers: 10
+    app.francetravail.max_offers: 10
+    app.wttj.max_offers: 10
     app.matching.weights:
         stack: 35
         experience: 15
@@ -135,6 +138,18 @@ services:
     App\Job\Provider\IndeedJobProvider:
         arguments:
             $maxOffers: '%app.indeed.max_offers%'
+
+    App\Job\Provider\ApecJobProvider:
+        arguments:
+            $maxOffers: '%app.apec.max_offers%'
+
+    App\Job\Provider\FranceTravailJobProvider:
+        arguments:
+            $maxOffers: '%app.francetravail.max_offers%'
+
+    App\Job\Provider\WelcomeToTheJungleJobProvider:
+        arguments:
+            $maxOffers: '%app.wttj.max_offers%'
 
     App\Job\Scheduler\JobSyncSchedule:
         arguments:

@@ -9,8 +9,11 @@ use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Application\Service\ConfigureCandidateJobSearchService;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
+use App\Job\Provider\ApecSearchUrlBuilder;
+use App\Job\Provider\FranceTravailSearchUrlBuilder;
 use App\Job\Provider\HelloWorkSearchUrlBuilder;
 use App\Job\Provider\IndeedSearchUrlBuilder;
+use App\Job\Provider\WelcomeToTheJungleSearchUrlBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Envelope;
@@ -18,7 +21,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class ConfigureCandidateJobSearchServiceTest extends TestCase
 {
-    public function testItCreatesSourcesForHelloWorkAndIndeedPerSearchTitle(): void
+    public function testItCreatesSourcesForAllConfiguredProvidersPerSearchTitle(): void
     {
         $sourceRepository = new class implements JobSourceRepositoryInterface {
             /** @var list<JobSource> */
@@ -46,21 +49,24 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::exactly(4))
+        $entityManager->expects(self::exactly(10))
             ->method('persist')
             ->willReturnCallback(static function (JobSource $source) use ($sourceRepository): void {
                 $sourceRepository->sources[] = $source;
                 (new \ReflectionProperty($source, 'id'))->setValue($source, count($sourceRepository->sources));
             });
-        $entityManager->expects(self::exactly(4))->method('flush');
+        $entityManager->expects(self::exactly(10))->method('flush');
         $messageBus = $this->createMock(MessageBusInterface::class);
-        $messageBus->expects(self::exactly(4))
+        $messageBus->expects(self::exactly(10))
             ->method('dispatch')
             ->willReturnCallback(static fn (object $message): Envelope => new Envelope($message));
         $service = new ConfigureCandidateJobSearchService(
             $sourceRepository,
             new HelloWorkSearchUrlBuilder(),
             new IndeedSearchUrlBuilder(),
+            new ApecSearchUrlBuilder(),
+            new FranceTravailSearchUrlBuilder(),
+            new WelcomeToTheJungleSearchUrlBuilder(),
             $entityManager,
             $messageBus,
         );
@@ -70,9 +76,12 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
         $symfonySource = $service->configureTitle($profile, 'Symfony', 'Lyon');
 
         self::assertNotSame($phpSource, $symfonySource);
-        self::assertCount(4, $sourceRepository->sources);
+        self::assertCount(10, $sourceRepository->sources);
         self::assertSame(JobProviderType::HELLOWORK, $sourceRepository->sources[0]->getProvider());
-        self::assertSame(JobProviderType::INDEED, $sourceRepository->sources[1]->getProvider());
+        self::assertSame(JobProviderType::APEC, $sourceRepository->sources[1]->getProvider());
+        self::assertSame(JobProviderType::FRANCE_TRAVAIL, $sourceRepository->sources[2]->getProvider());
+        self::assertSame(JobProviderType::WELCOME_TO_THE_JUNGLE, $sourceRepository->sources[3]->getProvider());
+        self::assertSame(JobProviderType::INDEED, $sourceRepository->sources[4]->getProvider());
     }
 
     public function testItReusesAnExistingSearchForTheCandidateProfile(): void
@@ -82,6 +91,9 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
 
         $helloWorkUrlBuilder = new HelloWorkSearchUrlBuilder();
         $indeedUrlBuilder = new IndeedSearchUrlBuilder();
+        $apecUrlBuilder = new ApecSearchUrlBuilder();
+        $franceTravailUrlBuilder = new FranceTravailSearchUrlBuilder();
+        $wttjUrlBuilder = new WelcomeToTheJungleSearchUrlBuilder();
 
         $source = new JobSource(
             $profile,
@@ -112,14 +124,14 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects(self::once())
+        $entityManager->expects(self::exactly(4))
             ->method('persist')
             ->willReturnCallback(static function (JobSource $newSource): void {
                 (new \ReflectionProperty($newSource, 'id'))->setValue($newSource, 13);
             });
-        $entityManager->expects(self::exactly(2))->method('flush');
+        $entityManager->expects(self::exactly(5))->method('flush');
         $messageBus = $this->createMock(MessageBusInterface::class);
-        $messageBus->expects(self::exactly(2))
+        $messageBus->expects(self::exactly(5))
             ->method('dispatch')
             ->willReturnCallback(static fn (object $message): Envelope => new Envelope($message));
 
@@ -127,11 +139,14 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             $sourceRepository,
             $helloWorkUrlBuilder,
             $indeedUrlBuilder,
+            $apecUrlBuilder,
+            $franceTravailUrlBuilder,
+            $wttjUrlBuilder,
             $entityManager,
             $messageBus,
         ))->configure($profile);
 
-        self::assertCount(2, $configuredSources);
+        self::assertCount(5, $configuredSources);
         self::assertSame($source, $configuredSources[0]);
         self::assertSame('HelloWork — Développeur PHP — Paris', $source->getName());
         self::assertStringContainsString('k=D%C3%A9veloppeur+PHP', $source->getUrl());
