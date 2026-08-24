@@ -4,7 +4,7 @@ framework:
 
         transports:
             async_priority:
-                dsn: '%env(MESSENGER_TRANSPORT_DSN)%/priority'
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%_priority'
                 retry_strategy:
                     max_retries: 3
                     delay: 1000
