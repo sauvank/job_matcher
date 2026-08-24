@@ -36,7 +36,7 @@ services:
     image: job-matcher-php:dev
     build:
       context: .
-    command: php bin/console messenger:consume async scheduler_job_sync --time-limit=3600 --memory-limit=128M --no-interaction
+    command: php bin/console messenger:consume async_priority async scheduler_job_sync --time-limit=3600 --memory-limit=128M --no-interaction
     restart: unless-stopped
     environment:
       APP_ENV: dev

@@ -79,7 +79,7 @@ final readonly class ConfigureCandidateJobSearchService
             JobProviderType::APEC => $this->apecUrlBuilder->build($title, $location),
             JobProviderType::FRANCE_TRAVAIL => $this->franceTravailUrlBuilder->build($title, $location),
             JobProviderType::INDEED => $this->indeedUrlBuilder->build($title, $location),
-            JobProviderType::FAKE => throw new \InvalidArgumentException('Unsupported provider type: '.$provider->value),
+            default => throw new \InvalidArgumentException('Unsupported provider type: '.$provider->value),
         };
 
         $providerLabel = match ($provider) {

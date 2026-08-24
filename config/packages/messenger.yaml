@@ -3,6 +3,14 @@ framework:
         failure_transport: failed
 
         transports:
+            async_priority:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%/priority'
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 2
+                    max_delay: 30000
+                    jitter: 0.1
             async:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 retry_strategy:
@@ -14,8 +22,8 @@ framework:
             failed: 'doctrine://default?queue_name=failed&auto_setup=1'
 
         routing:
-            App\Candidate\Application\Message\ProcessCvMessage: async
-            App\Job\Message\ImportJobSourceMessage: async
+            App\Candidate\Application\Message\ProcessCvMessage: async_priority
+            App\Job\Message\ImportJobSourceMessage: async_priority
             App\Job\Message\RefreshJobSourcesMessage: async
             App\Matching\Message\AnalyzeJobMatchMessage: async
 
@@ -24,5 +32,6 @@ when@test:
         messenger:
             failure_transport: failed
             transports:
+                async_priority: 'in-memory://'
                 async: 'in-memory://'
                 failed: 'in-memory://'

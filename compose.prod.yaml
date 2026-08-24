@@ -46,7 +46,7 @@ services:
       CLAMAV_DSN: tcp://clamav:3310
       CV_EXTRACTOR_DSN: unix:///run/cv-extractor/extractor.sock
       BROWSER_DSN: http://browser:3000
-    command: php bin/console messenger:consume async scheduler_job_sync --time-limit=3600 --memory-limit=128M --no-interaction
+    command: php bin/console messenger:consume async_priority async scheduler_job_sync --time-limit=3600 --memory-limit=128M --no-interaction
     volumes:
       - cv_data:/app/var/cv
       - extractor_runtime:/run/cv-extractor:ro
