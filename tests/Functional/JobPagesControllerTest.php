@@ -23,7 +23,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Sources d’offres');
-        self::assertSelectorTextContains('.page-heading', 'synchronisées automatiquement');
+        self::assertSelectorTextContains('.page-heading', 'Welcome to the Jungle');
         self::assertSelectorTextContains('.form-card h2', 'Ajouter une recherche');
     }
 
@@ -75,6 +75,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorCount(1, sprintf('.source-filter-tab[data-source-filter-value="%s"]', $frontendLabel));
         self::assertSelectorCount(2, sprintf('tr[data-source-filter-value="%s"]', $backendLabel));
         self::assertSelectorCount(1, sprintf('tr[data-source-filter-value="%s"]', $frontendLabel));
+        self::assertSelectorTextContains('.external-search-links', 'LinkedIn — '.$backendLabel);
     }
 
     public function testAJobSourceCanBeDeleted(): void

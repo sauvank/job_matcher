@@ -9,6 +9,7 @@ use App\Job\Application\Service\ConfigureCandidateJobSearchService;
 use App\Job\DTO\JobSearchData;
 use App\Job\Entity\JobSource;
 use App\Job\Message\ImportJobSourceMessage;
+use App\Job\Provider\LinkedInSearchUrlBuilder;
 use App\Job\Repository\JobSourceRepository;
 use App\Job\Translation\JobMessage;
 use App\Security\Entity\Account;
@@ -30,6 +31,7 @@ final class JobSourceController extends AbstractController
         #[CurrentUser] Account $account,
         JobSourceRepository $repository,
         ConfigureCandidateJobSearchService $searchService,
+        LinkedInSearchUrlBuilder $linkedInUrlBuilder,
     ): Response {
         $profile = $account->getCandidateProfile();
         $searchData = new JobSearchData();
@@ -44,12 +46,20 @@ final class JobSourceController extends AbstractController
         }
 
         $sources = $repository->findForProfile($profile);
+        $linkedinSearches = [];
+        if ($profile->getLocation() !== null) {
+            foreach ($sources as $source) {
+                $label = $source->getSearchLabel();
+                $linkedinSearches[$label] = $linkedInUrlBuilder->build($label, $profile->getLocation());
+            }
+        }
 
         return $this->render('job/source/index.html.twig', [
             'sources' => $sources,
             'hasActiveSync' => array_any($sources, static fn (JobSource $source): bool => $source->isSyncPending()),
             'searchForm' => $form,
             'profileLocation' => $profile->getLocation(),
+            'linkedinSearches' => $linkedinSearches,
         ]);
     }
 
