@@ -136,6 +136,8 @@ Welcome to the Jungle est interrogé via l’index de recherche public utilisé 
 
 Sur `/sources`, des onglets regroupent les fournisseurs par intitulé ou ensemble de mots-clés. Le filtre actif est conservé pendant les rafraîchissements automatiques du Turbo Frame.
 
+Sur `/jobs`, les offres peuvent être filtrées par fournisseur. Le nombre visible et le filtre actif sont mis à jour côté navigateur et conservés pendant la session.
+
 ## Analyse réelle du CV avec OpenAI ou Google Gemini
 
 Sans configuration locale, l'application utilise volontairement un faux analyseur gratuit (`CV_ANALYZER=fake`). Pour activer l'analyse avec OpenAI ou Google Gemini, créer un fichier `.env.local` à partir de l'exemple :

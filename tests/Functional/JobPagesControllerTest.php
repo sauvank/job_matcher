@@ -38,6 +38,58 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.page-heading', 'compatibilité calculée par l’IA');
     }
 
+    public function testJobOffersCanBeFilteredByProvider(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        foreach ([JobProviderType::HELLOWORK, JobProviderType::FRANCE_TRAVAIL] as $provider) {
+            $source = new JobSource(
+                $account->getCandidateProfile(),
+                $provider->value.' — PHP — Lyon',
+                'https://example.test/'.$provider->value.'/'.$uniqueId,
+                $provider,
+            );
+            $offer = new JobOffer($source, new NormalizedJobOffer(
+                externalId: $provider->value.'-'.$uniqueId,
+                url: 'https://example.test/'.$provider->value.'/'.$uniqueId.'/offer',
+                title: 'Offre '.$provider->value.' '.$uniqueId,
+                company: 'Entreprise test',
+                location: 'Lyon',
+                contractType: 'CDI',
+                minimumSalary: null,
+                maximumSalary: null,
+                remotePolicy: null,
+                yearsOfExperience: null,
+                description: 'Description de test',
+                publishedAt: null,
+                validThrough: null,
+                rawPayload: [],
+            ));
+            $match = new JobMatch(
+                $account->getCandidateProfile(),
+                $offer,
+                new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+            );
+            $entityManager->persist($source);
+            $entityManager->persist($offer);
+            $entityManager->persist($match);
+        }
+        $entityManager->flush();
+
+        $client->request('GET', '/jobs');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, '.source-filter-tab[data-offer-filter-value="HELLOWORK"]');
+        self::assertSelectorCount(1, '.source-filter-tab[data-offer-filter-value="FRANCE_TRAVAIL"]');
+        self::assertSelectorExists('.offer-card[data-offer-filter-value="HELLOWORK"]');
+        self::assertSelectorExists('.offer-card[data-offer-filter-value="FRANCE_TRAVAIL"]');
+        self::assertSelectorTextContains('.offer-card[data-offer-filter-value="FRANCE_TRAVAIL"]', 'France Travail');
+    }
+
     public function testJobSourcesExposeOneFilterTabPerSearchLabel(): void
     {
         $client = self::createClient();

@@ -3,11 +3,20 @@
 {% block title %}Offres importées · Job Matcher{% endblock %}
 
 {% block body %}
+    {% set providerLabels = {
+        'FAKE': 'Démonstration',
+        'HELLOWORK': 'HelloWork',
+        'INDEED': 'Indeed',
+        'APEC': 'Apec',
+        'FRANCE_TRAVAIL': 'France Travail',
+        'WELCOME_TO_THE_JUNGLE': 'Welcome to the Jungle'
+    } %}
+    <div data-controller="offer-filter">
     <div class="page-heading page-heading-actions">
         <div>
             <p class="eyebrow">Vos opportunités</p>
             <h1>Offres analysées</h1>
-            <p>{{ matches|length }} offre(s), classée(s) selon la compatibilité calculée par l’IA.</p>
+            <p><span data-offer-filter-target="count">{{ matches|length }}</span> offre(s), classée(s) selon la compatibilité calculée par l’IA.</p>
         </div>
         <a class="button secondary" href="{{ path('app_job_sources') }}">Gérer les sources</a>
     </div>
@@ -18,10 +27,25 @@
             <p>Aucune offre importée. <a href="{{ path('app_job_sources') }}">Configurez ou synchronisez vos sources</a> pour rechercher des opportunités.</p>
         </section>
     {% else %}
+        {% set providers = [] %}
+        {% for match in matches %}
+            {% set provider = match.jobOffer.source.provider.value %}
+            {% if provider not in providers %}
+                {% set providers = providers|merge([provider]) %}
+            {% endif %}
+        {% endfor %}
+        <div class="source-filter-tabs" role="tablist" aria-label="Filtrer les offres par fournisseur">
+            <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="tab" data-offer-filter-value="" data-action="offer-filter#select">Toutes</button>
+            {% for provider in providers %}
+                <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="tab" data-offer-filter-value="{{ provider }}" data-action="offer-filter#select">{{ providerLabels[provider] ?? provider }}</button>
+            {% endfor %}
+        </div>
+        <p class="source-filter-empty" data-offer-filter-target="empty" hidden>Aucune offre pour ce fournisseur.</p>
         <section class="offer-list">
             {% for match in matches %}
                 {% set offer = match.jobOffer %}
-                <a class="offer-card" href="{{ path('app_job_offer_show', {id: match.id}) }}" aria-label="Voir le détail de l’offre {{ offer.title }}">
+                {% set provider = offer.source.provider.value %}
+                <a class="offer-card" href="{{ path('app_job_offer_show', {id: match.id}) }}" aria-label="Voir le détail de l’offre {{ offer.title }}" data-offer-filter-target="card" data-offer-filter-value="{{ provider }}">
                     <div class="offer-score">
                         {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
                             <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}"><strong>{{ match.semanticScore }}</strong><small>%</small></span>
@@ -40,6 +64,7 @@
                             <span class="arrow-link" aria-hidden="true">→</span>
                         </div>
                         <div class="offer-meta">
+                            <span class="badge badge-info">{{ providerLabels[provider] ?? provider }}</span>
                             {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
                             {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
                             {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
@@ -53,4 +78,5 @@
             {% endfor %}
         </section>
     {% endif %}
+    </div>
 {% endblock %}

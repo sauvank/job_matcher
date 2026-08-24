@@ -289,6 +289,7 @@ td a:not(.button), .section-heading a:not(.button), .card a:not(.button) { color
 
 .offer-list { display: grid; gap: .85rem; }
 .offer-card { display: grid; min-height: 142px; padding: 1.1rem 1.35rem; border: 1px solid var(--border); border-radius: 1rem; grid-template-columns: 105px 1fr; align-items: center; background: var(--surface); box-shadow: var(--shadow-sm); color: inherit; text-decoration: none; transition: border .18s ease, box-shadow .18s ease, transform .18s ease; }
+.offer-card[hidden] { display: none; }
 .offer-card:hover { border-color: #d2d4e5; box-shadow: 0 12px 30px rgb(41 48 78 / 8%); transform: translateY(-2px); }
 .offer-card:focus-visible { border-color: var(--primary); outline: 4px solid rgb(91 91 214 / 12%); }
 .offer-score { display: grid; border-right: 1px solid var(--border); place-items: center; align-self: stretch; }
