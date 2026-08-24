@@ -131,9 +131,9 @@ p { color: var(--muted); }
 .manual-offer-import[open] summary { margin-bottom: .7rem; }
 .manual-offer-fields { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 1rem; }
 .source-filter-tabs { display: flex; margin-bottom: 1rem; padding-bottom: .35rem; overflow-x: auto; gap: .5rem; scrollbar-width: thin; }
-.source-filter-tab { padding: .55rem .85rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted); cursor: pointer; font-size: .82rem; font-weight: 750; white-space: nowrap; }
-.source-filter-tab:hover { border-color: var(--primary); color: var(--primary); }
-.source-filter-tab.active { border-color: var(--primary); background: var(--primary); color: white; }
+.source-filter-tab { padding: .55rem .85rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted) !important; box-shadow: none; cursor: pointer; font-size: .82rem; font-weight: 750; white-space: nowrap; }
+.source-filter-tab:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; box-shadow: none; transform: none; }
+.source-filter-tab.active { border-color: var(--primary); background: var(--primary); color: white !important; }
 .source-filter-empty { padding: 1rem; border-radius: .75rem; background: var(--surface-soft); color: var(--muted); }
 
 .upload-card { max-width: 760px; margin-inline: auto; }
