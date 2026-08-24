@@ -12,6 +12,7 @@ use App\Job\Enum\JobOfferAvailability;
 use App\Job\Enum\JobProviderType;
 use App\Job\Provider\FranceTravailJobPostingParser;
 use App\Job\Provider\FranceTravailJobProvider;
+use App\Job\Translation\JobMessage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -19,6 +20,26 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class FranceTravailJobProviderTest extends TestCase
 {
+    public function testItFailsWhenListingsExistButNoDetailCanBeParsed(): void
+    {
+        $client = new MockHttpClient([
+            new MockResponse('<a href="/offres/recherche/detail/212VBFN">Offre</a>'),
+            new MockResponse('<html><body>Réponse sans annonce exploitable</body></html>'),
+        ]);
+        $provider = new FranceTravailJobProvider($client, new FranceTravailJobPostingParser(), 10);
+        $source = new JobSource(
+            new CandidateProfile(),
+            'France Travail',
+            'https://candidat.francetravail.fr/offres/recherche?motsCles=PHP+Lyon',
+            JobProviderType::FRANCE_TRAVAIL,
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(JobMessage::INVALID_RESPONSE);
+
+        iterator_to_array($provider->fetch($source));
+    }
+
     #[DataProvider('unavailableResponses')]
     public function testItOnlyExpiresAnOfferWhenTheRemotePageConfirmsIt(int $statusCode, string $body, JobOfferAvailability $expected): void
     {

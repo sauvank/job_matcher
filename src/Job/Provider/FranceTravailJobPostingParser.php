@@ -143,22 +143,28 @@ final class FranceTravailJobPostingParser
     {
         $crawler = new Crawler($html);
 
-        $titleNode = $crawler->filter('h1, .item-title, [itemprop="title"]');
-        $title = $titleNode->count() > 0 ? trim($titleNode->first()->text()) : null;
+        $title = $this->firstNodeValue($crawler, ['[itemprop="title"]', 'h1', '.item-title']);
         if ($title === null || $title === '') {
             throw new \RuntimeException(JobMessage::JOB_POSTING_NOT_FOUND);
         }
         $title = (string) preg_replace('/^Offre\s+n°\s*[a-zA-Z0-9]+\s*/iu', '', $title);
 
-        $companyNode = $crawler->filter('[itemprop="hiringOrganization"], .employer-name, .t4');
-        $company = $companyNode->count() > 0 ? trim($companyNode->first()->text()) : null;
+        $company = $this->firstNodeValue($crawler, [
+            '[itemprop="hiringOrganization"] [itemprop="name"]',
+            '[itemprop="hiringOrganization"]',
+            '.employer-name',
+        ]);
         if ($company !== null) {
             $company = preg_replace('/(?:\s*-\s*)?Localiser\s+avec\s+Mappy/iu', '', $company);
             $company = is_string($company) && trim($company) !== '' ? trim($company) : null;
         }
 
-        $locationNode = $crawler->filter('[itemprop="jobLocation"], [itemprop="addressLocality"], .location');
-        $location = $locationNode->count() > 0 ? trim($locationNode->first()->text()) : null;
+        $location = $this->firstNodeValue($crawler, [
+            '[itemprop="jobLocation"] [itemprop="name"]',
+            '[itemprop="addressLocality"]',
+            '[itemprop="jobLocation"]',
+            '.location',
+        ]);
 
         $descriptionNode = $crawler->filter('[itemprop="description"], .description, .modal-details');
         $description = $descriptionNode->count() > 0 ? $this->cleanHtml($descriptionNode->first()->html()) : null;
@@ -175,15 +181,52 @@ final class FranceTravailJobPostingParser
             company: $company,
             location: $location,
             contractType: $contractType,
-            minimumSalary: null,
-            maximumSalary: null,
+            minimumSalary: $this->nodeIntegerValue($crawler, '[itemprop="baseSalary"] [itemprop="minValue"]'),
+            maximumSalary: $this->nodeIntegerValue($crawler, '[itemprop="baseSalary"] [itemprop="maxValue"]'),
             remotePolicy: preg_match('/télétravail|remote/i', $html) === 1 ? 'REMOTE_AVAILABLE' : null,
-            yearsOfExperience: $this->extractYearsOfExperience(null, $description),
+            yearsOfExperience: $this->extractYearsOfExperience(
+                $this->firstNodeValue($crawler, ['[itemprop="experienceRequirements"]']),
+                $description,
+            ),
             description: $description,
-            publishedAt: null,
-            validThrough: null,
+            publishedAt: $this->nodeDateValue($crawler, '[itemprop="datePosted"]'),
+            validThrough: $this->nodeDateValue($crawler, '[itemprop="validThrough"]'),
             rawPayload: ['source' => 'francetravail_html_fallback'],
         );
+    }
+
+    /** @param list<string> $selectors */
+    private function firstNodeValue(Crawler $crawler, array $selectors): ?string
+    {
+        foreach ($selectors as $selector) {
+            $nodes = $crawler->filter($selector);
+            if ($nodes->count() === 0) {
+                continue;
+            }
+
+            $node = $nodes->first();
+            $value = $node->attr('content');
+            if (!is_string($value) || trim($value) === '') {
+                $value = $node->text('');
+            }
+            if (trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
+
+    private function nodeIntegerValue(Crawler $crawler, string $selector): ?int
+    {
+        $value = $this->firstNodeValue($crawler, [$selector]);
+
+        return is_numeric($value) ? (int) round((float) $value) : null;
+    }
+
+    private function nodeDateValue(Crawler $crawler, string $selector): ?\DateTimeImmutable
+    {
+        return $this->dateValue($this->firstNodeValue($crawler, [$selector]));
     }
 
     /** @param array<string, mixed> $posting */

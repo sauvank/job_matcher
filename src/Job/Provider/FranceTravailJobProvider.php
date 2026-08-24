@@ -29,6 +29,8 @@ final readonly class FranceTravailJobProvider implements JobProviderInterface
     {
         $listingContent = $this->fetchContent($source->getUrl());
         $offerUrls = $this->parser->extractOfferUrls($listingContent, $this->maxOffers);
+        $parsedOfferCount = 0;
+        $lastParsingException = null;
 
         foreach ($offerUrls as $index => $url) {
             if ($index > 0) {
@@ -37,10 +39,17 @@ final readonly class FranceTravailJobProvider implements JobProviderInterface
 
             try {
                 $offerHtml = $this->fetchContent($url);
-                yield $this->parser->parseOffer($offerHtml, $url);
-            } catch (\Throwable) {
+                $offer = $this->parser->parseOffer($offerHtml, $url);
+                ++$parsedOfferCount;
+                yield $offer;
+            } catch (\Throwable $exception) {
+                $lastParsingException = $exception;
                 continue;
             }
+        }
+
+        if ($offerUrls !== [] && $parsedOfferCount === 0) {
+            throw new \RuntimeException(JobMessage::INVALID_RESPONSE, previous: $lastParsingException);
         }
     }
 
