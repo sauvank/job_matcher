@@ -22,7 +22,7 @@
         {% endif %}
     </section>
 
-    <turbo-frame id="job-sources-list">
+    <turbo-frame id="job-sources-list" {% if hasActiveSync %}data-controller="poll" data-poll-interval-value="2000" data-poll-url-value="{{ path('app_job_sources') }}"{% endif %}>
         <section class="card">
             <div class="section-heading">
                 <h2>Sources configurées</h2>
@@ -39,28 +39,39 @@
                     {% for source in sources %}
                         <tr id="job-source-{{ source.id }}">
                             <td><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></td>
-                            <td>{{ source.provider.value }}</td>
+                            <td><span class="badge">{{ source.provider.value }}</span></td>
                             <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</td>
                             <td>
                                 {% if source.syncStatus.value == 'QUEUED' %}
                                     <div class="progress-block compact">
-                                        <span>Mise en attente…</span>
-                                        <progress max="100">Import en attente</progress>
+                                        <span class="status-indicator">
+                                            <span class="spinner-sm"></span>
+                                            <span>En file d’attente…</span>
+                                        </span>
+                                        <progress max="100">En attente du worker</progress>
                                     </div>
                                 {% elseif source.syncStatus.value == 'RUNNING' %}
                                     <div class="progress-block compact">
-                                        <span>{{ source.processedOfferCount }} offre(s) traitée(s)</span>
-                                        <progress max="100">Import en cours</progress>
+                                        <span class="status-indicator">
+                                            <span class="spinner-sm"></span>
+                                            <span><strong>{{ source.processedOfferCount }}</strong> offre(s) traitée(s)</span>
+                                        </span>
+                                        <progress max="10" value="{{ source.processedOfferCount }}">{{ source.processedOfferCount }} / 10</progress>
                                     </div>
                                 {% elseif source.syncStatus.value == 'SUCCEEDED' %}
-                                    <div class="progress-block compact">
-                                        <span>{{ source.processedOfferCount }} offre(s) traitée(s)</span>
-                                        <progress max="100" value="100">100 %</progress>
+                                    <div class="status-badge-wrap">
+                                        <span class="badge badge-success">
+                                            ✓ {{ source.processedOfferCount }} offre(s) importée(s)
+                                        </span>
                                     </div>
                                 {% elseif source.lastError %}
-                                    <span class="text-error">{{ source.lastError|trans }}</span>
+                                    <div class="status-badge-wrap">
+                                        <span class="badge badge-danger" title="{{ source.lastError }}">
+                                            ✕ {{ source.lastError|trans }}
+                                        </span>
+                                    </div>
                                 {% else %}
-                                    Prête
+                                    <span class="badge badge-info">Prête</span>
                                 {% endif %}
                             </td>
                             <td>

@@ -343,6 +343,9 @@ progress::-webkit-progress-bar { border-radius: 999px; background: #e7e9ef; }
 progress::-webkit-progress-value { border-radius: 999px; background: var(--primary); }
 progress::-moz-progress-bar { border-radius: 999px; background: var(--primary); }
 .spinner { width: 1.35rem; height: 1.35rem; border: 2px solid #d5d8e2; border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+.spinner-sm { display: inline-block; width: .9rem; height: .9rem; border: 2px solid #d5d8e2; border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; }
+.status-indicator { display: inline-flex; align-items: center; gap: .4rem; margin-bottom: .35rem; font-size: .85rem; color: var(--text); }
+.status-badge-wrap { display: inline-flex; align-items: center; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .impersonation-bar { position: sticky; z-index: 30; top: 0; padding: .65rem 1rem; border-bottom: 1px solid #fed7aa; background: #fffbeb; color: #9a3412; font-size: .88rem; box-shadow: var(--shadow-sm); }
