@@ -15,7 +15,7 @@ final class FranceTravailSearchUrlBuilderTest extends TestCase
         $url = (new FranceTravailSearchUrlBuilder())->build('Développeur Symfony', 'Paris');
 
         self::assertSame(
-            'https://candidat.francetravail.fr/offres/recherche?motsCles=D%C3%A9veloppeur+Symfony&lieux=Paris&offresPartenaires=true&rayon=10&tri=0',
+            'https://candidat.francetravail.fr/offres/recherche?motsCles=D%C3%A9veloppeur+Symfony+Paris&offresPartenaires=true&tri=0',
             $url,
         );
     }

@@ -148,9 +148,14 @@ final class FranceTravailJobPostingParser
         if ($title === null || $title === '') {
             throw new \RuntimeException(JobMessage::JOB_POSTING_NOT_FOUND);
         }
+        $title = (string) preg_replace('/^Offre\s+n°\s*[a-zA-Z0-9]+\s*/iu', '', $title);
 
         $companyNode = $crawler->filter('[itemprop="hiringOrganization"], .employer-name, .t4');
         $company = $companyNode->count() > 0 ? trim($companyNode->first()->text()) : null;
+        if ($company !== null) {
+            $company = preg_replace('/(?:\s*-\s*)?Localiser\s+avec\s+Mappy/iu', '', $company);
+            $company = is_string($company) && trim($company) !== '' ? trim($company) : null;
+        }
 
         $locationNode = $crawler->filter('[itemprop="jobLocation"], [itemprop="addressLocality"], .location');
         $location = $locationNode->count() > 0 ? trim($locationNode->first()->text()) : null;
