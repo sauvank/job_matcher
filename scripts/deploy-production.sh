@@ -141,12 +141,11 @@ sed -i "s|^NGINX_IMAGE=.*$|NGINX_IMAGE=ghcr.io/sauvank/job-matcher-nginx:sha-$de
 "${compose[@]}" config --quiet
 "${compose[@]}" pull php worker nginx clamav extractor
 
-# ClamAV needs a few minutes to load its signatures. Start it before the
-# migration so that its cold start overlaps with work that does not need it.
+# Start background security services
 "${compose[@]}" up -d clamav extractor
 "${compose[@]}" run --rm php \
     php bin/console doctrine:migrations:migrate --no-interaction
-"${compose[@]}" up -d --wait --wait-timeout 600 clamav extractor
+"${compose[@]}" up -d --wait --wait-timeout 60 extractor
 "${compose[@]}" up -d --force-recreate --no-deps php worker
 "${compose[@]}" up -d --force-recreate --no-deps nginx
 
