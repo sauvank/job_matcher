@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Job\Application\Service;
 
 use App\Job\Entity\JobOffer;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 final class EsnDetector
 {
@@ -333,13 +334,8 @@ final class EsnDetector
 
     private function normalizeText(string $text): string
     {
-        $text = mb_strtolower($text, 'UTF-8');
-        $transliterated = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
-        if ($transliterated !== false) {
-            $text = $transliterated;
-        }
-        $cleaned = preg_replace('/[^a-z0-9]+/i', ' ', $text) ?? $text;
+        $slug = (new AsciiSlugger())->slug($text, ' ')->lower()->toString();
 
-        return trim(preg_replace('/\s+/', ' ', $cleaned) ?? $cleaned);
+        return trim(preg_replace('/\s+/', ' ', $slug) ?? $slug);
     }
 }
