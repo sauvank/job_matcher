@@ -16,9 +16,22 @@
         <div>
             <p class="eyebrow">Vos opportunités</p>
             <h1>Offres analysées</h1>
-            <p><span data-offer-filter-target="count">{{ matches|length }}</span> offre(s), classée(s) selon la compatibilité calculée par l’IA.</p>
+            {% if (currentView ?? 'ranked') == 'latest' %}
+                <p><span data-offer-filter-target="count">{{ matches|length }}</span> offre(s), classée(s) par date de découverte la plus récente.</p>
+            {% else %}
+                <p><span data-offer-filter-target="count">{{ matches|length }}</span> offre(s), classée(s) selon la compatibilité calculée par l’IA.</p>
+            {% endif %}
         </div>
         <a class="button secondary" href="{{ path('app_job_sources') }}">Gérer les sources</a>
+    </div>
+
+    <div class="view-tabs" role="tablist" aria-label="Mode de classement des offres">
+        <a href="{{ path('app_job_offers', {view: 'ranked'}) }}" class="view-tab {{ (currentView ?? 'ranked') == 'ranked' ? 'active' : '' }}" role="tab" aria-selected="{{ (currentView ?? 'ranked') == 'ranked' ? 'true' : 'false' }}">
+            <span aria-hidden="true">🎯</span> Meilleurs scores
+        </a>
+        <a href="{{ path('app_job_offers', {view: 'latest'}) }}" class="view-tab {{ (currentView ?? 'ranked') == 'latest' ? 'active' : '' }}" role="tab" aria-selected="{{ (currentView ?? 'ranked') == 'latest' ? 'true' : 'false' }}">
+            <span aria-hidden="true">⏱️</span> Dernières annonces trouvées
+        </a>
     </div>
 
     {% if matches is empty %}
@@ -34,18 +47,26 @@
                 {% set providers = providers|merge([provider]) %}
             {% endif %}
         {% endfor %}
-        <div class="source-filter-tabs" role="tablist" aria-label="Filtrer les offres par fournisseur">
-            <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="tab" data-offer-filter-value="" data-action="offer-filter#select">Toutes</button>
-            {% for provider in providers %}
-                <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="tab" data-offer-filter-value="{{ provider }}" data-action="offer-filter#select">{{ providerLabels[provider] ?? provider }}</button>
-            {% endfor %}
+        <div class="filter-toolbar">
+            <div class="source-filter-tabs" role="tablist" aria-label="Filtrer les offres par fournisseur">
+                <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="tab" data-offer-filter-value="" data-offer-filter-provider="" data-action="offer-filter#select">Toutes les sources</button>
+                {% for provider in providers %}
+                    <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="tab" data-offer-filter-value="{{ provider }}" data-offer-filter-provider="{{ provider }}" data-action="offer-filter#select">{{ providerLabels[provider] ?? provider }}</button>
+                {% endfor %}
+            </div>
+            <div class="source-filter-tabs" role="tablist" aria-label="Filtrer par type d’entreprise">
+                <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="esnTab" data-offer-filter-esn="" data-action="offer-filter#selectEsn">Toutes les entreprises</button>
+                <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="esnTab" data-offer-filter-esn="non_esn" data-action="offer-filter#selectEsn">🏢 Hors ESN</button>
+                <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="esnTab" data-offer-filter-esn="esn" data-action="offer-filter#selectEsn">💼 ESN</button>
+            </div>
         </div>
-        <p class="source-filter-empty" data-offer-filter-target="empty" hidden>Aucune offre pour ce fournisseur.</p>
+        <p class="source-filter-empty" data-offer-filter-target="empty" hidden>Aucune offre correspondant à vos critères de filtrage.</p>
         <section class="offer-list">
             {% for match in matches %}
                 {% set offer = match.jobOffer %}
                 {% set provider = offer.source.provider.value %}
-                <a class="offer-card" href="{{ path('app_job_offer_show', {id: match.id}) }}" aria-label="Voir le détail de l’offre {{ offer.title }}" data-offer-filter-target="card" data-offer-filter-value="{{ provider }}">
+                {% set isEsn = offer.isEsn %}
+                <a class="offer-card" href="{{ path('app_job_offer_show', {id: match.id}) }}" aria-label="Voir le détail de l’offre {{ offer.title }}" data-offer-filter-target="card" data-offer-filter-value="{{ provider }}" data-offer-filter-provider="{{ provider }}" data-offer-filter-esn="{{ isEsn ? '1' : '0' }}">
                     <div class="offer-score">
                         {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
                             <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}"><strong>{{ match.semanticScore }}</strong><small>%</small></span>
@@ -65,13 +86,19 @@
                         </div>
                         <div class="offer-meta">
                             <span class="badge badge-info">{{ providerLabels[provider] ?? provider }}</span>
+                            {% if isEsn %}<span class="badge badge-warning badge-esn" title="Entreprise de services du numérique / Cabinet de conseil ou recrutement">ESN</span>{% endif %}
                             {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
                             {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
                             {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
                             {% if offer.minimumSalary or offer.maximumSalary %}
                                 <span>{{ offer.minimumSalary ? offer.minimumSalary|number_format(0, ',', ' ') : '?' }} – {{ offer.maximumSalary ? offer.maximumSalary|number_format(0, ',', ' ') : '?' }} €</span>
                             {% endif %}
-                            <span>{{ match.semanticAnalyzedAt ? 'Analysée le ' ~ match.semanticAnalyzedAt|date('d/m/Y') : 'Analyse en cours' }}</span>
+                            {% if (currentView ?? 'ranked') == 'latest' %}
+                                <span>Trouvée le {{ offer.firstSeenAt|date('d/m/Y') }}</span>
+                                {% if offer.publishedAt %}<span>Publiée le {{ offer.publishedAt|date('d/m/Y') }}</span>{% endif %}
+                            {% else %}
+                                <span>{{ match.semanticAnalyzedAt ? 'Analysée le ' ~ match.semanticAnalyzedAt|date('d/m/Y') : 'Analyse en cours' }}</span>
+                            {% endif %}
                         </div>
                     </div>
                 </a>

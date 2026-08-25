@@ -36,6 +36,112 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Offres analysées');
         self::assertSelectorTextContains('.page-heading', 'compatibilité calculée par l’IA');
+        self::assertSelectorExists('.view-tab.active');
+        self::assertSelectorTextContains('.view-tab.active', 'Meilleurs scores');
+        self::assertSelectorExists('a[href="/jobs?view=latest"]');
+    }
+
+    public function testJobOffersCanBeViewedByLatest(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — PHP — Lyon',
+            'https://example.test/latest/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'latest-'.$uniqueId,
+            url: 'https://example.test/latest/'.$uniqueId.'/offer',
+            title: 'Offre récente '.$uniqueId,
+            company: 'Entreprise Test',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description',
+            publishedAt: new \DateTimeImmutable('2026-08-25 08:00:00'),
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+
+        $client->request('GET', '/jobs?view=latest');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.page-heading', 'date de découverte la plus récente');
+        self::assertSelectorTextContains('.view-tab.active', 'Dernières annonces trouvées');
+        self::assertSelectorTextContains('.offer-meta', 'Trouvée le');
+    }
+
+    public function testJobOffersDisplayEsnBadgeAndEsnFilterTabs(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — ESN — Lyon',
+            'https://example.test/esn/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $esnOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'esn-'.$uniqueId,
+            url: 'https://example.test/esn/'.$uniqueId.'/offer',
+            title: 'Développeur Fullstack',
+            company: 'Capgemini',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Mission pour notre client grand compte',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $esnOffer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($esnOffer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+
+        $client->request('GET', '/jobs');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.source-filter-tab[data-offer-filter-esn="esn"]');
+        self::assertSelectorExists('.source-filter-tab[data-offer-filter-esn="non_esn"]');
+        self::assertSelectorExists('.offer-card[data-offer-filter-esn="1"]');
+        self::assertSelectorTextContains('.offer-card[data-offer-filter-esn="1"] .badge-warning', 'ESN');
+
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+        $client->request('GET', '/jobs/'.$matchId);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.offer-meta .badge-warning', 'ESN');
     }
 
     public function testJobOffersCanBeFilteredByProvider(): void

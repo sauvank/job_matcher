@@ -21,10 +21,21 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class JobOfferController extends AbstractController
 {
     #[Route('/jobs', name: 'app_job_offers', methods: ['GET'])]
-    public function index(#[CurrentUser] Account $account, JobMatchRepository $repository): Response
+    public function index(Request $request, #[CurrentUser] Account $account, JobMatchRepository $repository): Response
     {
+        $view = $request->query->getString('view', 'ranked');
+        if (!in_array($view, ['ranked', 'latest'], true)) {
+            $view = 'ranked';
+        }
+
+        $profile = $account->getCandidateProfile();
+        $matches = $view === 'latest'
+            ? $repository->findLatestForProfile($profile)
+            : $repository->findRankedForProfile($profile);
+
         return $this->render('job/offer/index.html.twig', [
-            'matches' => $repository->findRankedForProfile($account->getCandidateProfile()),
+            'matches' => $matches,
+            'currentView' => $view,
         ]);
     }
 

@@ -126,6 +126,12 @@ p { color: var(--muted); }
 .form-card input:focus, .form-card select:focus, .form-card textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgb(91 91 214 / 10%); }
 .form-card ul { color: var(--danger); }
 .form-card input[type="checkbox"] { accent-color: var(--primary); }
+.view-tabs { display: inline-flex; margin-bottom: 1.5rem; padding: .3rem; border: 1px solid var(--border); border-radius: .85rem; background: var(--surface-soft); gap: .35rem; }
+.view-tab { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem .95rem; border: 1px solid transparent; border-radius: .65rem; color: var(--muted) !important; font-size: .88rem; font-weight: 750; text-decoration: none; transition: .18s ease; }
+.view-tab:hover { background: white; color: var(--text) !important; }
+.view-tab.active { border-color: var(--border-strong); background: white; color: var(--primary) !important; box-shadow: var(--shadow-sm); }
+.filter-toolbar { display: flex; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .85rem; }
+.filter-toolbar .source-filter-tabs { margin-bottom: 0; }
 .source-filter-tabs { display: flex; margin-bottom: 1rem; padding-bottom: .35rem; overflow-x: auto; gap: .5rem; scrollbar-width: thin; }
 .source-filter-tab { padding: .55rem .85rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted) !important; box-shadow: none; cursor: pointer; font-size: .82rem; font-weight: 750; white-space: nowrap; }
 .source-filter-tab:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; box-shadow: none; transform: none; }
@@ -364,6 +370,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--primary); 
 .badge-success { background: var(--success-soft); color: var(--success); }
 .badge-warning { background: var(--warning-soft); color: var(--warning); }
 .badge-danger { background: var(--danger-soft); color: var(--danger); }
+.badge-esn { background: #fef3c7; color: #92400e; }
 
 .admin-shell { display: grid; gap: 2rem; }
 .admin-subnav-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }

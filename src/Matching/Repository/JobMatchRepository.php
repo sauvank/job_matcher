@@ -50,6 +50,23 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     }
 
     /** @return list<JobMatch> */
+    public function findLatestForProfile(CandidateProfile $profile, int $limit = 100): array
+    {
+        $queryBuilder = $this->createQueryBuilder('jobMatch')
+            ->innerJoin('jobMatch.jobOffer', 'jobOffer')
+            ->innerJoin('jobOffer.source', 'jobSource')
+            ->andWhere('jobMatch.candidateProfile = :profile')
+            ->setParameter('profile', $profile)
+            ->orderBy('jobOffer.firstSeenAt', 'DESC')
+            ->addOrderBy('jobOffer.publishedAt', 'DESC')
+            ->addOrderBy('jobMatch.id', 'DESC')
+            ->setMaxResults($limit);
+        $this->restrictToActiveCv($queryBuilder, $profile);
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /** @return list<JobMatch> */
     public function findCompletedForProfile(CandidateProfile $profile, int $limit = 100): array
     {
         $queryBuilder = $this->createQueryBuilder('jobMatch')

@@ -31,6 +31,31 @@ final class JobOfferTest extends TestCase
         self::assertSame(JobOfferStatus::ACTIVE, $offer->getStatus());
     }
 
+    public function testItExposesFirstSeenAtAndDetectsEsnStatus(): void
+    {
+        $now = new \DateTimeImmutable();
+        $source = new JobSource(new CandidateProfile(), 'Source', 'https://example.test/jobs', JobProviderType::FAKE);
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: '124',
+            url: 'https://example.test/jobs/124',
+            title: 'Lead Tech',
+            company: 'Capgemini',
+            location: 'Paris',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: null,
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+
+        self::assertGreaterThanOrEqual($now->getTimestamp(), $offer->getFirstSeenAt()->getTimestamp());
+        self::assertTrue($offer->isEsn());
+    }
+
     private function offer(\DateTimeImmutable $validThrough): NormalizedJobOffer
     {
         return new NormalizedJobOffer(

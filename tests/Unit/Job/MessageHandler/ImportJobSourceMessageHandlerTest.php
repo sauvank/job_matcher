@@ -83,6 +83,21 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
                 return $this->match;
             }
+
+            public function findRankedForProfile(CandidateProfile $profile, int $limit = 100): array
+            {
+                return $this->match === null ? [] : [$this->match];
+            }
+
+            public function findLatestForProfile(CandidateProfile $profile, int $limit = 100): array
+            {
+                return $this->match === null ? [] : [$this->match];
+            }
+
+            public function findCompletedForProfile(CandidateProfile $profile, int $limit = 100): array
+            {
+                return $this->match === null ? [] : [$this->match];
+            }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(6))->method('flush');

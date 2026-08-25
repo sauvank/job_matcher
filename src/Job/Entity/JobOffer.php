@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Job\Entity;
 
+use App\Job\Application\Service\EsnDetector;
 use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Enum\JobOfferStatus;
 use App\Job\Repository\JobOfferRepository;
@@ -158,9 +159,19 @@ final class JobOffer
         return $this->publishedAt;
     }
 
+    public function getFirstSeenAt(): \DateTimeImmutable
+    {
+        return $this->firstSeenAt;
+    }
+
     public function getLastSeenAt(): \DateTimeImmutable
     {
         return $this->lastSeenAt;
+    }
+
+    public function isEsn(): bool
+    {
+        return EsnDetector::detect($this);
     }
 
     public function getStatus(): JobOfferStatus

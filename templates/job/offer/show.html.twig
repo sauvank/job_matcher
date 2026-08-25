@@ -4,6 +4,15 @@
 
 {% block body %}
     {% set offer = match.jobOffer %}
+    {% set providerLabels = {
+        'FAKE': 'Démonstration',
+        'HELLOWORK': 'HelloWork',
+        'INDEED': 'Indeed',
+        'APEC': 'Apec',
+        'FRANCE_TRAVAIL': 'France Travail',
+        'WELCOME_TO_THE_JUNGLE': 'Welcome to the Jungle'
+    } %}
+    {% set provider = offer.source.provider.value %}
 
     <a class="back-link" href="{{ path('app_job_offers') }}">← Retour aux offres</a>
     <section class="offer-hero card">
@@ -11,10 +20,14 @@
             <p class="eyebrow">{{ offer.company ?? 'Entreprise non renseignée' }}</p>
             <h1>{{ offer.title }}</h1>
             <div class="offer-meta">
+                <span class="badge badge-info">{{ providerLabels[provider] ?? provider }}</span>
+                {% if offer.isEsn %}<span class="badge badge-warning badge-esn" title="Entreprise de services du numérique / Cabinet de conseil ou recrutement">ESN</span>{% endif %}
                 {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
                 {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
                 {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
                 {% if offer.yearsOfExperience is not null %}<span>{{ offer.yearsOfExperience }} ans d’expérience</span>{% endif %}
+                <span>Trouvée le {{ offer.firstSeenAt|date('d/m/Y') }}</span>
+                {% if offer.publishedAt %}<span>Publiée le {{ offer.publishedAt|date('d/m/Y') }}</span>{% endif %}
             </div>
             <div class="button-row">
                 <a class="button" href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">Voir l’annonce originale ↗</a>
