@@ -21,6 +21,7 @@ final class EsnDetector
         'adentis',
         'adecco',
         'advans group',
+        'agap2',
         'akkodis',
         'akka',
         'akka technologies',
@@ -36,7 +37,6 @@ final class EsnDetector
         'approach people',
         'apside',
         'aquent',
-        'asi',
         'asi informatique',
         'astek',
         'asten',
@@ -44,18 +44,29 @@ final class EsnDetector
         'atos',
         'aubay',
         'ausy',
+        'avanade',
         'avisto',
+        'axians',
+        'badenoch & clark',
         'badenoch + clark',
         'bearingpoint',
         'beijaflore',
-        'bull',
+        'bertrandt',
+        'business & decision',
+        'bull sas',
+        'bull atos',
         'capgemini',
         'capgemini engineering',
+        'cat amania',
         'cbtw',
+        'cegedim',
         'celad',
         'cgi',
         'cgi france',
+        'claranet',
         'clever connect',
+        'cognizant',
+        'computacenter',
         'consort',
         'consort nt',
         'consort group',
@@ -69,12 +80,17 @@ final class EsnDetector
         'devoteam g cloud',
         'devoteam revolv',
         'digora',
+        'dxc technology',
         'econocom',
         'effiit',
         'elsys design',
+        'emagine',
+        'epam',
+        'epam systems',
         'ernst & young',
         'esn tech solutions',
         'eviden',
+        'exakis nelite',
         'expectra',
         'experis',
         'expertime',
@@ -85,15 +101,22 @@ final class EsnDetector
         'ey',
         'fed it',
         'fed group',
+        'freelance com',
         'gfi',
         'gfi informatique',
+        'groupe open',
+        'groupe sii',
+        'groupe sidiese',
         'hardis',
         'hardis group',
         'hays',
         'hays france',
+        'hcl tech',
+        'hcl technologies',
         'headmind partners',
         'hn services',
         'inetum',
+        'infosys',
         'infotel',
         'infotel conseil',
         'ippon',
@@ -101,20 +124,21 @@ final class EsnDetector
         'it link',
         'keyrus',
         'klanik',
-        'klee',
         'klee group',
         'kpmg',
         'leeto tech',
         'lesjeudis',
         'leyton',
         'lhh',
-        'linkt',
         'lynx rh',
+        'magellan partners',
         'maltem',
         'maltem consulting',
         'manpower',
+        'mantu',
         'maten',
         'maten it',
+        'mca ingenierie',
         'mc2i',
         'mc2i groupe',
         'meritis',
@@ -122,6 +146,7 @@ final class EsnDetector
         'michael page',
         'micropole',
         'modis',
+        'moongy',
         'neo soft',
         'neo-soft',
         'néo-soft',
@@ -134,11 +159,12 @@ final class EsnDetector
         'octo',
         'octo technology',
         'onepoint',
-        'open',
+        'open sas',
         'orange business services',
         'orange cyberdefense',
         'oresys',
         'page personnel',
+        'pentalog',
         'positive thinking company',
         'pricewaterhousecoopers',
         'proservia',
@@ -150,17 +176,16 @@ final class EsnDetector
         'robert walters',
         'scalian',
         'sedona',
+        'segula',
+        'segula technologies',
         'septentrion finance',
         'seyos',
         'sfeir',
         'sia partners',
         'siderlog',
         'sidiese',
-        'groupe sidiese',
         'sii',
-        'groupe sii',
         'silkhom',
-        'smile',
         'smile open source',
         'sogeti',
         'sogeti high tech',
@@ -169,7 +194,10 @@ final class EsnDetector
         'sopra banking',
         'sopra hr software',
         'sopra steria',
-        'spring',
+        'spie ics',
+        'spring france',
+        'spring professional',
+        'squad',
         'sqli',
         'sully group',
         'sword',
@@ -181,18 +209,34 @@ final class EsnDetector
         't&s engineering',
         'talan',
         'talentsoft',
+        'tata consultancy services',
+        'tcs',
         'technology & strategy',
         'tenacy',
+        'theodo',
+        'tibco software',
         'umanis',
         'upstone',
         'viseo',
         'wavestone',
         'weborama',
+        'webnet',
         'wemanity',
         'wescale',
+        'wipro',
         'witekio',
         'worldline',
         'zenika',
+    ];
+
+    /**
+     * Patterns matching company names that are definitely NOT ESNs (guardrails against false positives).
+     *
+     * @var list<string>
+     */
+    private const EXCLUDED_COMPANY_PATTERNS = [
+        '/\bconseil\s+(?:r[eé]gional|d[eé]partemental|g[eé]n[eé]ral|d[\'’][eé]tat|national|sup[eé]rieur|constitutionnel|des\s+prud[\'’]hommes|d[\'’]architecture|scientifique|de\s+l[\'’]europe)\b/iu',
+        '/\b(?:openclassrooms|dassault\s+syst[eè]mes|decathlon\s+digital|renault\s+digital)\b/iu',
     ];
 
     /**
@@ -203,19 +247,17 @@ final class EsnDetector
     private const COMPANY_PATTERNS = [
         '/\b(?:esn|ssii)\b/iu',
         '/\bconsulting\b/iu',
-        '/\bconseil(?:s)?\b/iu',
-        '/\bing[eé]nierie\b/iu',
-        '/\bdigital\s+services?\b/iu',
-        '/\b(?:recrutement|recruitment|staffing|chasseur\s+de\s+t[eê]tes?)\b/iu',
-        '/\b(?:infog[eé]rance|prestation(?:s)?)\b/iu',
-        '/\bservices?\s+num[eé]riques?\b/iu',
-        '/\btechnology\s+consulting\b/iu',
-        '/\bit\s+services?\b/iu',
-        '/\bconseil\s+en\s+technologies?\b/iu',
-        '/\bcabinet\s+de\s+conseil\b/iu',
-        '/\bconseil\s+it\b/iu',
+        '/\bcabinet\s+de\s+(?:conseil|recrutement|chasse|recruiting)\b/iu',
+        '/\b(?:recrutement|recruitment|staffing|chasseur\s+de\s+t[eê]tes?|int[eé]rim|travail\s+temporaire|agence\s+d[\'’]emploi)\b/iu',
+        '/\bconseil\s+(?:en\s+technologies?|it|informatique|en\s+syst[eè]mes?|en\s+ing[eé]nierie|en\s+strat[eé]gie|en\s+transformation\s+digitale|en\s+management)\b/iu',
         '/\bconseil\s+et\s+ing[eé]nierie\b/iu',
-        '/\bservices\s+informatiques?\b/iu',
+        '/\bservices?\s+num[eé]riques?\b/iu',
+        '/\bdigital\s+services?\b/iu',
+        '/\btechnology\s+services?\b/iu',
+        '/\bit\s+services?\b/iu',
+        '/\bservices?\s+informatiques?\b/iu',
+        '/\btech\s+staffing\b/iu',
+        '/\bing[eé]nierie\s+(?:informatique|logicielle|et\s+conseil|technologique|des\s+syst[eè]mes|et\s+technologies)\b/iu',
     ];
 
     /**
@@ -224,25 +266,28 @@ final class EsnDetector
      * @var list<string>
      */
     private const CONTENT_PATTERNS = [
-        '/\bpour\s+le\s+compte\s+d[\'’]un\s+(?:de\s+nos\s+)?clients?\b/iu',
-        '/\bpour\s+l[\'’]un\s+de\s+nos\s+clients\b/iu',
-        '/\bpour\s+notre\s+client\b/iu',
-        '/\bchez\s+(?:notre|nos|l[\'’]un\s+de\s+nos)\s+clients?\b/iu',
-        '/\b(?:en\s+prestation|en\s+r[eé]gie|au\s+forfait)\b/iu',
-        '/\bd[eé]l[eé]gation\s+de\s+comp[eé]tences?\b/iu',
-        '/\bassistance\s+technique\b/iu',
-        '/\bsoci[eé]t[eé]\s+de\s+services?\b/iu',
+        '/\bpour\s+le\s+compte\s+(?:d[\'’]|de\s+l[\'’]|de\s+)?(?:l[\'’]un\s+de\s+nos|un\s+de\s+nos|notre|nos|son|un|d[\'’]un)?\s*clients?\b/iu',
+        '/\bpour\s+(?:l[\'’]un\s+de\s+nos|un\s+de\s+nos|notre|l[\'’]un\s+des|un\s+des)\s+clients?\b/iu',
+        '/\b(?:recrut(?:e|ons|ement)|recherch(?:e|ons))\s+pour\s+(?:le\s+compte\s+d[\'’]|le\s+compte\s+de\s+l[\'’]|le\s+compte\s+de\s+|l[\'’]un\s+de\s+nos|un\s+de\s+nos|notre|son|un|nos)\s*clients?\b/iu',
+        '/\bmandat[eé](?:s|e)?\s+par\s+(?:l[\'’]un\s+de\s+nos|un\s+de\s+nos|notre|un|son)\s+clients?\b/iu',
+        '/\bnotre\s+client,?\s+(?:un\s+|une\s+|grand\s+|acteur\s+|leader\s+|sp[eé]cialis[eé]|pure\s+player|soci[eé]t[eé]|groupe|pme|startup|cabinet|dans\s+le\s+secteur)\b/iu',
+        '/\bchez\s+(?:notre|nos|l[\'’]un\s+de\s+nos|un\s+de\s+nos)\s+clients?\b/iu',
+        '/\bintervenir\s+chez\s+(?:notre|nos|des|les)\s+clients?\b/iu',
+        '/\bmissions?\s+(?:chez\s+(?:notre|nos|des|les)\s+clients?|en\s+client[eè]le)\b/iu',
+        '/\bint[eé]gr[eé](?:e)?\s+chez\s+(?:notre|le|un)\s+client\b/iu',
+        '/\b(?:en\s+prestation|en\s+r[eé]gie|au\s+forfait\s+ou\s+en\s+r[eé]gie|en\s+mode\s+forfait|en\s+assistance\s+technique\s+chez)\b/iu',
+        '/\bd[eé]l[eé]gation\s+de\s+(?:comp[eé]tences?|personnel|ressources?)\b/iu',
+        '/\bmise\s+[aà]\s+disposition\s+de\s+(?:comp[eé]tences?|personnel|consultants?)\b/iu',
+        '/\b(?:notre|une)\s+(?:esn|ssii)\b/iu',
         '/\b(?:entreprise|soci[eé]t[eé])\s+de\s+services?\s+du\s+num[eé]rique\b/iu',
         '/\bcabinet\s+de\s+recrutement\b/iu',
-        '/\bcabinet\s+de\s+conseil\b/iu',
-        '/\b(?:notre|une)\s+esn\b/iu',
-        '/\b(?:notre|une)\s+ssii\b/iu',
-        '/\b(?:nos|vos)\s+consultants?\b/iu',
-        '/\brejoindre\s+(?:notre|nos)\s+(?:consultants?|[eé]quipes?\s+de\s+consultants?)\b/iu',
-        '/\bclients?\s+grands?\s+comptes?\b/iu',
-        '/\bclient\s+final\b/iu',
-        '/\bintervenir\s+chez\s+(?:nos|des)\s+clients\b/iu',
-        '/\bmissions?\s+chez\s+nos\s+clients\b/iu',
+        '/\bcabinet\s+de\s+conseil\s+(?:en\s+technologies?|it|en\s+syst[eè]mes?|en\s+ing[eé]nierie|en\s+strat[eé]gie|en\s+transformation\s+digitale)\b/iu',
+        '/\bchasseur\s+de\s+t[eê]tes?\b/iu',
+        '/\bagence\s+d[\'’]int[eé]rim\b/iu',
+        '/\bsoci[eé]t[eé]\s+d[\'’]ing[eé]nierie\s+et\s+de\s+conseil\b/iu',
+        '/\b(?:rejoindre|int[eé]grer)\s+(?:notre|nos)\s+(?:consultants?|[eé]quipes?\s+de\s+consultants?|communaut[eé]\s+de\s+consultants?)\b/iu',
+        '/\ben\s+tant\s+que\s+consultant(?:e)?\s+(?:symfony|php|java|devops|fullstack|back|front|cloud|data|lead|architecte|it|technique)\b/iu',
+        '/\bnos\s+consultants?\s+(?:interviennent|accompagnent|r[eé]alisent)\b/iu',
     ];
 
     public static function detect(JobOffer $offer): bool
@@ -253,8 +298,14 @@ final class EsnDetector
     public function isEsn(JobOffer $offer): bool
     {
         $company = $offer->getCompany();
-        if ($company !== null && $this->isEsnCompany($company)) {
-            return true;
+        if ($company !== null) {
+            if ($this->isExcludedCompany($company)) {
+                return false;
+            }
+
+            if ($this->isEsnCompany($company)) {
+                return true;
+            }
         }
 
         if ($this->hasEsnInRawPayload($offer->getRawPayload())) {
@@ -276,6 +327,10 @@ final class EsnDetector
 
     public function isEsnCompany(string $company): bool
     {
+        if ($this->isExcludedCompany($company)) {
+            return false;
+        }
+
         $normalized = $this->normalizeText($company);
         if ($normalized === '') {
             return false;
@@ -288,6 +343,17 @@ final class EsnDetector
         }
 
         foreach (self::COMPANY_PATTERNS as $pattern) {
+            if (preg_match($pattern, $company) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isExcludedCompany(string $company): bool
+    {
+        foreach (self::EXCLUDED_COMPANY_PATTERNS as $pattern) {
             if (preg_match($pattern, $company) === 1) {
                 return true;
             }
@@ -313,18 +379,12 @@ final class EsnDetector
         $typeRecruteur = $payload['typeRecruteur'] ?? null;
         if (is_string($typeRecruteur)) {
             $upper = strtoupper(trim($typeRecruteur));
-            if ($upper === 'CABINET' || $upper === 'ENTREPRISE_INTERMEDIAIRE' || str_contains($upper, 'ESN')) {
-                return true;
-            }
-        }
-
-        $secteur = $payload['secteurActivite'] ?? $payload['domaine'] ?? null;
-        if (is_string($secteur)) {
-            $normalizedSecteur = $this->normalizeText($secteur);
-            if (str_contains($normalizedSecteur, 'conseil en systemes')
-                || str_contains($normalizedSecteur, 'services informatiques')
-                || str_contains($normalizedSecteur, 'travail temporaire')
-                || str_contains($normalizedSecteur, 'placement de personnel')) {
+            if ($upper === 'CABINET'
+                || $upper === 'ENTREPRISE_INTERMEDIAIRE'
+                || str_contains($upper, 'ESN')
+                || str_contains($upper, 'SSII')
+                || str_contains($upper, 'RECRUTEMENT')
+                || str_contains($upper, 'INTERIM')) {
                 return true;
             }
         }

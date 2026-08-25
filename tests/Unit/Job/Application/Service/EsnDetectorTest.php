@@ -42,6 +42,17 @@ final class EsnDetectorTest extends TestCase
             'Manpower',
             'Experis',
             'Michael Page',
+            'Webnet',
+            'Theodo',
+            'Cat-Amania',
+            'SFEIR',
+            'Apside',
+            'Ausy',
+            'Squad',
+            'Klanik',
+            'MoOngy',
+            'Cognizant',
+            'Avanade',
         ];
 
         foreach ($knownCompanies as $company) {
@@ -57,9 +68,10 @@ final class EsnDetectorTest extends TestCase
             'Alpha Conseil Informatique',
             'Global IT Services',
             'Talent Recrutement',
-            'Horizon Ingénierie',
+            'Horizon Ingénierie Informatique',
             'ESN Digital Group',
-            'Prestation & Conseil',
+            'Cabinet de Recrutement IT',
+            'Agence Interim Tech',
         ];
 
         foreach ($companiesWithKeywords as $company) {
@@ -74,9 +86,13 @@ final class EsnDetectorTest extends TestCase
             'Nous recrutons pour le compte de l\'un de nos clients grands comptes.',
             'Vous interviendrez en prestation chez notre client basé à Lyon.',
             'Poste en régie ou au forfait chez nos clients partenaires.',
-            'Notre cabinet de recrutement recherche un profil senior.',
+            'Notre cabinet de recrutement recherche un profil senior pour son client.',
             'Rejoignez notre équipe de consultants passionnés au sein de notre ESN.',
             'Mission de délégation de compétences pour un client final.',
+            'Notre client, leader dans le secteur bancaire, recherche un développeur.',
+            'Mandaté par notre client pour renforcer son pôle technique.',
+            'Intégré chez notre client, vous participerez aux développements.',
+            'En tant que consultant Symfony, vous interviendrez chez des clients.',
         ];
 
         foreach ($phrases as $phrase) {
@@ -87,20 +103,20 @@ final class EsnDetectorTest extends TestCase
 
     public function testItDetectsEsnFromRawPayload(): void
     {
-        $offerApec = $this->createOffer(
+        $offerCabinet = $this->createOffer(
             company: 'Société X',
             rawPayload: ['typeRecruteur' => 'CABINET'],
         );
-        self::assertTrue($this->detector->isEsn($offerApec));
+        self::assertTrue($this->detector->isEsn($offerCabinet));
 
-        $offerSector = $this->createOffer(
+        $offerIntermediaire = $this->createOffer(
             company: 'Société Y',
-            rawPayload: ['secteurActivite' => 'Conseil en systèmes et logiciels informatiques'],
+            rawPayload: ['typeRecruteur' => 'ENTREPRISE_INTERMEDIAIRE'],
         );
-        self::assertTrue($this->detector->isEsn($offerSector));
+        self::assertTrue($this->detector->isEsn($offerIntermediaire));
     }
 
-    public function testItDoesNotFalselyFlagDirectEmployers(): void
+    public function testItDoesNotFalselyFlagDirectEmployersAndPublicBodies(): void
     {
         $directEmployers = [
             'Doctolib',
@@ -113,6 +129,11 @@ final class EsnDetectorTest extends TestCase
             'BNP Paribas',
             'Ubisoft',
             'Deezer',
+            'Conseil Régional d\'Auvergne-Rhône-Alpes',
+            'Conseil Départemental de l\'Isère',
+            'OpenClassrooms',
+            'Dassault Systèmes',
+            'Decathlon Digital',
         ];
 
         foreach ($directEmployers as $company) {
