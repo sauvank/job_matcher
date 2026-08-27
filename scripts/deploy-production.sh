@@ -200,5 +200,17 @@ wait_for_application 30
 if [[ $release_compose_file != "$project_dir/compose.prod.yaml" ]]; then
     install -m 644 "$release_compose_file" "$project_dir/compose.prod.yaml"
 fi
+
+echo "Cleaning up old production artifacts and unused Docker images."
+if [[ -d "$project_dir/.deploy/backups" ]]; then
+    find "$project_dir/.deploy/backups" -maxdepth 1 -type f -name 'database-*.dump' | sort -r | tail -n +11 | xargs -r rm -f
+fi
+if [[ -d "$project_dir/.deploy/releases" ]]; then
+    find "$project_dir/.deploy/releases" -mindepth 1 -maxdepth 1 -type d | sort -r | tail -n +6 | xargs -r rm -rf
+fi
+docker image prune -a --filter "until=24h" -f >/dev/null 2>&1 || true
+docker builder prune --filter "until=24h" -f >/dev/null 2>&1 || true
+
 trap - ERR
 echo "Production deployment completed for $deploy_sha."
+

@@ -45,6 +45,9 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/DataFixtures/'
+            - '../src/Kernel.php'
 
     App\Candidate\Application\Storage\CvStorageInterface:
         alias: App\Candidate\Infrastructure\Storage\LocalPrivateCvStorage
@@ -181,3 +184,14 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@dev:
+    services:
+        App\DataFixtures\:
+            resource: '../src/DataFixtures/'
+
+when@test:
+    services:
+        App\DataFixtures\:
+            resource: '../src/DataFixtures/'
+

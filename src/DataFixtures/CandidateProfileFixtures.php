@@ -13,6 +13,10 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
+if (!class_exists(Fixture::class)) {
+    return;
+}
+
 final class CandidateProfileFixtures extends Fixture
 {
     public function __construct(private readonly UserPasswordHasherInterface $passwordHasher)
