@@ -1,17 +1,32 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['tab', 'esnTab', 'statusTab', 'excludeNotInterested', 'excludeEsn', 'card', 'empty', 'count'];
+    static targets = [
+        'tab',
+        'esnTab',
+        'dropdown',
+        'statusCheckbox',
+        'excludeNotInterested',
+        'excludeEsn',
+        'activeBadge',
+        'card',
+        'empty',
+        'count'
+    ];
 
     connect() {
+        this.boundCloseOnOutsideClick = (e) => {
+            if (this.hasDropdownTarget && this.dropdownTarget.open && !this.dropdownTarget.contains(e.target)) {
+                this.dropdownTarget.open = false;
+            }
+        };
+        document.addEventListener('click', this.boundCloseOnOutsideClick);
+
         const savedProvider = window.sessionStorage.getItem('job-matcher-offer-provider-filter') || '';
         const providerExists = savedProvider === '' || this.tabTargets.some((tab) => (tab.dataset.offerFilterValue || tab.dataset.offerFilterProvider) === savedProvider);
 
         const savedEsn = window.sessionStorage.getItem('job-matcher-offer-esn-filter') || '';
         const esnExists = savedEsn === '' || this.esnTabTargets.some((tab) => tab.dataset.offerFilterEsn === savedEsn);
-
-        const savedStatus = window.sessionStorage.getItem('job-matcher-offer-status-filter') || '';
-        const statusExists = savedStatus === '' || this.statusTabTargets.some((tab) => tab.dataset.offerFilterStatus === savedStatus);
 
         const savedExcludeNotInterested = window.sessionStorage.getItem('job-matcher-offer-exclude-not-interested') === '1';
         if (this.hasExcludeNotInterestedTarget) {
@@ -23,71 +38,90 @@ export default class extends Controller {
             this.excludeEsnTarget.checked = savedExcludeEsn;
         }
 
+        const rawStatuses = window.sessionStorage.getItem('job-matcher-offer-selected-statuses');
+        if (rawStatuses !== null) {
+            try {
+                const selected = JSON.parse(rawStatuses);
+                if (Array.isArray(selected)) {
+                    this.statusCheckboxTargets.forEach((cb) => {
+                        cb.checked = selected.includes(cb.value);
+                    });
+                }
+            } catch {
+                // Keep default checked
+            }
+        }
+
         this.applyFilter(
             providerExists ? savedProvider : '',
             esnExists ? savedEsn : '',
-            statusExists ? savedStatus : '',
+            this.getSelectedStatuses(),
             savedExcludeNotInterested,
             savedExcludeEsn
         );
     }
 
+    disconnect() {
+        if (this.boundCloseOnOutsideClick) {
+            document.removeEventListener('click', this.boundCloseOnOutsideClick);
+        }
+    }
+
     select(event) {
         const filter = event.currentTarget.dataset.offerFilterValue ?? event.currentTarget.dataset.offerFilterProvider ?? '';
         window.sessionStorage.setItem('job-matcher-offer-provider-filter', filter);
-        const currentEsn = this.getCurrentEsnFilter();
-        const currentStatus = this.getCurrentStatusFilter();
-        const excludeNotInterested = this.getExcludeNotInterested();
-        const excludeEsn = this.getExcludeEsn();
-        this.applyFilter(filter, currentEsn, currentStatus, excludeNotInterested, excludeEsn);
+        this.updateFilters();
     }
 
     selectEsn(event) {
         const esnFilter = event.currentTarget.dataset.offerFilterEsn ?? '';
         window.sessionStorage.setItem('job-matcher-offer-esn-filter', esnFilter);
-        const currentProvider = this.getCurrentProviderFilter();
-        const currentStatus = this.getCurrentStatusFilter();
-        const excludeNotInterested = this.getExcludeNotInterested();
-        const excludeEsn = this.getExcludeEsn();
-        this.applyFilter(currentProvider, esnFilter, currentStatus, excludeNotInterested, excludeEsn);
+        this.updateFilters();
     }
 
-    selectStatus(event) {
-        const statusFilter = event.currentTarget.dataset.offerFilterStatus ?? '';
-        window.sessionStorage.setItem('job-matcher-offer-status-filter', statusFilter);
-        const currentProvider = this.getCurrentProviderFilter();
-        const currentEsn = this.getCurrentEsnFilter();
-        const excludeNotInterested = this.getExcludeNotInterested();
-        const excludeEsn = this.getExcludeEsn();
-        this.applyFilter(currentProvider, currentEsn, statusFilter, excludeNotInterested, excludeEsn);
+    updateFilters() {
+        const provider = this.getCurrentProviderFilter();
+        const esn = this.getCurrentEsnFilter();
+        const selectedStatuses = this.getSelectedStatuses();
+        const excludeNotInterested = this.hasExcludeNotInterestedTarget ? this.excludeNotInterestedTarget.checked : false;
+        const excludeEsn = this.hasExcludeEsnTarget ? this.excludeEsnTarget.checked : false;
+
+        window.sessionStorage.setItem('job-matcher-offer-exclude-not-interested', excludeNotInterested ? '1' : '0');
+        window.sessionStorage.setItem('job-matcher-offer-exclude-esn', excludeEsn ? '1' : '0');
+        window.sessionStorage.setItem('job-matcher-offer-selected-statuses', JSON.stringify(selectedStatuses));
+
+        this.applyFilter(provider, esn, selectedStatuses, excludeNotInterested, excludeEsn);
     }
 
-    toggleExcludeNotInterested(event) {
-        const isChecked = event.currentTarget.checked;
-        window.sessionStorage.setItem('job-matcher-offer-exclude-not-interested', isChecked ? '1' : '0');
-        const currentProvider = this.getCurrentProviderFilter();
-        const currentEsn = this.getCurrentEsnFilter();
-        const currentStatus = this.getCurrentStatusFilter();
-        const excludeEsn = this.getExcludeEsn();
-        this.applyFilter(currentProvider, currentEsn, currentStatus, isChecked, excludeEsn);
+    resetDropdown() {
+        if (this.hasExcludeNotInterestedTarget) {
+            this.excludeNotInterestedTarget.checked = false;
+        }
+        if (this.hasExcludeEsnTarget) {
+            this.excludeEsnTarget.checked = false;
+        }
+        this.statusCheckboxTargets.forEach((cb) => {
+            cb.checked = true;
+        });
+        this.updateFilters();
     }
 
-    toggleExcludeEsn(event) {
-        const isChecked = event.currentTarget.checked;
-        window.sessionStorage.setItem('job-matcher-offer-exclude-esn', isChecked ? '1' : '0');
-        const currentProvider = this.getCurrentProviderFilter();
-        const currentEsn = this.getCurrentEsnFilter();
-        const currentStatus = this.getCurrentStatusFilter();
-        const excludeNotInterested = this.getExcludeNotInterested();
-        this.applyFilter(currentProvider, currentEsn, currentStatus, excludeNotInterested, isChecked);
+    checkAllStatuses() {
+        this.statusCheckboxTargets.forEach((cb) => {
+            cb.checked = true;
+        });
+        this.updateFilters();
     }
 
-    getExcludeNotInterested() {
-        return this.hasExcludeNotInterestedTarget ? this.excludeNotInterestedTarget.checked : false;
+    uncheckAllStatuses() {
+        this.statusCheckboxTargets.forEach((cb) => {
+            cb.checked = false;
+        });
+        this.updateFilters();
     }
 
-    getExcludeEsn() {
-        return this.hasExcludeEsnTarget ? this.excludeEsnTarget.checked : false;
+    getSelectedStatuses() {
+        return this.statusCheckboxTargets.filter((cb) => cb.checked).map((cb) => cb.value);
     }
 
     getCurrentProviderFilter() {
@@ -100,13 +134,9 @@ export default class extends Controller {
         return activeEsnTab ? (activeEsnTab.dataset.offerFilterEsn ?? '') : '';
     }
 
-    getCurrentStatusFilter() {
-        const activeStatusTab = this.statusTabTargets.find((tab) => tab.classList.contains('active'));
-        return activeStatusTab ? (activeStatusTab.dataset.offerFilterStatus ?? '') : '';
-    }
-
-    applyFilter(providerFilter, esnFilter, statusFilter = '', excludeNotInterested = false, excludeEsn = false) {
+    applyFilter(providerFilter, esnFilter, selectedStatuses, excludeNotInterested = false, excludeEsn = false) {
         let visibleCount = 0;
+        const allStatusesChecked = selectedStatuses.length === this.statusCheckboxTargets.length;
 
         this.cardTargets.forEach((card) => {
             const cardProvider = card.dataset.offerFilterProvider ?? card.dataset.offerFilterValue ?? '';
@@ -117,11 +147,9 @@ export default class extends Controller {
             const matchEsn = esnFilter === ''
                 ? (!excludeEsn || cardEsn === '0')
                 : (esnFilter === 'esn' ? cardEsn === '1' : cardEsn === '0');
-            const matchStatus = statusFilter === ''
-                || (statusFilter === 'ACTIVE' ? cardStatus !== 'NOT_INTERESTED' : cardStatus === statusFilter);
-            const matchExcludeNotInterested = (!excludeNotInterested || statusFilter === 'NOT_INTERESTED')
-                ? true
-                : cardStatus !== 'NOT_INTERESTED';
+
+            const matchStatus = allStatusesChecked || selectedStatuses.includes(cardStatus);
+            const matchExcludeNotInterested = !excludeNotInterested || cardStatus !== 'NOT_INTERESTED';
 
             const visible = matchProvider && matchEsn && matchStatus && matchExcludeNotInterested;
             card.hidden = !visible;
@@ -142,12 +170,16 @@ export default class extends Controller {
             tab.setAttribute('aria-selected', active ? 'true' : 'false');
         });
 
-        this.statusTabTargets.forEach((tab) => {
-            const val = tab.dataset.offerFilterStatus ?? '';
-            const active = val === statusFilter;
-            tab.classList.toggle('active', active);
-            tab.setAttribute('aria-selected', active ? 'true' : 'false');
-        });
+        // Compute active filters badge count
+        let activeFilterCount = 0;
+        if (excludeNotInterested) activeFilterCount++;
+        if (excludeEsn) activeFilterCount++;
+        if (!allStatusesChecked) activeFilterCount++;
+
+        if (this.hasActiveBadgeTarget) {
+            this.activeBadgeTarget.textContent = String(activeFilterCount);
+            this.activeBadgeTarget.hidden = activeFilterCount === 0;
+        }
 
         if (this.hasCountTarget) {
             this.countTarget.textContent = String(visibleCount);

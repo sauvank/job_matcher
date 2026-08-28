@@ -369,10 +369,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $client->request('GET', '/jobs');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="ACTIVE"]');
-        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="INTERESTED"]');
-        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="NOT_INTERESTED"]');
-        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="APPLIED"]');
+        self::assertSelectorExists('.filter-dropdown');
+        self::assertSelectorExists('input[data-offer-filter-target="statusCheckbox"][value="INTERESTED"]');
+        self::assertSelectorExists('input[data-offer-filter-target="statusCheckbox"][value="NOT_INTERESTED"]');
+        self::assertSelectorExists('input[data-offer-filter-target="statusCheckbox"][value="APPLIED"]');
         self::assertSelectorExists('input[data-offer-filter-target="excludeNotInterested"]');
         self::assertSelectorExists('input[data-offer-filter-target="excludeEsn"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-status="INTERESTED"]');
