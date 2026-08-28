@@ -61,6 +61,7 @@
             </div>
             <div class="source-filter-tabs" role="tablist" aria-label="Filtrer par statut de candidature">
                 <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="statusTab" data-offer-filter-status="" data-action="offer-filter#selectStatus">Tous les statuts</button>
+                <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="ACTIVE" data-action="offer-filter#selectStatus">✨ Offres retenues</button>
                 <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="INTERESTED" data-action="offer-filter#selectStatus">⭐ M’intéresse</button>
                 <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="APPLIED" data-action="offer-filter#selectStatus">📨 Candidaté</button>
                 <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="WAITING" data-action="offer-filter#selectStatus">⏳ En attente</button>
@@ -69,6 +70,12 @@
                 <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="NOT_INTERESTED" data-action="offer-filter#selectStatus">🚫 Ne m’intéresse pas</button>
                 <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="REJECTED" data-action="offer-filter#selectStatus">❌ Refusé</button>
                 <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="statusTab" data-offer-filter-status="ACCEPTED" data-action="offer-filter#selectStatus">🎉 Accepté</button>
+            </div>
+            <div class="filter-toolbar-options">
+                <label class="filter-toggle-label">
+                    <input type="checkbox" class="filter-toggle-checkbox" data-offer-filter-target="excludeNotInterested" data-action="change->offer-filter#toggleExcludeNotInterested">
+                    <span>🚫 Masquer les offres « Ne m’intéresse pas »</span>
+                </label>
             </div>
         </div>
         <p class="source-filter-empty" data-offer-filter-target="empty" hidden>Aucune offre correspondant à vos critères de filtrage.</p>
