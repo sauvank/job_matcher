@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['tab', 'esnTab', 'statusTab', 'excludeNotInterested', 'card', 'empty', 'count'];
+    static targets = ['tab', 'esnTab', 'statusTab', 'excludeNotInterested', 'excludeEsn', 'card', 'empty', 'count'];
 
     connect() {
         const savedProvider = window.sessionStorage.getItem('job-matcher-offer-provider-filter') || '';
@@ -13,16 +13,22 @@ export default class extends Controller {
         const savedStatus = window.sessionStorage.getItem('job-matcher-offer-status-filter') || '';
         const statusExists = savedStatus === '' || this.statusTabTargets.some((tab) => tab.dataset.offerFilterStatus === savedStatus);
 
-        const savedExclude = window.sessionStorage.getItem('job-matcher-offer-exclude-not-interested') === '1';
+        const savedExcludeNotInterested = window.sessionStorage.getItem('job-matcher-offer-exclude-not-interested') === '1';
         if (this.hasExcludeNotInterestedTarget) {
-            this.excludeNotInterestedTarget.checked = savedExclude;
+            this.excludeNotInterestedTarget.checked = savedExcludeNotInterested;
+        }
+
+        const savedExcludeEsn = window.sessionStorage.getItem('job-matcher-offer-exclude-esn') === '1';
+        if (this.hasExcludeEsnTarget) {
+            this.excludeEsnTarget.checked = savedExcludeEsn;
         }
 
         this.applyFilter(
             providerExists ? savedProvider : '',
             esnExists ? savedEsn : '',
             statusExists ? savedStatus : '',
-            savedExclude
+            savedExcludeNotInterested,
+            savedExcludeEsn
         );
     }
 
@@ -31,8 +37,9 @@ export default class extends Controller {
         window.sessionStorage.setItem('job-matcher-offer-provider-filter', filter);
         const currentEsn = this.getCurrentEsnFilter();
         const currentStatus = this.getCurrentStatusFilter();
-        const exclude = this.getExcludeNotInterested();
-        this.applyFilter(filter, currentEsn, currentStatus, exclude);
+        const excludeNotInterested = this.getExcludeNotInterested();
+        const excludeEsn = this.getExcludeEsn();
+        this.applyFilter(filter, currentEsn, currentStatus, excludeNotInterested, excludeEsn);
     }
 
     selectEsn(event) {
@@ -40,8 +47,9 @@ export default class extends Controller {
         window.sessionStorage.setItem('job-matcher-offer-esn-filter', esnFilter);
         const currentProvider = this.getCurrentProviderFilter();
         const currentStatus = this.getCurrentStatusFilter();
-        const exclude = this.getExcludeNotInterested();
-        this.applyFilter(currentProvider, esnFilter, currentStatus, exclude);
+        const excludeNotInterested = this.getExcludeNotInterested();
+        const excludeEsn = this.getExcludeEsn();
+        this.applyFilter(currentProvider, esnFilter, currentStatus, excludeNotInterested, excludeEsn);
     }
 
     selectStatus(event) {
@@ -49,8 +57,9 @@ export default class extends Controller {
         window.sessionStorage.setItem('job-matcher-offer-status-filter', statusFilter);
         const currentProvider = this.getCurrentProviderFilter();
         const currentEsn = this.getCurrentEsnFilter();
-        const exclude = this.getExcludeNotInterested();
-        this.applyFilter(currentProvider, currentEsn, statusFilter, exclude);
+        const excludeNotInterested = this.getExcludeNotInterested();
+        const excludeEsn = this.getExcludeEsn();
+        this.applyFilter(currentProvider, currentEsn, statusFilter, excludeNotInterested, excludeEsn);
     }
 
     toggleExcludeNotInterested(event) {
@@ -59,11 +68,26 @@ export default class extends Controller {
         const currentProvider = this.getCurrentProviderFilter();
         const currentEsn = this.getCurrentEsnFilter();
         const currentStatus = this.getCurrentStatusFilter();
-        this.applyFilter(currentProvider, currentEsn, currentStatus, isChecked);
+        const excludeEsn = this.getExcludeEsn();
+        this.applyFilter(currentProvider, currentEsn, currentStatus, isChecked, excludeEsn);
+    }
+
+    toggleExcludeEsn(event) {
+        const isChecked = event.currentTarget.checked;
+        window.sessionStorage.setItem('job-matcher-offer-exclude-esn', isChecked ? '1' : '0');
+        const currentProvider = this.getCurrentProviderFilter();
+        const currentEsn = this.getCurrentEsnFilter();
+        const currentStatus = this.getCurrentStatusFilter();
+        const excludeNotInterested = this.getExcludeNotInterested();
+        this.applyFilter(currentProvider, currentEsn, currentStatus, excludeNotInterested, isChecked);
     }
 
     getExcludeNotInterested() {
         return this.hasExcludeNotInterestedTarget ? this.excludeNotInterestedTarget.checked : false;
+    }
+
+    getExcludeEsn() {
+        return this.hasExcludeEsnTarget ? this.excludeEsnTarget.checked : false;
     }
 
     getCurrentProviderFilter() {
@@ -81,7 +105,7 @@ export default class extends Controller {
         return activeStatusTab ? (activeStatusTab.dataset.offerFilterStatus ?? '') : '';
     }
 
-    applyFilter(providerFilter, esnFilter, statusFilter = '', excludeNotInterested = false) {
+    applyFilter(providerFilter, esnFilter, statusFilter = '', excludeNotInterested = false, excludeEsn = false) {
         let visibleCount = 0;
 
         this.cardTargets.forEach((card) => {
@@ -91,15 +115,15 @@ export default class extends Controller {
 
             const matchProvider = providerFilter === '' || cardProvider === providerFilter;
             const matchEsn = esnFilter === ''
-                || (esnFilter === 'esn' && cardEsn === '1')
-                || (esnFilter === 'non_esn' && cardEsn === '0');
+                ? (!excludeEsn || cardEsn === '0')
+                : (esnFilter === 'esn' ? cardEsn === '1' : cardEsn === '0');
             const matchStatus = statusFilter === ''
                 || (statusFilter === 'ACTIVE' ? cardStatus !== 'NOT_INTERESTED' : cardStatus === statusFilter);
-            const matchExclude = (!excludeNotInterested || statusFilter === 'NOT_INTERESTED')
+            const matchExcludeNotInterested = (!excludeNotInterested || statusFilter === 'NOT_INTERESTED')
                 ? true
                 : cardStatus !== 'NOT_INTERESTED';
 
-            const visible = matchProvider && matchEsn && matchStatus && matchExclude;
+            const visible = matchProvider && matchEsn && matchStatus && matchExcludeNotInterested;
             card.hidden = !visible;
             visibleCount += visible ? 1 : 0;
         });

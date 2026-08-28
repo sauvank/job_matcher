@@ -374,6 +374,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="NOT_INTERESTED"]');
         self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="APPLIED"]');
         self::assertSelectorExists('input[data-offer-filter-target="excludeNotInterested"]');
+        self::assertSelectorExists('input[data-offer-filter-target="excludeEsn"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-status="INTERESTED"]');
         self::assertSelectorTextContains('.offer-card .offer-status-badge', 'M’intéresse');
         self::assertSelectorTextContains('.offer-card[data-offer-filter-status="INTERESTED"] .offer-meta', 'Offre très intéressante');

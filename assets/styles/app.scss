@@ -132,7 +132,7 @@ p { color: var(--muted); }
 .view-tab.active { border-color: var(--border-strong); background: white; color: var(--primary) !important; box-shadow: var(--shadow-sm); }
 .filter-toolbar { display: flex; margin-bottom: 1.25rem; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .85rem; }
 .filter-toolbar .source-filter-tabs { margin-bottom: 0; }
-.filter-toolbar-options { display: flex; width: 100%; align-items: center; justify-content: flex-end; padding-top: .25rem; }
+.filter-toolbar-options { display: flex; width: 100%; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 1.25rem; padding-top: .25rem; }
 .filter-toggle-label { display: inline-flex; align-items: center; gap: .55rem; font-size: .85rem; font-weight: 650; color: var(--muted); cursor: pointer; user-select: none; }
 .filter-toggle-label:hover { color: var(--text); }
 .filter-toggle-checkbox { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); cursor: pointer; }
