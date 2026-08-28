@@ -48,28 +48,17 @@
             {% endif %}
         {% endfor %}
         <div class="filter-toolbar">
-            <div class="source-filter-tabs" role="tablist" aria-label="Filtrer les offres par fournisseur">
-                <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="tab" data-offer-filter-value="" data-offer-filter-provider="" data-action="offer-filter#select">Toutes les sources</button>
-                {% for provider in providers %}
-                    <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="tab" data-offer-filter-value="{{ provider }}" data-offer-filter-provider="{{ provider }}" data-action="offer-filter#select">{{ providerLabels[provider] ?? provider }}</button>
-                {% endfor %}
-            </div>
-            <div class="filter-toolbar-right">
-                <div class="source-filter-tabs" role="tablist" aria-label="Filtrer par type d’entreprise">
-                    <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-offer-filter-target="esnTab" data-offer-filter-esn="" data-action="offer-filter#selectEsn">Toutes les entreprises</button>
-                    <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="esnTab" data-offer-filter-esn="non_esn" data-action="offer-filter#selectEsn">🏢 Hors ESN</button>
-                    <button type="button" class="source-filter-tab" role="tab" aria-selected="false" data-offer-filter-target="esnTab" data-offer-filter-esn="esn" data-action="offer-filter#selectEsn">💼 ESN</button>
-                </div>
+            <div class="filter-toolbar-left">
                 <details class="filter-dropdown" data-offer-filter-target="dropdown">
                     <summary class="filter-dropdown-btn">
                         <span aria-hidden="true">⚙️</span>
-                        <span>Filtres & Statuts</span>
+                        <span>Filtres & Sources</span>
                         <span class="filter-dropdown-badge" data-offer-filter-target="activeBadge" hidden>0</span>
                         <span class="filter-dropdown-arrow" aria-hidden="true">▾</span>
                     </summary>
                     <div class="filter-dropdown-menu">
                         <div class="filter-dropdown-header">
-                            <strong>Filtres & Statuts</strong>
+                            <strong>Filtres avancés</strong>
                             <button type="button" class="filter-dropdown-reset" data-action="offer-filter#resetDropdown">Réinitialiser</button>
                         </div>
                         <div class="filter-dropdown-section">
@@ -83,6 +72,26 @@
                                 <span>💼 Masquer les ESN</span>
                             </label>
                         </div>
+                        {% if providers is not empty %}
+                            <div class="filter-dropdown-section">
+                                <div class="filter-dropdown-section-head">
+                                    <span class="filter-dropdown-title">Sources & Plateformes</span>
+                                    <div class="filter-dropdown-quick-links">
+                                        <button type="button" data-action="offer-filter#checkAllSources">Toutes</button>
+                                        <span>·</span>
+                                        <button type="button" data-action="offer-filter#uncheckAllSources">Aucune</button>
+                                    </div>
+                                </div>
+                                <div class="filter-dropdown-grid">
+                                    {% for provider in providers %}
+                                        <label class="filter-dropdown-item">
+                                            <input type="checkbox" value="{{ provider }}" data-offer-filter-target="sourceCheckbox" data-action="change->offer-filter#updateFilters" checked>
+                                            <span>{{ providerLabels[provider] ?? provider }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
                         <div class="filter-dropdown-section">
                             <div class="filter-dropdown-section-head">
                                 <span class="filter-dropdown-title">Statuts de candidature</span>

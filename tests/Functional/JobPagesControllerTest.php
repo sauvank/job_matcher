@@ -91,7 +91,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.offer-meta', 'Trouvée le');
     }
 
-    public function testJobOffersDisplayEsnBadgeAndEsnFilterTabs(): void
+    public function testJobOffersDisplayEsnBadgeAndExcludeEsnDropdownFilter(): void
     {
         $client = self::createClient();
         $account = $this->loginOwner($client);
@@ -134,8 +134,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $client->request('GET', '/jobs');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('.source-filter-tab[data-offer-filter-esn="esn"]');
-        self::assertSelectorExists('.source-filter-tab[data-offer-filter-esn="non_esn"]');
+        self::assertSelectorExists('input[data-offer-filter-target="excludeEsn"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-esn="1"]');
         self::assertSelectorTextContains('.offer-card[data-offer-filter-esn="1"] .badge-warning', 'ESN');
 
@@ -146,7 +145,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.offer-meta .badge-warning', 'ESN');
     }
 
-    public function testJobOffersCanBeFilteredByProvider(): void
+    public function testJobOffersCanBeFilteredByProviderInDropdown(): void
     {
         $client = self::createClient();
         $account = $this->loginOwner($client);
@@ -191,8 +190,8 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $client->request('GET', '/jobs');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorCount(1, '.source-filter-tab[data-offer-filter-value="HELLOWORK"]');
-        self::assertSelectorCount(1, '.source-filter-tab[data-offer-filter-value="FRANCE_TRAVAIL"]');
+        self::assertSelectorCount(1, 'input[data-offer-filter-target="sourceCheckbox"][value="HELLOWORK"]');
+        self::assertSelectorCount(1, 'input[data-offer-filter-target="sourceCheckbox"][value="FRANCE_TRAVAIL"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-value="HELLOWORK"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-value="FRANCE_TRAVAIL"]');
         self::assertSelectorTextContains('.offer-card[data-offer-filter-value="FRANCE_TRAVAIL"]', 'France Travail');
