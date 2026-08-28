@@ -6,60 +6,256 @@
     <div class="page-heading">
         <p class="eyebrow">Mon compte</p>
         <h1>Paramètres du compte</h1>
+        <p>Gérez vos préférences d’alertes email quotidiennes, la sécurité de votre compte et accédez rapidement à vos paramètres clés.</p>
     </div>
 
-    <section class="section" id="alerts">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Notifications</p>
-                <h2>Alertes email quotidiennes</h2>
-            </div>
-            {% if account.lastAlertEmailSentAt %}
-                <span class="help-text">Dernier email envoyé le {{ account.lastAlertEmailSentAt|date('d/m/Y à H:i') }}</span>
-            {% endif %}
-        </div>
-        <div class="card">
-            <p>Recevez un email récapitulatif quotidien lorsque de nouvelles offres d’emploi correspondant à votre profil sont découvertes par Job Matcher.</p>
-
-            {{ form_start(alertForm, {'attr': {'class': 'form-grid'}}) }}
-                <div class="form-row">
-                    <label class="checkbox-label">
-                        {{ form_widget(alertForm.alertEmailEnabled) }}
-                        <span>{{ form_label(alertForm.alertEmailEnabled) }}</span>
-                    </label>
-                    {{ form_errors(alertForm.alertEmailEnabled) }}
-                </div>
-
-                <div class="form-row">
-                    {{ form_label(alertForm.alertScoreThreshold) }}
-                    {{ form_widget(alertForm.alertScoreThreshold, {'attr': {'class': 'form-input', 'style': 'max-width: 140px;'}}) }}
-                    {{ form_help(alertForm.alertScoreThreshold) }}
-                    {{ form_errors(alertForm.alertScoreThreshold) }}
-                </div>
-
-                <div class="button-row">
-                    <button type="submit" class="button">Enregistrer mes préférences d’alerte</button>
-                </div>
-            {{ form_end(alertForm) }}
-        </div>
-    </section>
-
-    <section class="section" id="security" style="margin-top: 2rem;">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Sécurité</p>
-                <h2>Connexion Google</h2>
+    {# Bandeau récapitulatif du compte #}
+    <div class="settings-account-summary card">
+        <div class="summary-item">
+            <span class="summary-label">Adresse email</span>
+            <div class="summary-value-wrap">
+                <strong>{{ account.email }}</strong>
+                {% if account.isEmailVerified %}
+                    <span class="badge badge-success">✓ Email vérifié</span>
+                {% else %}
+                    <span class="badge badge-warning">⚠️ Non vérifié</span>
+                {% endif %}
             </div>
         </div>
-        <div class="card">
-            {% if googleConnected %}
-                <p>Votre compte Google est associé à ce compte.</p>
-            {% elseif googleEnabled %}
-                <p>Associez Google uniquement après vous être connecté avec votre mot de passe. L'adresse Google devra correspondre à celle du compte.</p>
-                <a class="button google-button" href="{{ path('app_google_link') }}"><span class="google-mark" aria-hidden="true">G</span> Associer mon compte Google</a>
+        <div class="summary-item">
+            <span class="summary-label">Membre depuis</span>
+            <strong>{{ account.createdAt|date('d/m/Y') }}</strong>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">CV de référence</span>
+            {% if account.candidateProfile and account.candidateProfile.activeCvDocument %}
+                <a href="{{ path('app_cv_show', {id: account.candidateProfile.activeCvDocument.id}) }}" class="summary-link">
+                    📄 {{ account.candidateProfile.activeCvDocument.originalFilename }}
+                </a>
             {% else %}
-                <p>La connexion Google n'est pas configurée.</p>
+                <span class="help-text">Aucun CV actif (<a href="{{ path('app_cv_upload') }}">en téléverser un</a>)</span>
             {% endif %}
         </div>
-    </section>
+        <div class="summary-item">
+            <span class="summary-label">Compétences clés</span>
+            {% set skillsCount = account.candidateProfile ? account.candidateProfile.candidateSkills|length : 0 %}
+            <strong>{{ skillsCount }} déclarée{{ skillsCount > 1 ? 's' : '' }}</strong>
+        </div>
+    </div>
+
+    <div class="settings-grid" data-controller="alert-settings">
+        {# Colonne principale : Alertes & Notifications #}
+        <div class="settings-main-col">
+            <section class="section settings-section" id="alerts">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Notifications</p>
+                        <h2>Alertes email quotidiennes</h2>
+                    </div>
+                    {% if account.isAlertEmailEnabled %}
+                        <span class="badge badge-success">● Alertes actives</span>
+                    {% else %}
+                        <span class="badge badge-neutral">○ Alertes en pause</span>
+                    {% endif %}
+                </div>
+
+                <div class="card settings-card">
+                    <div class="settings-card-intro">
+                        <div class="settings-icon-badge" aria-hidden="true">🔔</div>
+                        <div>
+                            <p class="settings-lead">Recevez chaque matin un récapitulatif par email des nouvelles offres détectées dépassant votre seuil de compatibilité.</p>
+                            <span class="help-text">⏰ Envoi automatique programmé tous les matins à 08:00 (Europe/Paris).</span>
+                        </div>
+                    </div>
+
+                    {{ form_start(alertForm, {'attr': {'class': 'settings-form', 'name': 'account_alert_settings'}}) }}
+                        {# Toggle activation #}
+                        <div class="settings-toggle-box">
+                            <label class="settings-toggle-label">
+                                {{ form_widget(alertForm.alertEmailEnabled, {
+                                    'attr': {
+                                        'class': 'settings-checkbox-input',
+                                        'data-alert-settings-target': 'checkbox',
+                                        'data-action': 'change->alert-settings#toggle'
+                                    }
+                                }) }}
+                                <div class="toggle-track" aria-hidden="true">
+                                    <div class="toggle-thumb"></div>
+                                </div>
+                                <div class="toggle-text-wrap">
+                                    <strong>Activer l’alerte email quotidienne</strong>
+                                    <span>Vous recevrez un email uniquement lorsqu'au moins une offre correspond à vos critères.</span>
+                                </div>
+                            </label>
+                            {{ form_errors(alertForm.alertEmailEnabled) }}
+                        </div>
+
+                        {# Seuil de compatibilité #}
+                        <div class="settings-threshold-group" data-alert-settings-target="thresholdGroup">
+                            <div class="threshold-header">
+                                <div class="threshold-title-wrap">
+                                    <label for="{{ alertForm.alertScoreThreshold.vars.id }}" class="settings-field-title">
+                                        Seuil de compatibilité minimum requis
+                                    </label>
+                                    <p class="threshold-description">
+                                        Seules les offres ayant un score (IA ou critères) supérieur ou égal à ce niveau vous seront transmises.
+                                    </p>
+                                </div>
+                                <span class="settings-score-badge badge-good" data-alert-settings-target="valueBadge">
+                                    ≥ {{ alertForm.alertScoreThreshold.vars.value }}%
+                                </span>
+                            </div>
+
+                            <div class="settings-slider-wrap">
+                                {{ form_widget(alertForm.alertScoreThreshold, {
+                                    'attr': {
+                                        'type': 'range',
+                                        'class': 'settings-range-slider',
+                                        'min': '10',
+                                        'max': '100',
+                                        'step': '5',
+                                        'data-alert-settings-target': 'slider',
+                                        'data-action': 'input->alert-settings#onSliderInput'
+                                    }
+                                }) }}
+                                <div class="slider-ticks">
+                                    <span>10%</span>
+                                    <span>50%</span>
+                                    <span>70%</span>
+                                    <span>85%</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+
+                            {# Boutons de préréglages rapides #}
+                            <div class="settings-presets">
+                                <span class="presets-label">Raccourcis :</span>
+                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="50" data-action="click->alert-settings#setPreset">
+                                    ≥ 50% <small>(Large)</small>
+                                </button>
+                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="70" data-action="click->alert-settings#setPreset">
+                                    ≥ 70% <small>(Recommandé)</small>
+                                </button>
+                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="80" data-action="click->alert-settings#setPreset">
+                                    ≥ 80% <small>(Ciblé)</small>
+                                </button>
+                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="90" data-action="click->alert-settings#setPreset">
+                                    ≥ 90% <small>(Strict)</small>
+                                </button>
+                            </div>
+
+                            <p class="settings-score-hint" data-alert-settings-target="explanation">
+                                Équilibré (Recommandé) : bon compromis entre pertinence et volume d’offres.
+                            </p>
+                            {{ form_errors(alertForm.alertScoreThreshold) }}
+                        </div>
+
+                        {# Statut dernier envoi #}
+                        <div class="settings-last-sent-info">
+                            <span class="info-icon">ℹ️</span>
+                            <div>
+                                {% if account.lastAlertEmailSentAt %}
+                                    <span>Dernière alerte envoyée avec succès le <strong>{{ account.lastAlertEmailSentAt|date('d/m/Y à H:i') }}</strong>.</span>
+                                {% else %}
+                                    <span>Aucune alerte n'a encore été envoyée. La prochaine analyse est prévue demain matin à 08:00.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="settings-form-actions">
+                            <button type="submit" class="button">
+                                💾 Enregistrer mes préférences d’alerte
+                            </button>
+                        </div>
+                    {{ form_end(alertForm) }}
+                </div>
+            </section>
+        </div>
+
+        {# Colonne latérale : Sécurité & Raccourcis #}
+        <div class="settings-side-col">
+            <section class="section settings-section" id="security">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Sécurité</p>
+                        <h2>Connexion Google</h2>
+                    </div>
+                </div>
+                <div class="card settings-card">
+                    {% if googleConnected %}
+                        <div class="google-status-connected">
+                            <div class="google-status-badge">
+                                <span class="google-icon-circle">G</span>
+                                <div>
+                                    <strong>Compte Google associé</strong>
+                                    <p class="help-text">Connexion 1-clic activée.</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-success">✓ Actif</span>
+                        </div>
+                    {% elseif googleEnabled %}
+                        <p class="help-text">Associez votre compte Google pour vous connecter plus rapidement.</p>
+                        <a class="button google-button button-full" href="{{ path('app_google_link') }}">
+                            <span class="google-mark" aria-hidden="true">G</span> Associer mon compte Google
+                        </a>
+                    {% else %}
+                        <p class="help-text">La connexion Google n’est pas configurée sur cette instance.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="section settings-section" id="shortcuts">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Navigation</p>
+                        <h2>Raccourcis du profil</h2>
+                    </div>
+                </div>
+                <div class="card settings-card settings-shortcuts-card">
+                    <ul class="settings-shortcuts-list">
+                        <li>
+                            <a href="{{ path('app_candidate_profile') }}#skills" class="shortcut-item">
+                                <span class="shortcut-icon">🎯</span>
+                                <div>
+                                    <strong>Gérer mes compétences</strong>
+                                    <p>Ajustez vos technologies et niveaux</p>
+                                </div>
+                                <span class="shortcut-arrow">→</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ path('app_cv_upload') }}" class="shortcut-item">
+                                <span class="shortcut-icon">📄</span>
+                                <div>
+                                    <strong>Mon CV & Document</strong>
+                                    <p>Mettez à jour votre CV ou visualisez le texte</p>
+                                </div>
+                                <span class="shortcut-arrow">→</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ path('app_job_sources') }}" class="shortcut-item">
+                                <span class="shortcut-icon">🌐</span>
+                                <div>
+                                    <strong>Sources de recherche</strong>
+                                    <p>Configurez les plateformes d'offres</p>
+                                </div>
+                                <span class="shortcut-arrow">→</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ path('app_job_offers') }}" class="shortcut-item">
+                                <span class="shortcut-icon">💼</span>
+                                <div>
+                                    <strong>Tableau des offres</strong>
+                                    <p>Consultez toutes vos opportunités matchées</p>
+                                </div>
+                                <span class="shortcut-arrow">→</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
 {% endblock %}
