@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\Candidate\Application\Storage\CvStorageInterface;
 use App\Candidate\Entity\CandidateSkill;
 use App\Candidate\Entity\CvDocument;
 use App\Candidate\Entity\Skill;
@@ -179,6 +180,107 @@ final class CvPagesControllerTest extends AuthenticatedWebTestCase
 
         $client->request('GET', '/jobs/'.$phpMatch->getId());
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testOwnerCanViewOriginalCvFileAndExtractedText(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $storage = self::getContainer()->get(CvStorageInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        self::assertInstanceOf(CvStorageInterface::class, $storage);
+
+        $profile = $account->getCandidateProfile();
+        $uniqueId = bin2hex(random_bytes(6));
+        $storedFilename = 'functional-view-'.$uniqueId.'.pdf';
+        $filePath = $storage->absolutePath($storedFilename);
+        @mkdir(dirname($filePath), 0700, true);
+        file_put_contents($filePath, '%PDF-1.4 Fake PDF Content for Functional Test');
+
+        $document = new CvDocument(
+            $profile,
+            'mon-beau-cv.pdf',
+            $storedFilename,
+            'application/pdf',
+            2048,
+            hash('sha256', 'fake-pdf-'.$uniqueId),
+        );
+        $document->markAnalyzing("Développeur PHP Symfony avec 6 ans d'expérience.");
+        $document->markApplied('Développeur PHP', 'Lyon', 6);
+        $profile->activateCvDocument($document);
+        $entityManager->persist($document);
+        $entityManager->flush();
+
+        $documentId = $document->getId();
+        self::assertNotNull($documentId);
+
+        // 1. Direct file download/stream
+        $client->request('GET', '/cv/'.$documentId.'/file');
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('content-type', 'application/pdf');
+        self::assertResponseHeaderSame('x-content-type-options', 'nosniff');
+        $disposition = $client->getResponse()->headers->get('content-disposition');
+        self::assertIsString($disposition);
+        self::assertStringContainsString('inline', $disposition);
+        self::assertStringContainsString('mon-beau-cv.pdf', $disposition);
+
+        // 2. CV Show page contains viewer & extracted text
+        $client->request('GET', '/cv/'.$documentId);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('a[href="/cv/'.$documentId.'/file"]');
+        self::assertSelectorExists('iframe[src="/cv/'.$documentId.'/file"]');
+        self::assertSelectorExists('.cv-text-disclosure');
+        self::assertSelectorTextContains('.cv-raw-text-block', 'Développeur PHP Symfony avec 6 ans');
+
+        // 3. Profile page has banner with direct view link
+        $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.profile-active-cv-banner a[href="/cv/'.$documentId.'/file"]');
+
+        // 4. CV Upload page list has view link
+        $client->request('GET', '/cv');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.document-row a[href="/cv/'.$documentId.'/file"]');
+
+        // Clean up temp file
+        @unlink($filePath);
+    }
+
+    public function testAnotherAccountCannotAccessCvFile(): void
+    {
+        $client = self::createClient();
+        $owner = $this->owner();
+        $otherAccount = $this->account('other-cv-file@example.test');
+        $client->loginUser($owner);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $storage = self::getContainer()->get(CvStorageInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        self::assertInstanceOf(CvStorageInterface::class, $storage);
+
+        $uniqueId = bin2hex(random_bytes(6));
+        $storedFilename = 'functional-private-file-'.$uniqueId.'.pdf';
+        $filePath = $storage->absolutePath($storedFilename);
+        @mkdir(dirname($filePath), 0700, true);
+        file_put_contents($filePath, '%PDF-1.4 Private CV');
+
+        $document = new CvDocument(
+            $otherAccount->getCandidateProfile(),
+            'cv-secret.pdf',
+            $storedFilename,
+            'application/pdf',
+            1024,
+            hash('sha256', 'secret-'.$uniqueId),
+        );
+        $entityManager->persist($document);
+        $entityManager->flush();
+        $documentId = $document->getId();
+        self::assertNotNull($documentId);
+
+        $client->request('GET', '/cv/'.$documentId.'/file');
+        self::assertResponseStatusCodeSame(404);
+
+        @unlink($filePath);
     }
 
     private function appliedDocument(\App\Candidate\Entity\CandidateProfile $profile, string $filename, string $title): CvDocument

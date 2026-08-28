@@ -11,18 +11,21 @@
             {% if document.candidateProfile.activeCvDocument == document %}· <span class="badge">CV actif</span>{% endif %}
             {% if document.analyzer %}· {{ document.analyzer }}{% endif %}
         </p>
-        {% if document.hasAppliedProfile and document.candidateProfile.activeCvDocument != document %}
-            <form method="post" action="{{ path('app_cv_activate', {id: document.id}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('activate-cv-' ~ document.id) }}">
-                <button class="button secondary" type="submit">Utiliser ce CV</button>
-            </form>
-        {% endif %}
-        {% if document.status.value in ['READY', 'APPLIED', 'FAILED'] %}
-            <form method="post" action="{{ path('app_cv_reanalyze', {id: document.id}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('reanalyze-cv-' ~ document.id) }}">
-                <button class="button secondary" type="submit">Relancer l’analyse</button>
-            </form>
-        {% endif %}
+        <div class="button-row">
+            <a class="button secondary" href="{{ path('app_cv_file', {id: document.id}) }}" target="_blank" rel="noopener noreferrer">📄 Voir le document original ↗</a>
+            {% if document.hasAppliedProfile and document.candidateProfile.activeCvDocument != document %}
+                <form method="post" action="{{ path('app_cv_activate', {id: document.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('activate-cv-' ~ document.id) }}">
+                    <button class="button secondary" type="submit">Utiliser ce CV</button>
+                </form>
+            {% endif %}
+            {% if document.status.value in ['READY', 'APPLIED', 'FAILED'] %}
+                <form method="post" action="{{ path('app_cv_reanalyze', {id: document.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('reanalyze-cv-' ~ document.id) }}">
+                    <button class="button secondary" type="submit">Relancer l’analyse</button>
+                </form>
+            {% endif %}
+        </div>
     </div>
 
     {% if document.status.value in ['UPLOADED', 'EXTRACTING', 'ANALYZING'] %}
@@ -88,6 +91,39 @@
                     {{ form_row(reviewForm.apply) }}
                 {{ form_end(reviewForm) }}
             </section>
+        {% endif %}
+    {% endif %}
+
+    {% if document.status.value not in ['UPLOADED', 'EXTRACTING'] %}
+        {% if document.mimeType == 'application/pdf' or document.originalFilename ends with '.pdf' %}
+            <section class="card cv-preview-card">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Document original</p>
+                        <h2>Aperçu du CV</h2>
+                    </div>
+                    <a class="button button-compact secondary" href="{{ path('app_cv_file', {id: document.id}) }}" target="_blank" rel="noopener noreferrer">Ouvrir en plein écran ↗</a>
+                </div>
+                <div class="cv-pdf-viewer-wrap">
+                    <iframe src="{{ path('app_cv_file', {id: document.id}) }}" class="cv-pdf-frame" title="Aperçu du CV {{ document.originalFilename }}"></iframe>
+                </div>
+            </section>
+        {% endif %}
+
+        {% if document.extractedText %}
+            <details class="optimization-disclosure cv-text-disclosure">
+                <summary>
+                    <span class="disclosure-indicator" aria-hidden="true"></span>
+                    <div>
+                        <h3>Texte brut extrait</h3>
+                        <p>Contenu textuel lu et analysé par l’application</p>
+                    </div>
+                    <span class="disclosure-chevron" aria-hidden="true">▼</span>
+                </summary>
+                <div class="cv-raw-text-block">
+                    <pre>{{ document.extractedText }}</pre>
+                </div>
+            </details>
         {% endif %}
     {% endif %}
 {% endblock %}

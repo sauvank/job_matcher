@@ -56,6 +56,7 @@
                             <span>{{ document.originalFilename }}</span>
                             <span class="badge">{{ profile.activeCvDocument == document ? 'CV actif' : ('candidate.cv.status.' ~ document.status.value|lower)|trans }}</span>
                         </a>
+                        <a class="button secondary button-compact" href="{{ path('app_cv_file', {id: document.id}) }}" target="_blank" rel="noopener noreferrer" title="Voir le document original">Voir ↗</a>
                         {% if document.hasAppliedProfile and profile.activeCvDocument != document %}
                             <form method="post" action="{{ path('app_cv_activate', {id: document.id}) }}">
                                 <input type="hidden" name="_token" value="{{ csrf_token('activate-cv-' ~ document.id) }}">

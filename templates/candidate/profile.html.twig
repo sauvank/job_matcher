@@ -10,7 +10,10 @@
 
     {% if profile %}
         {% if profile.activeCvDocument %}
-            <p class="profile-active-cv">CV actif : <a href="{{ path('app_cv_show', {id: profile.activeCvDocument.id}) }}">{{ profile.activeCvDocument.originalFilename }}</a></p>
+            <div class="profile-active-cv-banner">
+                <p class="profile-active-cv">CV actif : <a href="{{ path('app_cv_show', {id: profile.activeCvDocument.id}) }}">{{ profile.activeCvDocument.originalFilename }}</a></p>
+                <a class="button button-compact secondary" href="{{ path('app_cv_file', {id: profile.activeCvDocument.id}) }}" target="_blank" rel="noopener noreferrer">📄 Voir le document original ↗</a>
+            </div>
         {% endif %}
         <section class="profile-grid">
             <div class="card"><span>Titre</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>

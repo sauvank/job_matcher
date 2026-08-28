@@ -20,6 +20,8 @@ use App\Job\Application\Service\ConfigureCandidateJobSearchService;
 use App\Security\Entity\Account;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -126,6 +128,32 @@ final class CvController extends AbstractController
             'analysis' => $analysis,
             'reviewForm' => $reviewForm,
         ]);
+    }
+
+    #[Route('/cv/{id<\d+>}/file', name: 'app_cv_file', methods: ['GET'])]
+    public function serveFile(
+        CvDocument $document,
+        #[CurrentUser] Account $account,
+        CvStorageInterface $storage,
+    ): Response {
+        $this->assertOwnsDocument($account, $document);
+        $filePath = $storage->absolutePath($document->getStoredFilename());
+        if (!is_file($filePath)) {
+            throw $this->createNotFoundException(CandidateMessage::DOCUMENT_NOT_FOUND);
+        }
+
+        $response = new BinaryFileResponse($filePath);
+        $disposition = HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_INLINE,
+            $document->getOriginalFilename(),
+            'cv.pdf',
+        );
+        $response->headers->set('Content-Disposition', $disposition);
+        $response->headers->set('Content-Type', $document->getMimeType() ?: 'application/pdf');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('Cache-Control', 'private, max-age=0, must-revalidate');
+
+        return $response;
     }
 
     #[Route('/cv/{id<\d+>}/reanalyze', name: 'app_cv_reanalyze', methods: ['POST'])]
