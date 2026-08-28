@@ -376,7 +376,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('input[data-offer-filter-target="excludeNotInterested"]');
         self::assertSelectorExists('input[data-offer-filter-target="excludeEsn"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-status="INTERESTED"]');
-        self::assertSelectorTextContains('.offer-card .offer-status-badge', 'M’intéresse');
+        self::assertSelectorTextContains('.offer-card[data-offer-filter-status="INTERESTED"] .offer-status-badge', 'M’intéresse');
         self::assertSelectorTextContains('.offer-card[data-offer-filter-status="INTERESTED"] .offer-meta', 'Offre très intéressante');
 
         $matchId = $match->getId();
@@ -672,8 +672,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSame('M’intéresse', $response['label']);
         self::assertSame('⭐', $response['icon']);
 
-        $entityManager->refresh($match);
-        self::assertSame(JobApplicationStatus::INTERESTED, $match->getApplicationStatus());
+        $entityManager->clear();
+        $reloaded = $entityManager->find(JobMatch::class, $matchId);
+        self::assertInstanceOf(JobMatch::class, $reloaded);
+        self::assertSame(JobApplicationStatus::INTERESTED, $reloaded->getApplicationStatus());
 
         // 2. Mark as NOT_INTERESTED via JSON
         $client->request('POST', '/jobs/'.$matchId.'/quick-status', [
@@ -688,8 +690,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSame('Ne m’intéresse pas', $response2['label']);
         self::assertSame('🚫', $response2['icon']);
 
-        $entityManager->refresh($match);
-        self::assertSame(JobApplicationStatus::NOT_INTERESTED, $match->getApplicationStatus());
+        $entityManager->clear();
+        $reloaded2 = $entityManager->find(JobMatch::class, $matchId);
+        self::assertInstanceOf(JobMatch::class, $reloaded2);
+        self::assertSame(JobApplicationStatus::NOT_INTERESTED, $reloaded2->getApplicationStatus());
 
         // 3. Reset back to UNPROCESSED via JSON
         $client->request('POST', '/jobs/'.$matchId.'/quick-status', [
@@ -702,8 +706,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertTrue($response3['success']);
         self::assertSame('UNPROCESSED', $response3['status']);
 
-        $entityManager->refresh($match);
-        self::assertSame(JobApplicationStatus::UNPROCESSED, $match->getApplicationStatus());
+        $entityManager->clear();
+        $reloaded3 = $entityManager->find(JobMatch::class, $matchId);
+        self::assertInstanceOf(JobMatch::class, $reloaded3);
+        self::assertSame(JobApplicationStatus::UNPROCESSED, $reloaded3->getApplicationStatus());
     }
 
     public function testAnotherAccountCannotQuickStatusJobOffer(): void
