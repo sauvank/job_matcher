@@ -8,6 +8,7 @@ use App\Form\JobApplicationStatusType;
 use App\Matching\DTO\JobApplicationStatusData;
 use App\Matching\DTO\SemanticJobAnalysis;
 use App\Matching\Entity\JobMatch;
+use App\Matching\Enum\JobApplicationStatus;
 use App\Matching\Message\AnalyzeJobMatchMessage;
 use App\Matching\Repository\JobMatchRepository;
 use App\Matching\Translation\MatchingMessage;
@@ -83,6 +84,56 @@ final class JobOfferController extends AbstractController
         }
 
         return $this->redirectToRoute('app_job_offer_show', ['id' => $match->getId()]);
+    }
+
+    #[Route('/jobs/{id<\d+>}/quick-status', name: 'app_job_offer_quick_status', methods: ['POST'])]
+    public function quickStatus(
+        JobMatch $match,
+        #[CurrentUser] Account $account,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $this->assertOwnsMatch($account, $match);
+
+        $submittedToken = $request->request->getString('_token');
+        if (!$this->isCsrfTokenValid('quick-status-'.$match->getId(), $submittedToken)) {
+            if ($request->isXmlHttpRequest() || str_contains((string) $request->headers->get('Accept'), 'application/json')) {
+                return $this->json(['error' => 'Invalid CSRF token'], Response::HTTP_BAD_REQUEST);
+            }
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $rawStatus = $request->request->getString('status');
+        $status = JobApplicationStatus::tryFrom($rawStatus);
+        if ($status === null) {
+            if ($request->isXmlHttpRequest() || str_contains((string) $request->headers->get('Accept'), 'application/json')) {
+                return $this->json(['error' => 'Invalid status'], Response::HTTP_BAD_REQUEST);
+            }
+
+            return $this->redirectToRoute('app_job_offers');
+        }
+
+        $match->updateApplicationStatus($status);
+        $entityManager->flush();
+
+        if ($request->isXmlHttpRequest() || str_contains((string) $request->headers->get('Accept'), 'application/json')) {
+            return $this->json([
+                'success' => true,
+                'status' => $status->value,
+                'label' => $status->label(),
+                'badgeClass' => $status->badgeClass(),
+                'icon' => $status->icon(),
+            ]);
+        }
+
+        $this->addFlash('success', MatchingMessage::APPLICATION_STATUS_UPDATED);
+
+        $referer = $request->headers->get('referer');
+        if (is_string($referer) && $referer !== '') {
+            return $this->redirect($referer);
+        }
+
+        return $this->redirectToRoute('app_job_offers');
     }
 
     #[Route('/jobs/{id<\d+>}/analyze', name: 'app_job_offer_analyze', methods: ['POST'])]

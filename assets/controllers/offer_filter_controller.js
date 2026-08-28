@@ -22,6 +22,11 @@ export default class extends Controller {
         };
         document.addEventListener('click', this.boundCloseOnOutsideClick);
 
+        this.boundOnOfferStatusUpdated = () => {
+            this.updateFilters();
+        };
+        window.addEventListener('offer-status-updated', this.boundOnOfferStatusUpdated);
+
         const savedProvider = window.sessionStorage.getItem('job-matcher-offer-provider-filter') || '';
         const providerExists = savedProvider === '' || this.tabTargets.some((tab) => (tab.dataset.offerFilterValue || tab.dataset.offerFilterProvider) === savedProvider);
 
@@ -64,6 +69,9 @@ export default class extends Controller {
     disconnect() {
         if (this.boundCloseOnOutsideClick) {
             document.removeEventListener('click', this.boundCloseOnOutsideClick);
+        }
+        if (this.boundOnOfferStatusUpdated) {
+            window.removeEventListener('offer-status-updated', this.boundOnOfferStatusUpdated);
         }
     }
 

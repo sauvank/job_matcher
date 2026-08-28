@@ -597,4 +597,152 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('#apercu-poste', 'Capacités & Compétences attendues');
         self::assertSelectorTextContains('.job-capacity-badge', 'PHP 8.3 & Symfony 7');
     }
+
+    public function testQuickStatusCanFavoriteAndDiscardJobOfferViaJson(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — QuickStatus — '.$uniqueId,
+            'https://example.test/quick-status/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'qs-'.$uniqueId,
+            url: 'https://example.test/qs/'.$uniqueId.'/offer',
+            title: 'Offre Quick Status '.$uniqueId,
+            company: 'Quick Company',
+            location: 'Paris',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(70, 70, 70, 70, 70, 70, 70, 70, 70, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+
+        // Get the list page to retrieve CSRF token and verify buttons
+        $crawler = $client->request('GET', '/jobs');
+        self::assertResponseIsSuccessful();
+        $cardActions = $crawler->filter('#job-match-'.$matchId.' .offer-card-actions');
+        self::assertCount(1, $cardActions);
+        $csrfToken = $cardActions->attr('data-quick-status-token-value');
+        self::assertNotEmpty($csrfToken);
+
+        // 1. Mark as FAVORITE / INTERESTED via JSON
+        $client->request('POST', '/jobs/'.$matchId.'/quick-status', [
+            '_token' => $csrfToken,
+            'status' => JobApplicationStatus::INTERESTED->value,
+        ], [], ['HTTP_ACCEPT' => 'application/json', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+
+        self::assertResponseIsSuccessful();
+        $response = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertTrue($response['success']);
+        self::assertSame('INTERESTED', $response['status']);
+        self::assertSame('M’intéresse', $response['label']);
+        self::assertSame('⭐', $response['icon']);
+
+        $entityManager->refresh($match);
+        self::assertSame(JobApplicationStatus::INTERESTED, $match->getApplicationStatus());
+
+        // 2. Mark as NOT_INTERESTED via JSON
+        $client->request('POST', '/jobs/'.$matchId.'/quick-status', [
+            '_token' => $csrfToken,
+            'status' => JobApplicationStatus::NOT_INTERESTED->value,
+        ], [], ['HTTP_ACCEPT' => 'application/json', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+
+        self::assertResponseIsSuccessful();
+        $response2 = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertTrue($response2['success']);
+        self::assertSame('NOT_INTERESTED', $response2['status']);
+        self::assertSame('Ne m’intéresse pas', $response2['label']);
+        self::assertSame('🚫', $response2['icon']);
+
+        $entityManager->refresh($match);
+        self::assertSame(JobApplicationStatus::NOT_INTERESTED, $match->getApplicationStatus());
+
+        // 3. Reset back to UNPROCESSED via JSON
+        $client->request('POST', '/jobs/'.$matchId.'/quick-status', [
+            '_token' => $csrfToken,
+            'status' => JobApplicationStatus::UNPROCESSED->value,
+        ], [], ['HTTP_ACCEPT' => 'application/json', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
+
+        self::assertResponseIsSuccessful();
+        $response3 = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertTrue($response3['success']);
+        self::assertSame('UNPROCESSED', $response3['status']);
+
+        $entityManager->refresh($match);
+        self::assertSame(JobApplicationStatus::UNPROCESSED, $match->getApplicationStatus());
+    }
+
+    public function testAnotherAccountCannotQuickStatusJobOffer(): void
+    {
+        $client = self::createClient();
+        $owner = $this->owner();
+        $otherAccount = $this->account('other-qs@example.test');
+        $client->loginUser($owner);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $otherAccount->getCandidateProfile(),
+            'Source Autre Compte QS '.$uniqueId,
+            'https://example.test/other-qs/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'other-qs-'.$uniqueId,
+            url: 'https://example.test/other-qs/'.$uniqueId.'/offer',
+            title: 'Offre Autre Compte QS',
+            company: 'Entreprise Autre',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $otherAccount->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+
+        $client->request('POST', '/jobs/'.$matchId.'/quick-status', [
+            '_token' => 'invalid-token',
+            'status' => JobApplicationStatus::INTERESTED->value,
+        ]);
+        self::assertResponseStatusCodeSame(404);
+    }
 }
