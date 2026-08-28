@@ -136,7 +136,7 @@ p { color: var(--muted); }
 .filter-toggle-label { display: inline-flex; align-items: center; gap: .55rem; font-size: .85rem; font-weight: 650; color: var(--muted); cursor: pointer; user-select: none; }
 .filter-toggle-label:hover { color: var(--text); }
 .filter-toggle-checkbox { width: 1.1rem; height: 1.1rem; accent-color: var(--primary); cursor: pointer; }
-.source-filter-tabs { display: flex; margin-bottom: 1rem; padding-bottom: .35rem; overflow-x: auto; gap: .5rem; scrollbar-width: thin; }
+.source-filter-tabs { display: flex; max-width: 100%; margin-bottom: 1rem; padding: 2px 2px 6px; align-items: center; overflow-x: auto; overflow-y: hidden; gap: .5rem; scrollbar-width: thin; }
 .source-filter-tab { padding: .55rem .85rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted) !important; box-shadow: none; cursor: pointer; font-size: .82rem; font-weight: 750; white-space: nowrap; }
 .source-filter-tab:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; box-shadow: none; transform: none; }
 .source-filter-tab.active { border-color: var(--primary); background: var(--primary); color: white !important; }
@@ -296,7 +296,7 @@ p { color: var(--muted); }
 .profile-active-cv-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; padding: .85rem 1.25rem; border: 1px solid var(--border); border-radius: .85rem; background: white; }
 .profile-active-cv-banner .profile-active-cv { margin: 0; }
 
-.table-wrapper { overflow-x: auto; }
+.table-wrapper { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 1rem .85rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
 th { color: var(--subtle); font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
@@ -465,13 +465,13 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monos
     .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
     .admin-split-grid { grid-template-columns: 1fr; }
     .admin-subnav-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-    .admin-nav { width: 100%; overflow-x: auto; }
+    .admin-nav { width: 100%; overflow-x: auto; overflow-y: hidden; }
     .schedule-meta-grid { grid-template-columns: 1fr; }
 }
 
 @include viewport-at-most(680px) {
     .header-inner { min-height: auto; padding-block: .8rem; align-items: flex-start; flex-direction: column; gap: .65rem; }
-    .site-header nav { width: 100%; overflow-x: auto; }
+    .site-header nav { width: 100%; overflow-x: auto; overflow-y: hidden; }
     .site-header nav a { padding: .55rem .7rem; white-space: nowrap; }
     .container, .site-footer { width: min(100% - 2rem, 1120px); }
     .main-content { padding-block: 2.5rem; }
