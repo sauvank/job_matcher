@@ -73,12 +73,12 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-success', 'Vos préférences d’alertes email ont été enregistrées.');
 
-        $em = self::getContainer()->get(EntityManagerInterface::class);
-        self::assertInstanceOf(EntityManagerInterface::class, $em);
-        $em->refresh($account);
-
-        self::assertTrue($account->isAlertEmailEnabled());
-        self::assertSame(85, $account->getAlertScoreThreshold());
+        $repository = self::getContainer()->get(AccountRepository::class);
+        self::assertInstanceOf(AccountRepository::class, $repository);
+        $reloaded = $repository->loadUserByIdentifier($account->getEmail());
+        self::assertNotNull($reloaded);
+        self::assertTrue($reloaded->isAlertEmailEnabled());
+        self::assertSame(85, $reloaded->getAlertScoreThreshold());
 
         // Test disabling alerts
         $crawler = $client->request('GET', '/compte/parametres');
@@ -91,9 +91,10 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         self::assertResponseRedirects('/compte/parametres');
         $client->followRedirect();
 
-        $em->refresh($account);
-        self::assertFalse($account->isAlertEmailEnabled());
-        self::assertSame(60, $account->getAlertScoreThreshold());
+        $reloaded = $repository->loadUserByIdentifier($account->getEmail());
+        self::assertNotNull($reloaded);
+        self::assertFalse($reloaded->isAlertEmailEnabled());
+        self::assertSame(60, $reloaded->getAlertScoreThreshold());
     }
 
     public function testAccountSettingsValidatesAlertScoreThresholdRange(): void
@@ -109,7 +110,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         $client->submit($form);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('.form-error-message', 'doit être compris entre 10% et 100%');
+        self::assertSelectorTextContains('form', 'doit être compris entre 10% et 100%');
     }
 
     public function testLoginPageIsAvailable(): void

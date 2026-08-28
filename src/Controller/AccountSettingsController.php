@@ -38,11 +38,13 @@ final class AccountSettingsController extends AbstractController
             return $this->redirectToRoute('app_account_settings');
         }
 
+        $response = new Response(null, $alertForm->isSubmitted() && !$alertForm->isValid() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK);
+
         return $this->render('account/settings.html.twig', [
             'googleEnabled' => $google->isConfigured(),
             'googleConnected' => $account->isGoogleConnected(),
             'alertForm' => $alertForm->createView(),
             'account' => $account,
-        ]);
+        ], $response);
     }
 }
