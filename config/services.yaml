@@ -182,6 +182,10 @@ services:
             $sender: '%env(MAILER_FROM)%'
             $verificationLifetimeSeconds: 86400
 
+    App\Matching\Service\DailyJobAlertService:
+        arguments:
+            $sender: '%env(MAILER_FROM)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

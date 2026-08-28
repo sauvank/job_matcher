@@ -6,6 +6,7 @@ namespace App\Job\Service;
 
 use App\Job\Entity\SchedulerExecutionLog;
 use App\Job\Message\RefreshJobSourcesMessage;
+use App\Job\Message\SendDailyJobAlertsMessage;
 use App\Job\Repository\SchedulerExecutionLogRepository;
 use Cron\CronExpression;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -43,6 +44,15 @@ final readonly class SchedulerInspector
                 'timezone' => 'Europe/Paris',
                 'messageClass' => RefreshJobSourcesMessage::class,
             ],
+            [
+                'name' => 'job_alerts',
+                'title' => 'Envoi des alertes email quotidiennes',
+                'description' => 'Détecte les nouvelles offres compatibles au-dessus du seuil personnalisé de chaque candidat et envoie le récapitulatif par email.',
+                'cronExpression' => '0 8 * * *',
+                'cronHuman' => 'Tous les jours à 08:00 (Europe/Paris)',
+                'timezone' => 'Europe/Paris',
+                'messageClass' => SendDailyJobAlertsMessage::class,
+            ],
         ];
 
         $result = [];
@@ -78,6 +88,12 @@ final readonly class SchedulerInspector
     {
         if ($scheduleName === 'job_sync') {
             $this->messageBus->dispatch(new RefreshJobSourcesMessage(triggeredBy: $triggeredBy));
+
+            return;
+        }
+
+        if ($scheduleName === 'job_alerts') {
+            $this->messageBus->dispatch(new SendDailyJobAlertsMessage(triggeredBy: $triggeredBy, force: true));
 
             return;
         }

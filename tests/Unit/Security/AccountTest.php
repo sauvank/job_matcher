@@ -53,4 +53,30 @@ final class AccountTest extends TestCase
         $account->revokeAdmin();
         self::assertFalse($account->isAdmin());
     }
+
+    public function testAlertSettingsDefaultsAndCustomization(): void
+    {
+        $account = new Account('candidate@example.test');
+        self::assertTrue($account->isAlertEmailEnabled());
+        self::assertSame(70, $account->getAlertScoreThreshold());
+        self::assertNull($account->getLastAlertEmailSentAt());
+
+        $account->setAlertEmailEnabled(false);
+        self::assertFalse($account->isAlertEmailEnabled());
+
+        $account->setAlertScoreThreshold(85);
+        self::assertSame(85, $account->getAlertScoreThreshold());
+
+        $now = new \DateTimeImmutable('2026-08-28 08:00:00');
+        $account->setLastAlertEmailSentAt($now);
+        self::assertSame($now, $account->getLastAlertEmailSentAt());
+    }
+
+    public function testAlertScoreThresholdValidation(): void
+    {
+        $account = new Account('candidate@example.test');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $account->setAlertScoreThreshold(105);
+    }
 }

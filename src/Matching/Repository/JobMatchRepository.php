@@ -6,8 +6,10 @@ namespace App\Matching\Repository;
 
 use App\Candidate\Entity\CandidateProfile;
 use App\Job\Entity\JobOffer;
+use App\Job\Enum\JobOfferStatus;
 use App\Matching\Application\Repository\JobMatchRepositoryInterface;
 use App\Matching\Entity\JobMatch;
+use App\Matching\Enum\JobApplicationStatus;
 use App\Matching\Enum\SemanticAnalysisStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
@@ -81,6 +83,36 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->setMaxResults($limit);
         $this->restrictToActiveCv($queryBuilder, $profile);
 
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /** @return list<JobMatch> */
+    public function findMatchesForDailyAlert(
+        CandidateProfile $profile,
+        int $minScore,
+        \DateTimeImmutable $since,
+        int $limit = 20,
+    ): array {
+        $queryBuilder = $this->createQueryBuilder('jobMatch')
+            ->innerJoin('jobMatch.jobOffer', 'jobOffer')
+            ->innerJoin('jobOffer.source', 'jobSource')
+            ->andWhere('jobMatch.candidateProfile = :profile')
+            ->andWhere('jobMatch.applicationStatus != :notInterested')
+            ->andWhere('jobOffer.status != :expired')
+            ->andWhere('COALESCE(jobMatch.semanticScore, jobMatch.globalScore) >= :minScore')
+            ->andWhere('(jobOffer.firstSeenAt >= :since OR jobMatch.analyzedAt >= :since OR (jobOffer.publishedAt IS NOT NULL AND jobOffer.publishedAt >= :since))')
+            ->setParameter('profile', $profile)
+            ->setParameter('notInterested', JobApplicationStatus::NOT_INTERESTED)
+            ->setParameter('expired', JobOfferStatus::EXPIRED)
+            ->setParameter('minScore', $minScore)
+            ->setParameter('since', $since)
+            ->orderBy('COALESCE(jobMatch.semanticScore, jobMatch.globalScore)', 'DESC')
+            ->addOrderBy('jobOffer.firstSeenAt', 'DESC')
+            ->setMaxResults($limit);
+
+        $this->restrictToActiveCv($queryBuilder, $profile);
+
+        /* @var list<JobMatch> */
         return $queryBuilder->getQuery()->getResult();
     }
 

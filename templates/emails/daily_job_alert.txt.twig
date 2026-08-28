@@ -1,0 +1,21 @@
+Bonjour,
+
+{{ matches|length }} nouvelle(s) offre(s) d'emploi correspondant à votre profil (compatibilité ≥ {{ threshold }}%) ont été trouvées sur Job Matcher :
+
+{% for match in matches %}
+------------------------------------------------------------
+{% set offer = match.jobOffer %}
+{% set score = match.semanticScore ?? match.globalScore %}
+[{{ score }}%] {{ offer.title }} — {{ offer.company ?? 'Entreprise non renseignée' }}
+{% if offer.location %}Lieu : {{ offer.location }}{% endif %}
+{% if offer.contractType %}Contrat : {{ offer.contractType }}{% endif %}
+{% if match.jobSummary %}
+Aperçu : {{ match.jobSummary }}
+{% endif %}
+Consulter l'offre : {{ url('app_job_offer_show', {id: match.id}) }}
+
+{% endfor %}
+------------------------------------------------------------
+Accédez à toutes vos offres analysées : {{ url('app_job_offers') }}
+
+Pour modifier votre seuil de compatibilité ou désactiver ces alertes : {{ url('app_account_settings') }}

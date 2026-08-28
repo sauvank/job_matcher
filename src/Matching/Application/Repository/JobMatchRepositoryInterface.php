@@ -22,4 +22,7 @@ interface JobMatchRepositoryInterface
 
     /** @return list<JobMatch> */
     public function findCompletedForProfile(CandidateProfile $profile, int $limit = 100): array;
+
+    /** @return list<JobMatch> */
+    public function findMatchesForDailyAlert(CandidateProfile $profile, int $minScore, \DateTimeImmutable $since, int $limit = 20): array;
 }

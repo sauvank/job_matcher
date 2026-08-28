@@ -98,6 +98,11 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
                 return $this->match === null ? [] : [$this->match];
             }
+
+            public function findMatchesForDailyAlert(CandidateProfile $profile, int $minScore, \DateTimeImmutable $since, int $limit = 20): array
+            {
+                return $this->match === null ? [] : [$this->match];
+            }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(6))->method('flush');

@@ -8,7 +8,43 @@
         <h1>Paramètres du compte</h1>
     </div>
 
-    <section class="section" id="security">
+    <section class="section" id="alerts">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Notifications</p>
+                <h2>Alertes email quotidiennes</h2>
+            </div>
+            {% if account.lastAlertEmailSentAt %}
+                <span class="help-text">Dernier email envoyé le {{ account.lastAlertEmailSentAt|date('d/m/Y à H:i') }}</span>
+            {% endif %}
+        </div>
+        <div class="card">
+            <p>Recevez un email récapitulatif quotidien lorsque de nouvelles offres d’emploi correspondant à votre profil sont découvertes par Job Matcher.</p>
+
+            {{ form_start(alertForm, {'attr': {'class': 'form-grid'}}) }}
+                <div class="form-row">
+                    <label class="checkbox-label">
+                        {{ form_widget(alertForm.alertEmailEnabled) }}
+                        <span>{{ form_label(alertForm.alertEmailEnabled) }}</span>
+                    </label>
+                    {{ form_errors(alertForm.alertEmailEnabled) }}
+                </div>
+
+                <div class="form-row">
+                    {{ form_label(alertForm.alertScoreThreshold) }}
+                    {{ form_widget(alertForm.alertScoreThreshold, {'attr': {'class': 'form-input', 'style': 'max-width: 140px;'}}) }}
+                    {{ form_help(alertForm.alertScoreThreshold) }}
+                    {{ form_errors(alertForm.alertScoreThreshold) }}
+                </div>
+
+                <div class="button-row">
+                    <button type="submit" class="button">Enregistrer mes préférences d’alerte</button>
+                </div>
+            {{ form_end(alertForm) }}
+        </div>
+    </section>
+
+    <section class="section" id="security" style="margin-top: 2rem;">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">Sécurité</p>

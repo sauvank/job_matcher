@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
 /** @extends ServiceEntityRepository<Account> */
-final class AccountRepository extends ServiceEntityRepository implements PasswordUpgraderInterface, UserLoaderInterface
+class AccountRepository extends ServiceEntityRepository implements PasswordUpgraderInterface, UserLoaderInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -92,5 +92,18 @@ final class AccountRepository extends ServiceEntityRepository implements Passwor
         }
 
         return $results;
+    }
+
+    /** @return list<Account> */
+    public function findAccountsForDailyAlerts(): array
+    {
+        /* @var list<Account> */
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.candidateProfile', 'cp')
+            ->addSelect('cp')
+            ->where('a.alertEmailEnabled = true')
+            ->orderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

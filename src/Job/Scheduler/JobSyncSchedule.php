@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Job\Scheduler;
 
 use App\Job\Message\RefreshJobSourcesMessage;
+use App\Job\Message\SendDailyJobAlertsMessage;
 use Symfony\Component\Lock\LockFactory;
 use Symfony\Component\Scheduler\Attribute\AsSchedule;
 use Symfony\Component\Scheduler\RecurringMessage;
@@ -25,6 +26,7 @@ final readonly class JobSyncSchedule implements ScheduleProviderInterface
     {
         return (new Schedule())
             ->add(RecurringMessage::cron('0 4 * * *', new RefreshJobSourcesMessage(), new \DateTimeZone('Europe/Paris')))
+            ->add(RecurringMessage::cron('0 8 * * *', new SendDailyJobAlertsMessage(), new \DateTimeZone('Europe/Paris')))
             ->stateful($this->cache)
             ->processOnlyLastMissedRun(true)
             ->lock($this->lockFactory->createLock('scheduler-job-sync'));

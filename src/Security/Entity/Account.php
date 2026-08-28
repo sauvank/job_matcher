@@ -46,6 +46,15 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(options: ['default' => true])]
+    private bool $alertEmailEnabled = true;
+
+    #[ORM\Column(options: ['default' => 70])]
+    private int $alertScoreThreshold = 70;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastAlertEmailSentAt = null;
+
     public function __construct(string $email)
     {
         $normalizedEmail = mb_strtolower(trim($email));
@@ -175,6 +184,40 @@ final class Account implements UserInterface, PasswordAuthenticatedUserInterface
     public function unverifyEmail(): void
     {
         $this->emailVerifiedAt = null;
+    }
+
+    public function isAlertEmailEnabled(): bool
+    {
+        return $this->alertEmailEnabled;
+    }
+
+    public function setAlertEmailEnabled(bool $alertEmailEnabled): void
+    {
+        $this->alertEmailEnabled = $alertEmailEnabled;
+    }
+
+    public function getAlertScoreThreshold(): int
+    {
+        return $this->alertScoreThreshold;
+    }
+
+    public function setAlertScoreThreshold(int $alertScoreThreshold): void
+    {
+        if ($alertScoreThreshold < 1 || $alertScoreThreshold > 100) {
+            throw new \InvalidArgumentException('Le seuil de compatibilité doit être compris entre 1 et 100.');
+        }
+
+        $this->alertScoreThreshold = $alertScoreThreshold;
+    }
+
+    public function getLastAlertEmailSentAt(): ?\DateTimeImmutable
+    {
+        return $this->lastAlertEmailSentAt;
+    }
+
+    public function setLastAlertEmailSentAt(?\DateTimeImmutable $lastAlertEmailSentAt): void
+    {
+        $this->lastAlertEmailSentAt = $lastAlertEmailSentAt;
     }
 
     public function eraseCredentials(): void

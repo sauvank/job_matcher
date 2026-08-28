@@ -52,6 +52,64 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Paramètres du compte');
         self::assertSelectorTextContains('#security h2', 'Connexion Google');
+        self::assertSelectorTextContains('#alerts h2', 'Alertes email quotidiennes');
+    }
+
+    public function testAccountSettingsAllowConfiguringDailyAlertEmailAndThreshold(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+
+        $crawler = $client->request('GET', '/compte/parametres');
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->selectButton('Enregistrer mes préférences d’alerte')->form([
+            'account_alert_settings[alertEmailEnabled]' => true,
+            'account_alert_settings[alertScoreThreshold]' => 85,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/compte/parametres');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Vos préférences d’alertes email ont été enregistrées.');
+
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $em);
+        $em->refresh($account);
+
+        self::assertTrue($account->isAlertEmailEnabled());
+        self::assertSame(85, $account->getAlertScoreThreshold());
+
+        // Test disabling alerts
+        $crawler = $client->request('GET', '/compte/parametres');
+        $form = $crawler->selectButton('Enregistrer mes préférences d’alerte')->form([
+            'account_alert_settings[alertEmailEnabled]' => false,
+            'account_alert_settings[alertScoreThreshold]' => '60',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/compte/parametres');
+        $client->followRedirect();
+
+        $em->refresh($account);
+        self::assertFalse($account->isAlertEmailEnabled());
+        self::assertSame(60, $account->getAlertScoreThreshold());
+    }
+
+    public function testAccountSettingsValidatesAlertScoreThresholdRange(): void
+    {
+        $client = self::createClient();
+        $this->loginOwner($client);
+
+        $crawler = $client->request('GET', '/compte/parametres');
+        $form = $crawler->selectButton('Enregistrer mes préférences d’alerte')->form([
+            'account_alert_settings[alertEmailEnabled]' => true,
+            'account_alert_settings[alertScoreThreshold]' => 120,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.form-error-message', 'doit être compris entre 10% et 100%');
     }
 
     public function testLoginPageIsAvailable(): void

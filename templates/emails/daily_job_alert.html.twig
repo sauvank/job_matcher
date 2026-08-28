@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelles offres compatibles sur Job Matcher</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f5f8; color: #1e293b; -webkit-font-smoothing: antialiased; }
+        .wrapper { width: 100%; background-color: #f4f5f8; padding: 32px 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05); }
+        .header { background: #4f46e5; padding: 28px 32px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+        .header p { margin: 6px 0 0; font-size: 14px; opacity: 0.9; }
+        .content { padding: 28px 32px; }
+        .intro { font-size: 15px; line-height: 1.5; margin-bottom: 24px; color: #334155; }
+        .offer-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; margin-bottom: 16px; background: #ffffff; }
+        .offer-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .offer-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px; text-decoration: none; }
+        .offer-company { font-size: 13px; font-weight: 600; color: #4f46e5; margin: 0; }
+        .score-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 800; }
+        .score-good { background: #ecfdf5; color: #047857; }
+        .score-medium { background: #fffbeb; color: #b45309; }
+        .offer-meta { font-size: 12px; color: #64748b; margin: 8px 0; }
+        .offer-summary { font-size: 13px; color: #475569; line-height: 1.45; margin: 10px 0; background: #f8fafc; padding: 10px 12px; border-radius: 6px; border-left: 3px solid #4f46e5; }
+        .offer-actions { margin-top: 12px; text-align: right; }
+        .btn-link { display: inline-block; font-size: 13px; font-weight: 700; color: #4f46e5; text-decoration: none; padding: 6px 12px; border-radius: 6px; background: #eef2ff; }
+        .main-cta { text-align: center; margin: 32px 0 16px; }
+        .btn-primary { display: inline-block; padding: 12px 28px; background: #4f46e5; color: #ffffff !important; font-size: 15px; font-weight: 700; text-decoration: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25); }
+        .footer { background: #f8fafc; padding: 20px 32px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+        .footer a { color: #64748b; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>🎯 Job Matcher</h1>
+                <p>Vos opportunités du jour</p>
+            </div>
+            <div class="content">
+                <p class="intro">
+                    Bonjour,<br>
+                    <strong>{{ matches|length }} nouvelle(s) offre(s)</strong> correspondant à vos compétences et critères (score ≥ {{ threshold }}%) ont été trouvées pour votre profil :
+                </p>
+
+                {% for match in matches %}
+                    {% set offer = match.jobOffer %}
+                    {% set score = match.semanticScore ?? match.globalScore %}
+                    <div class="offer-card">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td valign="top">
+                                    <p class="offer-company">{{ offer.company ?? 'Entreprise confidentielle' }}</p>
+                                    <h2 style="margin: 2px 0 6px; font-size: 16px;">
+                                        <a href="{{ url('app_job_offer_show', {id: match.id}) }}" class="offer-title">{{ offer.title }}</a>
+                                    </h2>
+                                </td>
+                                <td align="right" valign="top" style="width: 70px;">
+                                    <span class="score-badge {{ score >= 75 ? 'score-good' : 'score-medium' }}">
+                                        {{ score }}%
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div class="offer-meta">
+                            {% if offer.location %}📍 {{ offer.location }} &nbsp;·&nbsp; {% endif %}
+                            {% if offer.contractType %}💼 {{ offer.contractType }} &nbsp;·&nbsp; {% endif %}
+                            🌐 {{ offer.source.provider.value }}
+                        </div>
+
+                        {% if match.jobSummary %}
+                            <div class="offer-summary">
+                                {{ match.jobSummary }}
+                            </div>
+                        {% endif %}
+
+                        <div class="offer-actions">
+                            <a href="{{ url('app_job_offer_show', {id: match.id}) }}" class="btn-link">
+                                Voir l’analyse complète →
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="main-cta">
+                    <a href="{{ url('app_job_offers') }}" class="btn-primary">
+                        Découvrir toutes vos opportunités sur Job Matcher
+                    </a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>
+                    Vous recevez cet email quotidien car les alertes d'offres compatibles (seuil ≥ {{ threshold }}%) sont activées sur votre compte.
+                </p>
+                <p>
+                    Pour ajuster votre seuil ou désactiver les alertes, rendez-vous dans vos <a href="{{ url('app_account_settings') }}">Paramètres de compte</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
