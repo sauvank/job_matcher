@@ -98,7 +98,7 @@
                                         Seuil de compatibilité minimum requis
                                     </label>
                                     <p class="threshold-description">
-                                        Seules les offres ayant un score (IA ou critères) supérieur ou égal à ce niveau vous seront transmises.
+                                        Seules les offres ayant un score supérieur ou égal à ce niveau vous seront transmises.
                                     </p>
                                 </div>
                                 <span class="settings-score-badge badge-good" data-alert-settings-target="valueBadge">
@@ -109,7 +109,6 @@
                             <div class="settings-slider-wrap">
                                 {{ form_widget(alertForm.alertScoreThreshold, {
                                     'attr': {
-                                        'type': 'range',
                                         'class': 'settings-range-slider',
                                         'min': '10',
                                         'max': '100',
@@ -119,29 +118,31 @@
                                     }
                                 }) }}
                                 <div class="slider-ticks">
-                                    <span>10%</span>
+                                    <span>10% (Large)</span>
                                     <span>50%</span>
-                                    <span>70%</span>
+                                    <span>70% (Défaut)</span>
                                     <span>85%</span>
-                                    <span>100%</span>
+                                    <span>100% (Strict)</span>
                                 </div>
                             </div>
 
                             {# Boutons de préréglages rapides #}
                             <div class="settings-presets">
                                 <span class="presets-label">Raccourcis :</span>
-                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="50" data-action="click->alert-settings#setPreset">
-                                    ≥ 50% <small>(Large)</small>
-                                </button>
-                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="70" data-action="click->alert-settings#setPreset">
-                                    ≥ 70% <small>(Recommandé)</small>
-                                </button>
-                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="80" data-action="click->alert-settings#setPreset">
-                                    ≥ 80% <small>(Ciblé)</small>
-                                </button>
-                                <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="90" data-action="click->alert-settings#setPreset">
-                                    ≥ 90% <small>(Strict)</small>
-                                </button>
+                                <div class="presets-buttons-wrap">
+                                    <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="50" data-action="click->alert-settings#setPreset">
+                                        ≥ 50% <span>(Large)</span>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="70" data-action="click->alert-settings#setPreset">
+                                        ≥ 70% <span>(Recommandé)</span>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="80" data-action="click->alert-settings#setPreset">
+                                        ≥ 80% <span>(Ciblé)</span>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-alert-settings-target="presetBtn" data-preset-value="90" data-action="click->alert-settings#setPreset">
+                                        ≥ 90% <span>(Strict)</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <p class="settings-score-hint" data-alert-settings-target="explanation">

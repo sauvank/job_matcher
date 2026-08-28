@@ -7,7 +7,7 @@ namespace App\Form;
 use App\Security\DTO\AccountAlertSettingsData;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\RangeType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -20,7 +20,7 @@ final class AccountAlertSettingsType extends AbstractType
                 'required' => false,
                 'label' => 'Recevoir l’alerte email quotidienne pour les nouvelles offres',
             ])
-            ->add('alertScoreThreshold', IntegerType::class, [
+            ->add('alertScoreThreshold', RangeType::class, [
                 'required' => true,
                 'label' => 'Seuil minimum de compatibilité (%)',
                 'attr' => [

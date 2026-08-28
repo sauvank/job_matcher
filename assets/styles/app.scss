@@ -755,18 +755,21 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monos
 .settings-slider-wrap {
     display: flex;
     flex-direction: column;
-    gap: .45rem;
+    gap: .55rem;
+    padding: .4rem 0;
 
     .settings-range-slider {
         -webkit-appearance: none;
         appearance: none;
         width: 100%;
         height: 8px;
-        border-radius: 4px;
-        background: #e1e5ee;
+        border-radius: 999px;
+        background: #dcdfe8;
         outline: none;
         cursor: pointer;
         transition: background .18s ease;
+        margin: 0;
+        accent-color: var(--primary);
 
         &::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -812,52 +815,71 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monos
         font-size: .74rem;
         font-weight: 700;
         color: var(--subtle);
-        padding-inline: 4px;
+        padding-inline: 2px;
     }
 }
 
 .settings-presets {
     display: flex;
     align-items: center;
-    gap: .45rem;
+    gap: .65rem;
     flex-wrap: wrap;
 
     .presets-label {
-        font-size: .78rem;
-        font-weight: 750;
+        font-size: .76rem;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: .05em;
+        letter-spacing: .06em;
         color: var(--subtle);
-        margin-right: .25rem;
+    }
+
+    .presets-buttons-wrap {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        flex-wrap: wrap;
     }
 
     .preset-pill {
-        padding: .35rem .7rem;
-        font-size: .8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        white-space: nowrap;
+        padding: .35rem .75rem;
+        font-size: .82rem;
         font-weight: 650;
-        color: var(--muted);
+        color: var(--muted) !important;
         background: var(--surface-soft);
-        border: 1px solid var(--border);
-        border-radius: .6rem;
+        border: 1px solid var(--border-strong);
+        border-radius: 999px;
         cursor: pointer;
         transition: .15s ease;
+        box-shadow: none;
+        min-height: auto;
 
-        small {
+        span {
+            font-size: .75rem;
             font-weight: 500;
-            opacity: .8;
+            opacity: .85;
         }
 
         &:hover {
-            border-color: var(--border-strong);
-            background: white;
-            color: var(--text);
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            color: var(--primary) !important;
+            transform: none;
+            box-shadow: none;
         }
 
         &.is-active {
-            border-color: #c7c7f3;
-            background: var(--primary-soft);
-            color: var(--primary-dark);
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white !important;
             font-weight: 750;
+
+            span {
+                opacity: .95;
+            }
         }
     }
 }
