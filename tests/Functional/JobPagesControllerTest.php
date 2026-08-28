@@ -436,16 +436,28 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertResponseIsSuccessful();
 
         $form = $crawler->filter('form.status-edit-form')->form([
-            'job_application_status[status]' => JobApplicationStatus::NOT_INTERESTED->value,
-            'job_application_status[reason]' => 'Salaire inférieur au marché',
+            'job_application_status[status]' => JobApplicationStatus::APPLIED->value,
+            'job_application_status[reason]' => 'Candidature envoyée ce matin',
         ]);
         $client->submit($form);
 
         self::assertResponseRedirects('/jobs/'.$matchId);
         $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('#suivi-candidature', 'Ne m’intéresse pas');
-        self::assertSelectorTextContains('#suivi-candidature blockquote', 'Salaire inférieur au marché');
+        self::assertSelectorTextContains('#suivi-candidature', 'Candidaté');
+        self::assertSelectorTextContains('#suivi-candidature blockquote', 'Candidature envoyée ce matin');
+
+        // Now test setting NOT_INTERESTED redirects back to /jobs
+        $crawler2 = $client->request('GET', '/jobs/'.$matchId);
+        $form2 = $crawler2->filter('form.status-edit-form')->form([
+            'job_application_status[status]' => JobApplicationStatus::NOT_INTERESTED->value,
+            'job_application_status[reason]' => 'Salaire inférieur au marché',
+        ]);
+        $client->submit($form2);
+
+        self::assertResponseRedirects('/jobs');
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
 
         $entityManager->clear();
         $reloaded = $entityManager->find(JobMatch::class, $matchId);

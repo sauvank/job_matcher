@@ -34,6 +34,13 @@
             </div>
             <div class="button-row">
                 <a class="button" href="{{ offer.url }}" target="_blank" rel="noopener noreferrer">Voir l’annonce originale ↗</a>
+                {% if match.applicationStatus.value != 'NOT_INTERESTED' %}
+                    <form method="post" action="{{ path('app_job_offer_quick_status', {id: match.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('quick-status-' ~ match.id) }}">
+                        <input type="hidden" name="status" value="NOT_INTERESTED">
+                        <button type="submit" class="button secondary" title="Écarter cette offre et retourner à la liste">🚫 Ne m’intéresse pas</button>
+                    </form>
+                {% endif %}
                 {% if match.semanticAnalysisStatus.value not in ['QUEUED', 'RUNNING'] %}
                     <form method="post" action="{{ path('app_job_offer_analyze', {id: match.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('analyze-job-' ~ match.id) }}">

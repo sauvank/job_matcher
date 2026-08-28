@@ -81,6 +81,10 @@ final class JobOfferController extends AbstractController
             $match->updateApplicationStatus($statusData->status, $statusData->reason);
             $entityManager->flush();
             $this->addFlash('success', MatchingMessage::APPLICATION_STATUS_UPDATED);
+
+            if ($statusData->status === JobApplicationStatus::NOT_INTERESTED) {
+                return $this->redirectToRoute('app_job_offers');
+            }
         }
 
         return $this->redirectToRoute('app_job_offer_show', ['id' => $match->getId()]);
@@ -127,6 +131,10 @@ final class JobOfferController extends AbstractController
         }
 
         $this->addFlash('success', MatchingMessage::APPLICATION_STATUS_UPDATED);
+
+        if ($status === JobApplicationStatus::NOT_INTERESTED) {
+            return $this->redirectToRoute('app_job_offers');
+        }
 
         $referer = $request->headers->get('referer');
         if (is_string($referer) && $referer !== '') {
