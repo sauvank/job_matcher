@@ -438,14 +438,18 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--primary); 
 .offer-card-not-interested { opacity: .6; background: #fcfdfe; }
 .offer-card-not-interested:hover { opacity: 1; }
 
-.status-tracking-card { padding: clamp(1.4rem, 4vw, 2.5rem); }
-.status-tracking-layout { display: grid; grid-template-columns: 1fr 1.3fr; gap: 2rem; align-items: start; }
-.status-current-display { padding: 1.25rem; border: 1px solid var(--border); border-radius: .85rem; background: var(--surface-soft); }
-.status-current-badge-wrap { display: flex; flex-direction: column; gap: .5rem; }
+.offer-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 1.5rem; align-items: start; margin-top: 1.5rem; }
+.offer-detail-main { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
+.offer-detail-sidebar { position: sticky; top: 1.5rem; z-index: 10; min-width: 0; }
+.status-tracking-card { padding: clamp(1.25rem, 3vw, 1.75rem); }
+.status-tracking-layout { display: flex; flex-direction: column; gap: 1.25rem; }
+.status-tracking-card .button-full { width: 100%; justify-content: center; }
+.status-current-display { padding: 1.15rem; border: 1px solid var(--border); border-radius: .85rem; background: var(--surface-soft); }
+.status-current-badge-wrap { display: flex; flex-direction: column; gap: .45rem; }
 .status-current-label { font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--subtle); }
 .status-badge-lg { font-size: .82rem; padding: .4rem .85rem; }
-.status-current-reason { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-.status-current-reason blockquote { height: auto; margin: .4rem 0 0; white-space: pre-wrap; }
+.status-current-reason { margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--border); }
+.status-current-reason blockquote { height: auto; margin: .35rem 0 0; white-space: pre-wrap; }
 .status-edit-form { display: grid; gap: 1rem; }
 .status-edit-form .form-row { display: grid; gap: .4rem; }
 .status-edit-form label { font-size: .82rem; font-weight: 750; color: var(--text); }
@@ -505,6 +509,8 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monos
     .feature-card:last-child { border-bottom: 0; }
     .offer-hero { grid-template-columns: 1fr; }
     .hero-score-wrap { min-width: auto; grid-row: 1; justify-self: start; }
+    .offer-detail-layout { grid-template-columns: 1fr; }
+    .offer-detail-sidebar { position: static; }
     .status-tracking-layout { grid-template-columns: 1fr; }
     .job-overview-grid { grid-template-columns: 1fr; }
     .evidence-grid { grid-template-columns: 1fr; }
