@@ -178,6 +178,32 @@
                                 <span>{{ match.semanticAnalyzedAt ? 'Analysée le ' ~ match.semanticAnalyzedAt|date('d/m/Y') : 'Analyse en cours' }}</span>
                             {% endif %}
                         </div>
+                        {% set jobSummary = match.jobSummary %}
+                        {% set capacities = match.requiredCapacities %}
+                        {% set expectations = match.keyExpectations %}
+                        {% if jobSummary or capacities is not empty or expectations is not empty %}
+                            <div class="offer-snippet">
+                                {% if jobSummary %}
+                                    <p class="offer-snippet-text">{{ jobSummary }}</p>
+                                {% elseif expectations is not empty %}
+                                    <p class="offer-snippet-text">{{ expectations|first }}</p>
+                                {% endif %}
+                                {% if capacities is not empty %}
+                                    <div class="offer-snippet-badges">
+                                        {% for cap in capacities|slice(0, 4) %}
+                                            <span class="offer-capacity-pill">{{ cap }}</span>
+                                        {% endfor %}
+                                        {% if capacities|length > 4 %}
+                                            <span class="offer-capacity-more">+{{ capacities|length - 4 }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% elseif offer.description %}
+                            <div class="offer-snippet">
+                                <p class="offer-snippet-text">{{ offer.description|striptags|slice(0, 150) }}{{ offer.description|striptags|length > 150 ? '…' : '' }}</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </a>
             {% endfor %}

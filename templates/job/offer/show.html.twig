@@ -53,6 +53,47 @@
         </div>
     </section>
 
+    {% if semanticAnalysis and (semanticAnalysis.jobSummary or semanticAnalysis.keyExpectations is not empty or semanticAnalysis.requiredCapacities is not empty) %}
+        <section class="card job-overview-card" id="apercu-poste">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Aperçu express</p>
+                    <h2>Le poste en un coup d’œil</h2>
+                </div>
+            </div>
+
+            {% if semanticAnalysis.jobSummary %}
+                <div class="job-overview-summary">
+                    <p class="job-overview-lead">{{ semanticAnalysis.jobSummary }}</p>
+                </div>
+            {% endif %}
+
+            <div class="job-overview-grid">
+                {% if semanticAnalysis.keyExpectations is not empty %}
+                    <div class="job-overview-box">
+                        <h3>🎯 Attentes & Missions clés</h3>
+                        <ul class="job-overview-list">
+                            {% for expectation in semanticAnalysis.keyExpectations %}
+                                <li>{{ expectation }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% if semanticAnalysis.requiredCapacities is not empty %}
+                    <div class="job-overview-box">
+                        <h3>💡 Capacités & Compétences attendues</h3>
+                        <div class="job-overview-capsules">
+                            {% for capacity in semanticAnalysis.requiredCapacities %}
+                                <span class="job-capacity-badge">{{ capacity }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
+
     <section class="card status-tracking-card" id="suivi-candidature">
         <div class="section-heading">
             <div>

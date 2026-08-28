@@ -36,7 +36,11 @@ final readonly class OpenAiJobSemanticAnalyzer implements JobSemanticAnalyzerInt
                     'model' => $this->model,
                     'store' => false,
                     'instructions' => <<<'PROMPT'
-                        Tu es un analyste de recrutement rigoureux. Extrais TOUTES les exigences et caractéristiques significatives de l’annonce : technologies, versions, méthodes, expérience, formation, certifications, responsabilités, séniorité, domaine, qualités humaines et conditions de travail. Ne te limite jamais au champ skills du fournisseur. Toute certification, habilitation ou autorisation professionnelle doit constituer une exigence CERTIFICATION distincte.
+                        Tu es un analyste de recrutement rigoureux.
+                        1. Rédige un jobSummary : un résumé clair, synthétique et objectif du poste (2 à 3 phrases décrivant le rôle principal, le contexte d'équipe/projet et la finalité de la mission).
+                        2. Extrais les keyExpectations : 2 à 4 points décrivant concrètement les attentes et missions principales du poste.
+                        3. Extrais les requiredCapacities : 3 à 5 capacités clés exigées ou attendues pour réussir sur le poste (compétences techniques majeures, niveau d'expérience, capacités méthodologiques et qualités requises).
+                        4. Extrais TOUTES les exigences et caractéristiques significatives de l’annonce dans requirements : technologies, versions, méthodes, expérience, formation, certifications, responsabilités, séniorité, domaine, qualités humaines et conditions de travail. Ne te limite jamais au champ skills du fournisseur. Toute certification, habilitation ou autorisation professionnelle doit constituer une exigence CERTIFICATION distincte.
 
                         Pour chaque exigence, cite un court extrait exact de l’annonce dans offerEvidence. Classe REQUIRED seulement si le texte l’impose clairement, PREFERRED si le texte dit idéalement/souhaité/serait un plus, CONTEXT si ce n’est pas une exigence candidat. Une certification formulée comme obligatoire, requise, exigée ou indispensable est toujours REQUIRED. Compare ensuite au CV : MATCH exige une preuve explicite dans le CV, PARTIAL une preuve proche mais incomplète, GAP une contradiction ou une insuffisance explicite, UNKNOWN si le CV ne permet pas de conclure. L’absence de mention d’une certification dans le CV est UNKNOWN, jamais MATCH et jamais une preuve que le candidat ne la possède pas. N’invente jamais une compétence à partir d’une compétence voisine. Pour UNKNOWN ou GAP sans preuve CV, cvEvidence doit être null.
 
@@ -161,10 +165,13 @@ final readonly class OpenAiJobSemanticAnalyzer implements JobSemanticAnalyzerInt
         return [
             'type' => 'object',
             'additionalProperties' => false,
-            'required' => ['compatibilityScore', 'summary', 'requirements', 'strengths', 'concerns', 'questions'],
+            'required' => ['compatibilityScore', 'summary', 'jobSummary', 'keyExpectations', 'requiredCapacities', 'requirements', 'strengths', 'concerns', 'questions'],
             'properties' => [
                 'compatibilityScore' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 100],
                 'summary' => ['type' => 'string'],
+                'jobSummary' => ['type' => 'string'],
+                'keyExpectations' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 6, 'items' => ['type' => 'string']],
+                'requiredCapacities' => ['type' => 'array', 'minItems' => 1, 'maxItems' => 8, 'items' => ['type' => 'string']],
                 'requirements' => [
                     'type' => 'array',
                     'minItems' => 1,

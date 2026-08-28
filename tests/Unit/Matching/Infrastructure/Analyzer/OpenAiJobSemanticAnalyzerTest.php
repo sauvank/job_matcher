@@ -21,6 +21,9 @@ final class OpenAiJobSemanticAnalyzerTest extends TestCase
         $output = json_encode([
             'compatibilityScore' => 62,
             'summary' => 'PHP correspond, Angular reste à confirmer.',
+            'jobSummary' => 'Développement d’applications web Symfony et Angular.',
+            'keyExpectations' => ['Développer des fonctionnalités Symfony', 'Intégrer les interfaces Angular'],
+            'requiredCapacities' => ['PHP', 'Symfony', 'Angular'],
             'requirements' => [[
                 'category' => 'TECHNICAL',
                 'importance' => 'REQUIRED',
@@ -43,6 +46,9 @@ final class OpenAiJobSemanticAnalyzerTest extends TestCase
 
         self::assertSame('Angular', $analysis->requirements[0]->label);
         self::assertSame(62, $analysis->compatibilityScore);
+        self::assertSame('Développement d’applications web Symfony et Angular.', $analysis->jobSummary);
+        self::assertCount(2, $analysis->keyExpectations);
+        self::assertCount(3, $analysis->requiredCapacities);
         $requestBody = json_decode((string) $response->getRequestOptions()['body'], true, 512, JSON_THROW_ON_ERROR);
         self::assertTrue($requestBody['store'] === false);
         self::assertTrue($requestBody['text']['format']['strict']);
@@ -51,6 +57,9 @@ final class OpenAiJobSemanticAnalyzerTest extends TestCase
         self::assertStringContainsString('certification REQUIRED sans preuve explicite', $requestBody['instructions']);
         self::assertStringContainsString('plafonne le score global à 69', $requestBody['instructions']);
         self::assertStringContainsString('Ne compte jamais séparément un diplôme et son titre RNCP', $requestBody['instructions']);
+        self::assertContains('jobSummary', $requestBody['text']['format']['schema']['required']);
+        self::assertContains('keyExpectations', $requestBody['text']['format']['schema']['required']);
+        self::assertContains('requiredCapacities', $requestBody['text']['format']['schema']['required']);
         self::assertContains('CERTIFICATION', $requestBody['text']['format']['schema']['properties']['requirements']['items']['properties']['category']['enum']);
     }
 

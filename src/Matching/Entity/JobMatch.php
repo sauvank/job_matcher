@@ -137,6 +137,83 @@ final class JobMatch
         return $this->semanticAnalysis;
     }
 
+    public function getJobSummary(): ?string
+    {
+        $summary = $this->semanticAnalysis['jobSummary'] ?? null;
+        if (is_string($summary) && trim($summary) !== '') {
+            return trim($summary);
+        }
+
+        return null;
+    }
+
+    /** @return list<string> */
+    public function getKeyExpectations(): array
+    {
+        $items = $this->semanticAnalysis['keyExpectations'] ?? null;
+        if (is_array($items) && $items !== []) {
+            $filtered = [];
+            foreach ($items as $item) {
+                if (is_string($item) && trim($item) !== '') {
+                    $filtered[] = trim($item);
+                }
+            }
+            if ($filtered !== []) {
+                return $filtered;
+            }
+        }
+
+        $requirements = $this->semanticAnalysis['requirements'] ?? null;
+        if (is_array($requirements)) {
+            $fallback = [];
+            foreach ($requirements as $req) {
+                if (is_array($req) && ($req['category'] ?? null) === 'RESPONSIBILITY' && is_string($req['label'] ?? null) && count($fallback) < 4) {
+                    $fallback[] = trim($req['label']);
+                }
+            }
+
+            return $fallback;
+        }
+
+        return [];
+    }
+
+    /** @return list<string> */
+    public function getRequiredCapacities(): array
+    {
+        $items = $this->semanticAnalysis['requiredCapacities'] ?? null;
+        if (is_array($items) && $items !== []) {
+            $filtered = [];
+            foreach ($items as $item) {
+                if (is_string($item) && trim($item) !== '') {
+                    $filtered[] = trim($item);
+                }
+            }
+            if ($filtered !== []) {
+                return $filtered;
+            }
+        }
+
+        $requirements = $this->semanticAnalysis['requirements'] ?? null;
+        if (is_array($requirements)) {
+            $fallback = [];
+            foreach ($requirements as $req) {
+                if (is_array($req)
+                    && ($req['importance'] ?? null) === 'REQUIRED'
+                    && in_array($req['category'] ?? null, ['TECHNICAL', 'EXPERIENCE', 'SOFT_SKILL', 'CERTIFICATION'], true)
+                    && is_string($req['label'] ?? null)
+                    && count($fallback) < 5
+                ) {
+                    $fallback[] = trim($req['label']);
+                }
+            }
+
+            return $fallback;
+        }
+
+        return [];
+    }
+
     public function getSemanticAnalysisStatus(): SemanticAnalysisStatus
     {
         return $this->semanticAnalysisStatus;

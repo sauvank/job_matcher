@@ -23,6 +23,9 @@ final class GeminiJobSemanticAnalyzerTest extends TestCase
         $output = json_encode([
             'compatibilityScore' => 75,
             'summary' => 'PHP et Symfony correspondent, Angular à clarifier.',
+            'jobSummary' => 'Développement d’applications web Symfony et Angular.',
+            'keyExpectations' => ['Développer des fonctionnalités Symfony', 'Intégrer les interfaces Angular'],
+            'requiredCapacities' => ['Symfony', 'Angular', 'PHP'],
             'requirements' => [
                 [
                     'category' => 'TECHNICAL',
@@ -72,6 +75,9 @@ final class GeminiJobSemanticAnalyzerTest extends TestCase
 
         self::assertSame('gemini:gemini-2.0-flash', $analyzer->name());
         self::assertSame(75, $analysis->compatibilityScore);
+        self::assertSame('Développement d’applications web Symfony et Angular.', $analysis->jobSummary);
+        self::assertCount(2, $analysis->keyExpectations);
+        self::assertCount(3, $analysis->requiredCapacities);
         self::assertCount(2, $analysis->requirements);
         self::assertSame('Symfony', $analysis->requirements[0]->label);
         self::assertSame('MATCH', $analysis->requirements[0]->assessment->value);

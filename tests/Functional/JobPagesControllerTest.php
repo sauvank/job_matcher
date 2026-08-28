@@ -10,6 +10,7 @@ use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
 use App\Job\Repository\JobSourceRepository;
 use App\Matching\DTO\MatchScore;
+use App\Matching\DTO\SemanticJobAnalysis;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Enum\JobApplicationStatus;
 use Doctrine\ORM\EntityManagerInterface;
@@ -505,5 +506,95 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
             ],
         ]);
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testJobOfferDisplaysJobSummaryAndCapacitiesOnListAndDetailPage(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — Summary Test — '.$uniqueId,
+            'https://example.test/summary-test/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'summary-test-'.$uniqueId,
+            url: 'https://example.test/summary-test/'.$uniqueId.'/offer',
+            title: 'Lead Développeur PHP '.$uniqueId,
+            company: 'TechCorp '.$uniqueId,
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: 55000,
+            maximumSalary: 65000,
+            remotePolicy: null,
+            yearsOfExperience: 6,
+            description: 'Conception et développement de la plateforme SaaS en PHP/Symfony.',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(85, 85, 85, 85, 85, 85, 85, 85, 85, [], [], [], []),
+        );
+        $match->completeSemanticAnalysis(SemanticJobAnalysis::fromArray([
+            'compatibilityScore' => 88,
+            'summary' => 'Excellente correspondance technique.',
+            'jobSummary' => 'Pilotage de l’architecture SaaS et encadrement technique de l’équipe backend.',
+            'keyExpectations' => [
+                'Concevoir l’architecture des microservices PHP',
+                'Accompagner la montée en compétences des développeurs',
+            ],
+            'requiredCapacities' => [
+                'PHP 8.3 & Symfony 7',
+                'Architecture microservices',
+                'PostgreSQL',
+                'Leadership technique',
+            ],
+            'requirements' => [
+                [
+                    'category' => 'TECHNICAL',
+                    'importance' => 'REQUIRED',
+                    'label' => 'Symfony',
+                    'offerEvidence' => 'Symfony 7 requis',
+                    'assessment' => 'MATCH',
+                    'cvEvidence' => 'Symfony 5 ans',
+                    'explanation' => 'Maîtrise validée',
+                ],
+            ],
+            'strengths' => ['Expérience Symfony solide.'],
+            'concerns' => [],
+            'questions' => [],
+        ]), 'test-analyzer');
+
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+
+        // Check list view
+        $client->request('GET', '/jobs');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.offer-snippet-text', 'Pilotage de l’architecture SaaS');
+        self::assertSelectorTextContains('.offer-snippet-badges', 'PHP 8.3 & Symfony 7');
+        self::assertSelectorTextContains('.offer-snippet-badges', 'Architecture microservices');
+
+        // Check detail view
+        $client->request('GET', '/jobs/'.$matchId);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#apercu-poste');
+        self::assertSelectorTextContains('.job-overview-lead', 'Pilotage de l’architecture SaaS et encadrement technique');
+        self::assertSelectorTextContains('#apercu-poste', 'Attentes & Missions clés');
+        self::assertSelectorTextContains('#apercu-poste', 'Concevoir l’architecture des microservices PHP');
+        self::assertSelectorTextContains('#apercu-poste', 'Capacités & Compétences attendues');
+        self::assertSelectorTextContains('.job-capacity-badge', 'PHP 8.3 & Symfony 7');
     }
 }
