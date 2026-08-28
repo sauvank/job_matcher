@@ -185,14 +185,15 @@ final class CvPagesControllerTest extends AuthenticatedWebTestCase
     public function testOwnerCanViewOriginalCvFileAndExtractedText(): void
     {
         $client = self::createClient();
-        $account = $this->loginOwner($client);
+        $uniqueId = bin2hex(random_bytes(6));
+        $account = $this->account('cv-view-'.$uniqueId.'@example.test');
+        $client->loginUser($account);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $storage = self::getContainer()->get(CvStorageInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
         self::assertInstanceOf(CvStorageInterface::class, $storage);
 
         $profile = $account->getCandidateProfile();
-        $uniqueId = bin2hex(random_bytes(6));
         $storedFilename = 'functional-view-'.$uniqueId.'.pdf';
         $filePath = $storage->absolutePath($storedFilename);
         @mkdir(dirname($filePath), 0700, true);
