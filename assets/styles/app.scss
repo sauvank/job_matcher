@@ -155,6 +155,13 @@ p { color: var(--muted); }
 .filter-dropdown-item { display: flex; align-items: center; gap: .45rem; padding: .35rem .45rem; border-radius: .45rem; font-size: .8rem; font-weight: 600; color: var(--text); cursor: pointer; user-select: none; transition: background .15s ease; }
 .filter-dropdown-item:hover { background: var(--surface-soft); }
 .filter-dropdown-item input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--primary); cursor: pointer; margin: 0; }
+.filter-dropdown-score-value { font-size: .78rem; font-weight: 800; color: var(--primary); background: var(--primary-soft); padding: .15rem .5rem; border-radius: 999px; }
+.filter-dropdown-slider-wrap { display: flex; flex-direction: column; gap: .5rem; padding: .35rem 0; }
+.filter-score-slider { width: 100%; height: .35rem; border-radius: .25rem; background: var(--border-strong); accent-color: var(--primary); cursor: pointer; outline: none; }
+.filter-dropdown-presets { display: flex; align-items: center; gap: .35rem; }
+.filter-preset-btn { flex: 1; padding: .25rem .35rem; border: 1px solid var(--border); border-radius: .4rem; background: var(--surface); color: var(--muted) !important; font-size: .72rem; font-weight: 700; cursor: pointer; text-align: center; transition: .15s ease; box-shadow: none; min-height: auto; }
+.filter-preset-btn:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; transform: none; box-shadow: none; }
+.filter-preset-btn.is-active { border-color: var(--primary); background: var(--primary); color: white !important; }
 .source-filter-tabs { display: flex; max-width: 100%; margin-bottom: 1rem; padding: 2px 2px 6px; align-items: center; overflow-x: auto; overflow-y: hidden; gap: .5rem; scrollbar-width: thin; }
 .source-filter-tab { padding: .55rem .85rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--muted) !important; box-shadow: none; cursor: pointer; font-size: .82rem; font-weight: 750; white-space: nowrap; }
 .source-filter-tab:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; box-shadow: none; transform: none; }

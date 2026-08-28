@@ -9,10 +9,14 @@ use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
 use App\Job\Repository\JobSourceRepository;
+use App\Matching\DTO\AnalyzedRequirement;
 use App\Matching\DTO\MatchScore;
 use App\Matching\DTO\SemanticJobAnalysis;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Enum\JobApplicationStatus;
+use App\Matching\Enum\RequirementAssessment;
+use App\Matching\Enum\RequirementCategory;
+use App\Matching\Enum\RequirementImportance;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class JobPagesControllerTest extends AuthenticatedWebTestCase
@@ -195,6 +199,79 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.offer-card[data-offer-filter-value="HELLOWORK"]');
         self::assertSelectorExists('.offer-card[data-offer-filter-value="FRANCE_TRAVAIL"]');
         self::assertSelectorTextContains('.offer-card[data-offer-filter-value="FRANCE_TRAVAIL"]', 'France Travail');
+    }
+
+    public function testJobOffersExposeCompatibilityScoreSliderAndFilterAttributes(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — PHP — Lyon',
+            'https://example.test/score-test/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'score-'.$uniqueId,
+            url: 'https://example.test/score-test/'.$uniqueId.'/offer',
+            title: 'Lead Dev PHP Symfony',
+            company: 'Tech Company',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Poste avec score de compatibilité élevé',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(88, 88, 88, 88, 88, 88, 88, 88, 88, [], [], [], []),
+        );
+        $match->completeSemanticAnalysis(
+            new SemanticJobAnalysis(
+                compatibilityScore: 88,
+                summary: 'Excellente correspondance',
+                requirements: [
+                    new AnalyzedRequirement(
+                        category: RequirementCategory::TECHNICAL,
+                        importance: RequirementImportance::REQUIRED,
+                        label: 'PHP / Symfony',
+                        offerEvidence: 'Maîtrise de PHP 8 et Symfony demandée',
+                        assessment: RequirementAssessment::MATCH,
+                        cvEvidence: '5 ans d’expérience Symfony',
+                        explanation: 'Profil parfaitement aligné',
+                    ),
+                ],
+                strengths: ['PHP 8', 'Symfony'],
+                concerns: [],
+                questions: [],
+                jobSummary: 'Lead developer sur Symfony 7',
+                keyExpectations: ['Architecture', 'Mentorat'],
+                requiredCapacities: ['Symfony', 'PHP'],
+            ),
+            'gpt-4o-mini',
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+
+        $client->request('GET', '/jobs');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('input[data-offer-filter-target="minScore"]');
+        self::assertSelectorExists('[data-offer-filter-target="minScoreLabel"]');
+        self::assertSelectorExists('.filter-preset-btn[data-score="80"]');
+        self::assertSelectorExists('.offer-card[data-offer-filter-score="88"]');
     }
 
     public function testJobSourcesExposeOneFilterTabPerSearchLabel(): void
