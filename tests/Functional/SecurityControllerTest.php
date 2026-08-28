@@ -110,7 +110,7 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
         $client->submit($form);
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('form', 'doit être compris entre 10% et 100%');
+        self::assertSelectorTextContains('form[name="account_alert_settings"]', 'doit être compris entre 10% et 100%');
     }
 
     public function testLoginPageIsAvailable(): void
