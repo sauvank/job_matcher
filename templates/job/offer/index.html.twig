@@ -100,7 +100,7 @@
                             <span class="badge badge-info">{{ providerLabels[provider] ?? provider }}</span>
                             {% if isEsn %}<span class="badge badge-warning badge-esn" title="Entreprise de services du numérique / Cabinet de conseil ou recrutement">ESN</span>{% endif %}
                             {% if match.applicationStatus.value != 'UNPROCESSED' %}
-                                <span class="badge {{ match.applicationStatus.badgeClass }}">{{ match.applicationStatus.icon }} {{ match.applicationStatus.label }}</span>
+                                <span class="badge {{ match.applicationStatus.badgeClass }} offer-status-badge">{{ match.applicationStatus.icon }} {{ match.applicationStatus.label }}</span>
                             {% endif %}
                             {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
                             {% if match.statusReason %}
