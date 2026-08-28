@@ -98,6 +98,8 @@ job:
     job_posting_not_found: "La fiche ne contient aucune offre structurée exploitable."
     indeed_blocked: "Indeed bloque actuellement la synchronisation automatique depuis le serveur."
 matching:
+  status:
+    updated: "Le statut de l’offre a été mis à jour."
   analysis:
     match_not_found: "La correspondance demandée est introuvable."
     queued: "L’analyse complète de l’annonce a été mise en attente."

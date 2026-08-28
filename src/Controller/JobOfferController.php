@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Form\JobApplicationStatusType;
+use App\Matching\DTO\JobApplicationStatusData;
 use App\Matching\DTO\SemanticJobAnalysis;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Message\AnalyzeJobMatchMessage;
@@ -45,10 +47,42 @@ final class JobOfferController extends AbstractController
         $this->assertOwnsMatch($account, $match);
         $semanticAnalysis = $match->getSemanticAnalysis();
 
+        $statusData = new JobApplicationStatusData();
+        $statusData->status = $match->getApplicationStatus();
+        $statusData->reason = $match->getStatusReason();
+        $statusForm = $this->createForm(JobApplicationStatusType::class, $statusData, [
+            'action' => $this->generateUrl('app_job_offer_update_status', ['id' => $match->getId()]),
+        ]);
+
         return $this->render('job/offer/show.html.twig', [
             'match' => $match,
             'semanticAnalysis' => $semanticAnalysis === null ? null : SemanticJobAnalysis::fromArray($semanticAnalysis),
+            'statusForm' => $statusForm->createView(),
         ]);
+    }
+
+    #[Route('/jobs/{id<\d+>}/status', name: 'app_job_offer_update_status', methods: ['POST'])]
+    public function updateStatus(
+        JobMatch $match,
+        #[CurrentUser] Account $account,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $this->assertOwnsMatch($account, $match);
+
+        $statusData = new JobApplicationStatusData();
+        $statusData->status = $match->getApplicationStatus();
+        $statusData->reason = $match->getStatusReason();
+        $form = $this->createForm(JobApplicationStatusType::class, $statusData);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $match->updateApplicationStatus($statusData->status, $statusData->reason);
+            $entityManager->flush();
+            $this->addFlash('success', MatchingMessage::APPLICATION_STATUS_UPDATED);
+        }
+
+        return $this->redirectToRoute('app_job_offer_show', ['id' => $match->getId()]);
     }
 
     #[Route('/jobs/{id<\d+>}/analyze', name: 'app_job_offer_analyze', methods: ['POST'])]

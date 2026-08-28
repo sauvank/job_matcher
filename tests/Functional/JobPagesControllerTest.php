@@ -11,6 +11,7 @@ use App\Job\Enum\JobProviderType;
 use App\Job\Repository\JobSourceRepository;
 use App\Matching\DTO\MatchScore;
 use App\Matching\Entity\JobMatch;
+use App\Matching\Enum\JobApplicationStatus;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class JobPagesControllerTest extends AuthenticatedWebTestCase
@@ -321,6 +322,185 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertResponseStatusCodeSame(404);
 
         $client->request('GET', '/jobs/'.$matchId);
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testJobOffersDisplayApplicationStatusAndFilterTabs(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — PHP — Lyon',
+            'https://example.test/status/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'status-'.$uniqueId,
+            url: 'https://example.test/status/'.$uniqueId.'/offer',
+            title: 'Offre avec statut '.$uniqueId,
+            company: 'Entreprise Status',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $match->updateApplicationStatus(JobApplicationStatus::INTERESTED, 'Offre très intéressante pour mon profil');
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+
+        $client->request('GET', '/jobs');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="INTERESTED"]');
+        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="NOT_INTERESTED"]');
+        self::assertSelectorExists('.source-filter-tab[data-offer-filter-status="APPLIED"]');
+        self::assertSelectorExists('.offer-card[data-offer-filter-status="INTERESTED"]');
+        self::assertSelectorTextContains('.offer-card .badge-info', 'M’intéresse');
+        self::assertSelectorTextContains('.offer-meta', 'Offre très intéressante');
+
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+        $client->request('GET', '/jobs/'.$matchId);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#suivi-candidature');
+        self::assertSelectorTextContains('#suivi-candidature', 'M’intéresse');
+        self::assertSelectorTextContains('#suivi-candidature blockquote', 'Offre très intéressante pour mon profil');
+        self::assertSelectorExists('form[action="/jobs/'.$matchId.'/status"]');
+    }
+
+    public function testJobOfferApplicationStatusCanBeUpdated(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — PHP — Lyon',
+            'https://example.test/update-status/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'update-status-'.$uniqueId,
+            url: 'https://example.test/update-status/'.$uniqueId.'/offer',
+            title: 'Offre pour mise à jour statut '.$uniqueId,
+            company: 'Entreprise Maj',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+
+        $crawler = $client->request('GET', '/jobs/'.$matchId);
+        self::assertResponseIsSuccessful();
+
+        $form = $crawler->filter('form.status-edit-form')->form([
+            'job_application_status[status]' => JobApplicationStatus::NOT_INTERESTED->value,
+            'job_application_status[reason]' => 'Salaire inférieur au marché',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/jobs/'.$matchId);
+        $client->followRedirect();
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#suivi-candidature', 'Ne m’intéresse pas');
+        self::assertSelectorTextContains('#suivi-candidature blockquote', 'Salaire inférieur au marché');
+
+        $entityManager->clear();
+        $reloaded = $entityManager->find(JobMatch::class, $matchId);
+        self::assertInstanceOf(JobMatch::class, $reloaded);
+        self::assertSame(JobApplicationStatus::NOT_INTERESTED, $reloaded->getApplicationStatus());
+        self::assertSame('Salaire inférieur au marché', $reloaded->getStatusReason());
+        self::assertNotNull($reloaded->getStatusUpdatedAt());
+    }
+
+    public function testAnotherAccountCannotUpdateJobOfferApplicationStatus(): void
+    {
+        $client = self::createClient();
+        $owner = $this->owner();
+        $otherAccount = $this->account('other-user-status@example.test');
+        $client->loginUser($owner);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(6));
+
+        $source = new JobSource(
+            $otherAccount->getCandidateProfile(),
+            'Recherche privée',
+            'https://example.test/private-status/'.$uniqueId,
+            JobProviderType::FAKE,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'priv-status-'.$uniqueId,
+            url: 'https://example.test/private-status/'.$uniqueId.'/offer',
+            title: 'Offre privée',
+            company: 'Entreprise privée',
+            location: 'Paris',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Description',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $otherAccount->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+        $matchId = $match->getId();
+        self::assertNotNull($matchId);
+
+        $client->request('POST', '/jobs/'.$matchId.'/status', [
+            'job_application_status' => [
+                'status' => JobApplicationStatus::APPLIED->value,
+                'reason' => 'Tentative',
+            ],
+        ]);
         self::assertResponseStatusCodeSame(404);
     }
 }

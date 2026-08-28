@@ -7,6 +7,7 @@ namespace App\Matching\Translation;
 final class MatchingMessage
 {
     public const MATCH_NOT_FOUND = 'matching.analysis.match_not_found';
+    public const APPLICATION_STATUS_UPDATED = 'matching.status.updated';
     public const SEMANTIC_ANALYSIS_QUEUED = 'matching.analysis.queued';
     public const SEMANTIC_ANALYSIS_FAILED = 'matching.analysis.failed';
     public const INVALID_SEMANTIC_ANALYSIS = 'matching.analysis.invalid';

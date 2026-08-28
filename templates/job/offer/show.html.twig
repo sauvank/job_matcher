@@ -23,6 +23,9 @@
                 <span class="badge badge-info">{{ providerLabels[provider] ?? provider }}</span>
                 {% if offer.isEsn %}<span class="badge badge-warning badge-esn" title="Entreprise de services du numérique / Cabinet de conseil ou recrutement">ESN</span>{% endif %}
                 {% if offer.status.value == 'EXPIRED' %}<span class="badge badge-neutral">Annonce expirée</span>{% endif %}
+                {% if match.applicationStatus.value != 'UNPROCESSED' %}
+                    <span class="badge {{ match.applicationStatus.badgeClass }}">{{ match.applicationStatus.icon }} {{ match.applicationStatus.label }}</span>
+                {% endif %}
                 {% if offer.location %}<span>{{ offer.location }}</span>{% endif %}
                 {% if offer.contractType %}<span>{{ offer.contractType }}</span>{% endif %}
                 {% if offer.yearsOfExperience is not null %}<span>{{ offer.yearsOfExperience }} ans d’expérience</span>{% endif %}
@@ -47,6 +50,51 @@
                 <span class="hero-score score-pending"><span class="spinner" aria-hidden="true"></span></span>
                 <span>Analyse en cours</span>
             {% endif %}
+        </div>
+    </section>
+
+    <section class="card status-tracking-card" id="suivi-candidature">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Suivi personnel</p>
+                <h2>Statut & Candidature</h2>
+            </div>
+            {% if match.statusUpdatedAt %}
+                <span class="help-text">Mis à jour le {{ match.statusUpdatedAt|date('d/m/Y à H:i') }}</span>
+            {% endif %}
+        </div>
+
+        <div class="status-tracking-layout">
+            <div class="status-current-display">
+                <div class="status-current-badge-wrap">
+                    <span class="status-current-label">Statut actuel</span>
+                    <span class="badge {{ match.applicationStatus.badgeClass }} status-badge-lg">
+                        {{ match.applicationStatus.icon }} {{ match.applicationStatus.label }}
+                    </span>
+                </div>
+                {% if match.statusReason %}
+                    <div class="status-current-reason">
+                        <span class="field-label">Note / Raison</span>
+                        <blockquote>{{ match.statusReason }}</blockquote>
+                    </div>
+                {% endif %}
+            </div>
+
+            {{ form_start(statusForm, {'attr': {'class': 'status-edit-form'}}) }}
+                <div class="form-row">
+                    {{ form_label(statusForm.status) }}
+                    {{ form_widget(statusForm.status, {'attr': {'class': 'form-select'}}) }}
+                    {{ form_errors(statusForm.status) }}
+                </div>
+                <div class="form-row">
+                    {{ form_label(statusForm.reason) }}
+                    {{ form_widget(statusForm.reason, {'attr': {'class': 'form-textarea'}}) }}
+                    {{ form_errors(statusForm.reason) }}
+                </div>
+                <div class="button-row">
+                    <button type="submit" class="button">Enregistrer le statut</button>
+                </div>
+            {{ form_end(statusForm) }}
         </div>
     </section>
 

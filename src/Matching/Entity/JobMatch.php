@@ -8,6 +8,7 @@ use App\Candidate\Entity\CandidateProfile;
 use App\Job\Entity\JobOffer;
 use App\Matching\DTO\MatchScore;
 use App\Matching\DTO\SemanticJobAnalysis;
+use App\Matching\Enum\JobApplicationStatus;
 use App\Matching\Enum\SemanticAnalysisStatus;
 use App\Matching\Repository\JobMatchRepository;
 use Doctrine\DBAL\Types\Types;
@@ -46,6 +47,15 @@ final class JobMatch
 
     #[ORM\Column(enumType: SemanticAnalysisStatus::class)]
     private SemanticAnalysisStatus $semanticAnalysisStatus = SemanticAnalysisStatus::NOT_REQUESTED;
+
+    #[ORM\Column(enumType: JobApplicationStatus::class)]
+    private JobApplicationStatus $applicationStatus = JobApplicationStatus::UNPROCESSED;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $statusReason = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $statusUpdatedAt = null;
 
     #[ORM\Column(length: 120, nullable: true)]
     private ?string $semanticAnalyzer = null;
@@ -130,6 +140,29 @@ final class JobMatch
     public function getSemanticAnalysisStatus(): SemanticAnalysisStatus
     {
         return $this->semanticAnalysisStatus;
+    }
+
+    public function getApplicationStatus(): JobApplicationStatus
+    {
+        return $this->applicationStatus;
+    }
+
+    public function getStatusReason(): ?string
+    {
+        return $this->statusReason;
+    }
+
+    public function getStatusUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->statusUpdatedAt;
+    }
+
+    public function updateApplicationStatus(JobApplicationStatus $status, ?string $reason = null): void
+    {
+        $this->applicationStatus = $status;
+        $cleanReason = $reason !== null ? trim($reason) : null;
+        $this->statusReason = $cleanReason === '' ? null : $cleanReason;
+        $this->statusUpdatedAt = new \DateTimeImmutable();
     }
 
     public function getSemanticAnalyzer(): ?string
