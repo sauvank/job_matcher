@@ -1,10 +1,37 @@
 import { Controller } from '@hotwired/stimulus';
 
+function getStored(key, fallback = '') {
+    try {
+        const val = window.localStorage.getItem(key);
+        if (val !== null) return val;
+    } catch {
+        // ignore
+    }
+    try {
+        return window.sessionStorage.getItem(key) || fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function setStored(key, value) {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch {
+        // ignore
+    }
+    try {
+        window.sessionStorage.setItem(key, value);
+    } catch {
+        // ignore
+    }
+}
+
 export default class extends Controller {
     static targets = ['tab', 'row', 'empty'];
 
     connect() {
-        const savedFilter = window.sessionStorage.getItem('job-matcher-source-filter') || '';
+        const savedFilter = getStored('job-matcher-source-filter', '');
         const filterExists = savedFilter === '' || this.tabTargets.some((tab) => tab.dataset.sourceFilterValue === savedFilter);
 
         this.applyFilter(filterExists ? savedFilter : '');
@@ -12,7 +39,7 @@ export default class extends Controller {
 
     select(event) {
         const filter = event.currentTarget.dataset.sourceFilterValue || '';
-        window.sessionStorage.setItem('job-matcher-source-filter', filter);
+        setStored('job-matcher-source-filter', filter);
         this.applyFilter(filter);
     }
 

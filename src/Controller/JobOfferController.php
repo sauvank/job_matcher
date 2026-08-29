@@ -26,8 +26,21 @@ final class JobOfferController extends AbstractController
     #[Route('/jobs', name: 'app_job_offers', methods: ['GET'])]
     public function index(Request $request, #[CurrentUser] Account $account, JobMatchRepository $repository): Response
     {
-        $view = $request->query->getString('view', 'ranked');
-        if (!in_array($view, ['ranked', 'latest'], true)) {
+        $session = $request->hasSession() ? $request->getSession() : null;
+
+        if ($request->query->has('view')) {
+            $view = $request->query->getString('view');
+            if (in_array($view, ['ranked', 'latest'], true)) {
+                $session?->set('job_offers_view', $view);
+            } else {
+                $view = 'ranked';
+            }
+        } elseif ($session !== null && $session->has('job_offers_view')) {
+            $view = (string) $session->get('job_offers_view');
+            if (!in_array($view, ['ranked', 'latest'], true)) {
+                $view = 'ranked';
+            }
+        } else {
             $view = 'ranked';
         }
 

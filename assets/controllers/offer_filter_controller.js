@@ -1,5 +1,42 @@
 import { Controller } from '@hotwired/stimulus';
 
+function getStored(key, fallback = null) {
+    try {
+        const val = window.localStorage.getItem(key);
+        if (val !== null) return val;
+    } catch {
+        // Local storage unavailable or restricted
+    }
+    try {
+        return window.sessionStorage.getItem(key);
+    } catch {
+        return fallback;
+    }
+}
+
+function setStored(key, value) {
+    try {
+        window.localStorage.setItem(key, value);
+    } catch {
+        // ignore
+    }
+    try {
+        window.sessionStorage.setItem(key, value);
+    } catch {
+        // ignore
+    }
+}
+
+const STORAGE_KEYS = {
+    UNSELECTED_SOURCES: 'job-matcher-offer-unselected-sources',
+    LEGACY_SELECTED_SOURCES: 'job-matcher-offer-selected-sources',
+    UNSELECTED_STATUSES: 'job-matcher-offer-unselected-statuses',
+    LEGACY_SELECTED_STATUSES: 'job-matcher-offer-selected-statuses',
+    EXCLUDE_NOT_INTERESTED: 'job-matcher-offer-exclude-not-interested',
+    EXCLUDE_ESN: 'job-matcher-offer-exclude-esn',
+    MIN_SCORE: 'job-matcher-offer-min-score',
+};
+
 export default class extends Controller {
     static targets = [
         'dropdown',
@@ -29,46 +66,79 @@ export default class extends Controller {
         };
         window.addEventListener('offer-status-updated', this.boundOnOfferStatusUpdated);
 
-        const rawSources = window.sessionStorage.getItem('job-matcher-offer-selected-sources');
-        if (rawSources !== null) {
+        // 1. Sources restoration (newly added sources remain checked by default)
+        const rawUnselectedSources = getStored(STORAGE_KEYS.UNSELECTED_SOURCES);
+        if (rawUnselectedSources !== null) {
             try {
-                const selected = JSON.parse(rawSources);
-                if (Array.isArray(selected)) {
+                const unselected = JSON.parse(rawUnselectedSources);
+                if (Array.isArray(unselected)) {
                     this.sourceCheckboxTargets.forEach((cb) => {
-                        cb.checked = selected.includes(cb.value);
+                        cb.checked = !unselected.includes(cb.value);
                     });
                 }
             } catch {
                 // Keep default checked
             }
+        } else {
+            const rawLegacySources = getStored(STORAGE_KEYS.LEGACY_SELECTED_SOURCES);
+            if (rawLegacySources !== null) {
+                try {
+                    const selected = JSON.parse(rawLegacySources);
+                    if (Array.isArray(selected)) {
+                        this.sourceCheckboxTargets.forEach((cb) => {
+                            cb.checked = selected.includes(cb.value);
+                        });
+                    }
+                } catch {
+                    // Keep default checked
+                }
+            }
         }
 
-        const savedExcludeNotInterested = window.sessionStorage.getItem('job-matcher-offer-exclude-not-interested') === '1';
+        // 2. Exclude Not Interested
+        const savedExcludeNotInterested = getStored(STORAGE_KEYS.EXCLUDE_NOT_INTERESTED) === '1';
         if (this.hasExcludeNotInterestedTarget) {
             this.excludeNotInterestedTarget.checked = savedExcludeNotInterested;
         }
 
-        const savedExcludeEsn = window.sessionStorage.getItem('job-matcher-offer-exclude-esn') === '1';
+        // 3. Exclude ESN
+        const savedExcludeEsn = getStored(STORAGE_KEYS.EXCLUDE_ESN) === '1';
         if (this.hasExcludeEsnTarget) {
             this.excludeEsnTarget.checked = savedExcludeEsn;
         }
 
-        const savedMinScore = parseInt(window.sessionStorage.getItem('job-matcher-offer-min-score') || '0', 10) || 0;
+        // 4. Min score
+        const savedMinScore = parseInt(getStored(STORAGE_KEYS.MIN_SCORE) || '0', 10) || 0;
         if (this.hasMinScoreTarget) {
             this.minScoreTarget.value = String(savedMinScore);
         }
 
-        const rawStatuses = window.sessionStorage.getItem('job-matcher-offer-selected-statuses');
-        if (rawStatuses !== null) {
+        // 5. Statuses restoration
+        const rawUnselectedStatuses = getStored(STORAGE_KEYS.UNSELECTED_STATUSES);
+        if (rawUnselectedStatuses !== null) {
             try {
-                const selected = JSON.parse(rawStatuses);
-                if (Array.isArray(selected)) {
+                const unselected = JSON.parse(rawUnselectedStatuses);
+                if (Array.isArray(unselected)) {
                     this.statusCheckboxTargets.forEach((cb) => {
-                        cb.checked = selected.includes(cb.value);
+                        cb.checked = !unselected.includes(cb.value);
                     });
                 }
             } catch {
                 // Keep default checked
+            }
+        } else {
+            const rawLegacyStatuses = getStored(STORAGE_KEYS.LEGACY_SELECTED_STATUSES);
+            if (rawLegacyStatuses !== null) {
+                try {
+                    const selected = JSON.parse(rawLegacyStatuses);
+                    if (Array.isArray(selected)) {
+                        this.statusCheckboxTargets.forEach((cb) => {
+                            cb.checked = selected.includes(cb.value);
+                        });
+                    }
+                } catch {
+                    // Keep default checked
+                }
             }
         }
 
@@ -100,16 +170,20 @@ export default class extends Controller {
 
     updateFilters() {
         const selectedSources = this.getSelectedSources();
+        const unselectedSources = this.sourceCheckboxTargets.filter((cb) => !cb.checked).map((cb) => cb.value);
         const selectedStatuses = this.getSelectedStatuses();
+        const unselectedStatuses = this.statusCheckboxTargets.filter((cb) => !cb.checked).map((cb) => cb.value);
         const excludeNotInterested = this.hasExcludeNotInterestedTarget ? this.excludeNotInterestedTarget.checked : false;
         const excludeEsn = this.hasExcludeEsnTarget ? this.excludeEsnTarget.checked : false;
         const minScore = this.hasMinScoreTarget ? (parseInt(this.minScoreTarget.value, 10) || 0) : 0;
 
-        window.sessionStorage.setItem('job-matcher-offer-selected-sources', JSON.stringify(selectedSources));
-        window.sessionStorage.setItem('job-matcher-offer-exclude-not-interested', excludeNotInterested ? '1' : '0');
-        window.sessionStorage.setItem('job-matcher-offer-exclude-esn', excludeEsn ? '1' : '0');
-        window.sessionStorage.setItem('job-matcher-offer-min-score', String(minScore));
-        window.sessionStorage.setItem('job-matcher-offer-selected-statuses', JSON.stringify(selectedStatuses));
+        setStored(STORAGE_KEYS.UNSELECTED_SOURCES, JSON.stringify(unselectedSources));
+        setStored(STORAGE_KEYS.LEGACY_SELECTED_SOURCES, JSON.stringify(selectedSources));
+        setStored(STORAGE_KEYS.UNSELECTED_STATUSES, JSON.stringify(unselectedStatuses));
+        setStored(STORAGE_KEYS.LEGACY_SELECTED_STATUSES, JSON.stringify(selectedStatuses));
+        setStored(STORAGE_KEYS.EXCLUDE_NOT_INTERESTED, excludeNotInterested ? '1' : '0');
+        setStored(STORAGE_KEYS.EXCLUDE_ESN, excludeEsn ? '1' : '0');
+        setStored(STORAGE_KEYS.MIN_SCORE, String(minScore));
 
         this.applyFilter(selectedSources, selectedStatuses, excludeNotInterested, excludeEsn, minScore);
     }
