@@ -18,6 +18,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'job_match')]
 #[ORM\UniqueConstraint(name: 'uniq_job_match_candidate_offer', columns: ['candidate_profile_id', 'job_offer_id'])]
 #[ORM\Index(name: 'idx_job_match_alert_sent_at', columns: ['alert_sent_at'])]
+#[ORM\Index(name: 'idx_job_match_application_status', columns: ['application_status'])]
+#[ORM\Index(name: 'idx_job_match_profile_semantic', columns: ['candidate_profile_id', 'semantic_score'])]
 final class JobMatch
 {
     #[ORM\Id]

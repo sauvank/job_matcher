@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: JobSourceRepository::class)]
 #[ORM\Table(name: 'job_source')]
 #[ORM\UniqueConstraint(name: 'uniq_job_source_cv_url', columns: ['cv_document_id', 'url'])]
+#[ORM\Index(name: 'idx_job_source_enabled', columns: ['enabled'])]
 final class JobSource
 {
     #[ORM\Id]

@@ -14,6 +14,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: JobOfferRepository::class)]
 #[ORM\Table(name: 'job_offer')]
 #[ORM\UniqueConstraint(name: 'uniq_job_offer_source_external', columns: ['source_id', 'external_id'])]
+#[ORM\Index(name: 'idx_job_offer_status', columns: ['status'])]
+#[ORM\Index(name: 'idx_job_offer_first_seen_at', columns: ['first_seen_at'])]
 final class JobOffer
 {
     #[ORM\Id]

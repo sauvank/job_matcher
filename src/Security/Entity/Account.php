@@ -14,6 +14,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: AccountRepository::class)]
 #[ORM\Table(name: 'app_account')]
+#[ORM\Index(name: 'idx_account_alert_email_enabled', columns: ['alert_email_enabled'])]
 #[UniqueEntity(fields: ['email'], message: 'Un compte utilise déjà cette adresse email.')]
 final class Account implements UserInterface, PasswordAuthenticatedUserInterface
 {
