@@ -20,8 +20,6 @@ ARG COMPOSER_AUTH
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
 
-COPY docker/php/prod.ini /usr/local/etc/php/conf.d/zz-app-prod.ini
-
 COPY composer.json composer.lock symfony.lock ./
 RUN COMPOSER_AUTH=$COMPOSER_AUTH composer install --prefer-dist --no-dev --no-interaction --no-progress --no-scripts
 
@@ -32,6 +30,8 @@ RUN COMPOSER_AUTH=$COMPOSER_AUTH composer dump-autoload --classmap-authoritative
     && php bin/console asset-map:compile \
     && mkdir -p var/cache var/log var/cv \
     && chown -R www-data:www-data var
+
+COPY docker/php/prod.ini /usr/local/etc/php/conf.d/zz-app-prod.ini
 
 CMD ["php-fpm"]
 
