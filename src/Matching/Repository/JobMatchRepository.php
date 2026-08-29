@@ -100,7 +100,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->andWhere('jobMatch.applicationStatus != :notInterested')
             ->andWhere('jobOffer.status != :expired')
             ->andWhere('COALESCE(jobMatch.semanticScore, jobMatch.globalScore) >= :minScore')
-            ->andWhere('(jobOffer.firstSeenAt >= :since OR jobMatch.analyzedAt >= :since OR (jobOffer.publishedAt IS NOT NULL AND jobOffer.publishedAt >= :since))')
+            ->andWhere('(jobOffer.firstSeenAt >= :since OR jobMatch.analyzedAt >= :since OR (jobMatch.semanticAnalyzedAt IS NOT NULL AND jobMatch.semanticAnalyzedAt >= :since) OR (jobOffer.publishedAt IS NOT NULL AND jobOffer.publishedAt >= :since))')
             ->setParameter('profile', $profile)
             ->setParameter('notInterested', JobApplicationStatus::NOT_INTERESTED)
             ->setParameter('expired', JobOfferStatus::EXPIRED)
