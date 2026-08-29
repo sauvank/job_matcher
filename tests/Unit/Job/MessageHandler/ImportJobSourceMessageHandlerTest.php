@@ -99,7 +99,7 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
                 return $this->match === null ? [] : [$this->match];
             }
 
-            public function findMatchesForDailyAlert(CandidateProfile $profile, int $minScore, \DateTimeImmutable $since, int $limit = 20): array
+            public function findMatchesForDailyAlert(CandidateProfile $profile, int $minScore, \DateTimeImmutable $since, int $limit = 20, bool $force = false): array
             {
                 return $this->match === null ? [] : [$this->match];
             }

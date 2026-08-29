@@ -92,6 +92,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         int $minScore,
         \DateTimeImmutable $since,
         int $limit = 20,
+        bool $force = false,
     ): array {
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('CASE WHEN jobMatch.semanticScore IS NOT NULL THEN jobMatch.semanticScore ELSE jobMatch.globalScore END AS HIDDEN effectiveScore')
@@ -100,8 +101,13 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->andWhere('jobMatch.candidateProfile = :profile')
             ->andWhere('jobMatch.applicationStatus != :notInterested')
             ->andWhere('jobOffer.status != :expired')
-            ->andWhere('(jobMatch.semanticScore >= :minScore OR (jobMatch.semanticScore IS NULL AND jobMatch.globalScore >= :minScore))')
-            ->andWhere('(jobOffer.firstSeenAt >= :since OR jobMatch.analyzedAt >= :since OR (jobMatch.semanticAnalyzedAt IS NOT NULL AND jobMatch.semanticAnalyzedAt >= :since) OR (jobOffer.publishedAt IS NOT NULL AND jobOffer.publishedAt >= :since))')
+            ->andWhere('(jobMatch.semanticScore >= :minScore OR (jobMatch.semanticScore IS NULL AND jobMatch.globalScore >= :minScore))');
+
+        if (!$force) {
+            $queryBuilder->andWhere('jobMatch.alertSentAt IS NULL');
+        }
+
+        $queryBuilder->andWhere('(jobOffer.firstSeenAt >= :since OR jobMatch.analyzedAt >= :since OR (jobMatch.semanticAnalyzedAt IS NOT NULL AND jobMatch.semanticAnalyzedAt >= :since) OR (jobOffer.publishedAt IS NOT NULL AND jobOffer.publishedAt >= :since))')
             ->setParameter('profile', $profile)
             ->setParameter('notInterested', JobApplicationStatus::NOT_INTERESTED)
             ->setParameter('expired', JobOfferStatus::EXPIRED)

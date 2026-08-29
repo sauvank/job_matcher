@@ -56,7 +56,7 @@ final class DailyJobAlertServiceTest extends TestCase
         $matchRepository = $this->createMock(JobMatchRepositoryInterface::class);
         $matchRepository->expects(self::once())
             ->method('findMatchesForDailyAlert')
-            ->with($profile, 75, self::isInstanceOf(\DateTimeImmutable::class), 15)
+            ->with($profile, 75, self::isInstanceOf(\DateTimeImmutable::class), 15, false)
             ->willReturn([$match]);
 
         /** @var MailerInterface&MockObject $mailer */
@@ -96,6 +96,7 @@ final class DailyJobAlertServiceTest extends TestCase
 
         self::assertSame(1, $sentCount);
         self::assertSame($now, $account->getLastAlertEmailSentAt());
+        self::assertSame($now, $match->getAlertSentAt());
     }
 
     public function testItDoesNotSendEmailWhenNoMatchesFound(): void

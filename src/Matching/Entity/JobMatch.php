@@ -66,6 +66,9 @@ final class JobMatch
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $semanticAnalyzedAt = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $alertSentAt = null;
+
     #[ORM\Column]
     private int $stackScore;
 
@@ -255,6 +258,16 @@ final class JobMatch
     public function getSemanticAnalyzedAt(): ?\DateTimeImmutable
     {
         return $this->semanticAnalyzedAt;
+    }
+
+    public function getAlertSentAt(): ?\DateTimeImmutable
+    {
+        return $this->alertSentAt;
+    }
+
+    public function setAlertSentAt(?\DateTimeImmutable $alertSentAt): void
+    {
+        $this->alertSentAt = $alertSentAt;
     }
 
     public function getStackScore(): int

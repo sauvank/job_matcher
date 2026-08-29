@@ -46,11 +46,16 @@ readonly class DailyJobAlertService
                 $account->getCandidateProfile(),
                 $threshold,
                 $since,
-                limit: 15
+                limit: 15,
+                force: $force,
             );
 
             if ($matches === []) {
                 continue;
+            }
+
+            foreach ($matches as $match) {
+                $match->setAlertSentAt($now);
             }
 
             $this->sendAlertEmail($account, $matches, $threshold);
