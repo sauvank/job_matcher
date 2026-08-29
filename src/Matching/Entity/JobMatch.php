@@ -17,6 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: JobMatchRepository::class)]
 #[ORM\Table(name: 'job_match')]
 #[ORM\UniqueConstraint(name: 'uniq_job_match_candidate_offer', columns: ['candidate_profile_id', 'job_offer_id'])]
+#[ORM\Index(name: 'idx_job_match_alert_sent_at', columns: ['alert_sent_at'])]
 final class JobMatch
 {
     #[ORM\Id]

@@ -38,6 +38,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     {
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('CASE WHEN jobMatch.semanticScore IS NULL THEN 1 ELSE 0 END AS HIDDEN semanticScoreMissing')
+            ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
@@ -55,6 +56,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     public function findLatestForProfile(CandidateProfile $profile, int $limit = 100): array
     {
         $queryBuilder = $this->createQueryBuilder('jobMatch')
+            ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
@@ -72,7 +74,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     public function findCompletedForProfile(CandidateProfile $profile, int $limit = 100): array
     {
         $queryBuilder = $this->createQueryBuilder('jobMatch')
-            ->addSelect('jobOffer')
+            ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
@@ -96,6 +98,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     ): array {
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('CASE WHEN jobMatch.semanticScore IS NOT NULL THEN jobMatch.semanticScore ELSE jobMatch.globalScore END AS HIDDEN effectiveScore')
+            ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')

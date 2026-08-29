@@ -25,6 +25,7 @@ framework:
             App\Candidate\Application\Message\ProcessCvMessage: async_priority
             App\Job\Message\ImportJobSourceMessage: async_priority
             App\Job\Message\RefreshJobSourcesMessage: async
+            App\Job\Message\SendDailyJobAlertsMessage: async
             App\Matching\Message\AnalyzeJobMatchMessage: async
 
 when@test:
