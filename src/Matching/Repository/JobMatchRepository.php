@@ -94,19 +94,20 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         int $limit = 20,
     ): array {
         $queryBuilder = $this->createQueryBuilder('jobMatch')
+            ->addSelect('CASE WHEN jobMatch.semanticScore IS NOT NULL THEN jobMatch.semanticScore ELSE jobMatch.globalScore END AS HIDDEN effectiveScore')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
             ->andWhere('jobMatch.applicationStatus != :notInterested')
             ->andWhere('jobOffer.status != :expired')
-            ->andWhere('COALESCE(jobMatch.semanticScore, jobMatch.globalScore) >= :minScore')
+            ->andWhere('(jobMatch.semanticScore >= :minScore OR (jobMatch.semanticScore IS NULL AND jobMatch.globalScore >= :minScore))')
             ->andWhere('(jobOffer.firstSeenAt >= :since OR jobMatch.analyzedAt >= :since OR (jobMatch.semanticAnalyzedAt IS NOT NULL AND jobMatch.semanticAnalyzedAt >= :since) OR (jobOffer.publishedAt IS NOT NULL AND jobOffer.publishedAt >= :since))')
             ->setParameter('profile', $profile)
             ->setParameter('notInterested', JobApplicationStatus::NOT_INTERESTED)
             ->setParameter('expired', JobOfferStatus::EXPIRED)
             ->setParameter('minScore', $minScore)
             ->setParameter('since', $since)
-            ->orderBy('COALESCE(jobMatch.semanticScore, jobMatch.globalScore)', 'DESC')
+            ->orderBy('effectiveScore', 'DESC')
             ->addOrderBy('jobOffer.firstSeenAt', 'DESC')
             ->setMaxResults($limit);
 
