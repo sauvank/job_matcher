@@ -27,6 +27,8 @@
             <div class="card"><span>Intitulé de poste</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>
             <div class="card"><span>Zone géographique</span><strong>{{ profile.location ?? 'À renseigner' }}</strong></div>
             <div class="card"><span>Expérience</span><strong>{{ profile.yearsOfExperience is not null ? profile.yearsOfExperience ~ ' ans' : 'À renseigner' }}</strong></div>
+            <div class="card"><span>Salaire min. souhaité</span><strong>{{ profile.minimumSalary ? profile.minimumSalary|number_format(0, ',', ' ') ~ ' € / an' : 'Non renseigné' }}</strong></div>
+            <div class="card"><span>TJM min. souhaité</span><strong>{{ profile.minimumDailyRate ? profile.minimumDailyRate ~ ' € / j' : 'Non renseigné' }}</strong></div>
             <div class="card">
                 <span>Contrats recherchés</span>
                 <strong>
@@ -46,8 +48,8 @@
         <details class="profile-edit-disclosure">
             <summary>
                 <div>
-                    <h3>✏️ Modifier mes critères et ma zone géographique</h3>
-                    <p>Ajustez votre intitulé de poste ciblé, votre zone géographique, vos années d’expérience et vos types de contrat souhaités</p>
+                    <h3>✏️ Modifier mes critères et rémunération</h3>
+                    <p>Ajustez votre intitulé de poste ciblé, votre zone géographique, vos années d’expérience, votre prétention salariale / TJM et vos types de contrat</p>
                 </div>
                 <span class="disclosure-chevron" aria-hidden="true">▼</span>
             </summary>
@@ -57,6 +59,8 @@
                         {{ form_row(profileDetailsForm.title) }}
                         {{ form_row(profileDetailsForm.location) }}
                         {{ form_row(profileDetailsForm.yearsOfExperience) }}
+                        {{ form_row(profileDetailsForm.minimumSalary) }}
+                        {{ form_row(profileDetailsForm.minimumDailyRate) }}
                     </div>
                     <div class="profile-details-contracts">
                         <span class="form-section-label">Type(s) de contrat recherché(s)</span>

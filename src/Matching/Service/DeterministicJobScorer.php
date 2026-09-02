@@ -146,7 +146,25 @@ final readonly class DeterministicJobScorer
      */
     private function scoreSalary(CandidateProfile $profile, JobOffer $offer, array &$strengths, array &$gaps, array &$unknowns): int
     {
-        $expected = $profile->getMinimumSalary();
+        $expectedAnnual = $profile->getMinimumSalary();
+        $expectedDaily = $profile->getMinimumDailyRate();
+
+        $contract = $offer->getContractType();
+        $isFreelance = $contract !== null && (
+            str_contains(mb_strtoupper($contract), 'FREELANCE')
+            || str_contains(mb_strtoupper($contract), 'INDÉPENDANT')
+            || str_contains(mb_strtoupper($contract), 'INDEPENDANT')
+        );
+
+        $expected = null;
+        if ($isFreelance && $expectedDaily !== null) {
+            $expected = (int) round($expectedDaily * 218);
+        } elseif ($expectedAnnual !== null) {
+            $expected = $expectedAnnual;
+        } elseif ($expectedDaily !== null) {
+            $expected = (int) round($expectedDaily * 218);
+        }
+
         $offeredMaximum = $offer->getMaximumSalary() ?? $offer->getMinimumSalary();
         if ($expected === null || $offeredMaximum === null) {
             $unknowns[] = new MatchReason(MatchingMessage::SALARY_UNKNOWN);

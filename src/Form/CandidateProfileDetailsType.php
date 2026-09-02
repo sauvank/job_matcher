@@ -46,6 +46,26 @@ final class CandidateProfileDetailsType extends AbstractType
                 ],
                 'help' => 'Nombre total d’années d’expérience professionnelle.',
             ])
+            ->add('minimumSalary', IntegerType::class, [
+                'label' => 'Salaire annuel brut minimum (€ / an)',
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Ex : 50000',
+                    'min' => 0,
+                    'step' => 1000,
+                ],
+                'help' => 'Rémunération annuelle minimale souhaitée (CDI / CDD).',
+            ])
+            ->add('minimumDailyRate', IntegerType::class, [
+                'label' => 'TJM minimum (€ / jour)',
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Ex : 550',
+                    'min' => 0,
+                    'step' => 25,
+                ],
+                'help' => 'Taux Journalier Moyen minimum souhaité pour les missions Freelance.',
+            ])
             ->add('preferredContractTypes', ChoiceType::class, [
                 'label' => 'Type(s) de contrat recherché(s)',
                 'choices' => ContractType::choices(),

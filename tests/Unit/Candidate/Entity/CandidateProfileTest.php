@@ -65,22 +65,26 @@ final class CandidateProfileTest extends TestCase
         self::assertSame(['CDI'], $profile->getPreferredContractTypes());
         self::assertSame(['CDI'], $cv->getAppliedContractTypes());
 
-        $profile->updateDetails('  Lead Developer  ', '  Lyon et périphérie  ', 7, ['FREELANCE', 'CDI']);
+        $profile->updateDetails('  Lead Developer  ', '  Lyon et périphérie  ', 7, ['FREELANCE', 'CDI'], 60000, 600);
 
         self::assertSame('Lead Developer', $profile->getTitle());
         self::assertSame('Lyon et périphérie', $profile->getLocation());
         self::assertSame(7, $profile->getYearsOfExperience());
         self::assertSame(['FREELANCE', 'CDI'], $profile->getPreferredContractTypes());
+        self::assertSame(60000, $profile->getMinimumSalary());
+        self::assertSame(600, $profile->getMinimumDailyRate());
         self::assertSame('Lead Developer', $cv->getAppliedTitle());
         self::assertSame('Lyon et périphérie', $cv->getAppliedLocation());
         self::assertSame(7, $cv->getAppliedYearsOfExperience());
         self::assertSame(['FREELANCE', 'CDI'], $cv->getAppliedContractTypes());
 
-        $profile->updateDetails('', '   ', null, []);
+        $profile->updateDetails('', '   ', null, [], null, null);
         self::assertNull($profile->getTitle());
         self::assertNull($profile->getLocation());
         self::assertNull($profile->getYearsOfExperience());
         self::assertSame([], $profile->getPreferredContractTypes());
+        self::assertNull($profile->getMinimumSalary());
+        self::assertNull($profile->getMinimumDailyRate());
         self::assertNull($cv->getAppliedTitle());
         self::assertNull($cv->getAppliedLocation());
         self::assertNull($cv->getAppliedYearsOfExperience());

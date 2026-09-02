@@ -18,6 +18,12 @@ final class CandidateProfileDetailsData
         #[Assert\Range(min: 0, max: 80, notInRangeMessage: 'L’expérience doit être comprise entre {{ min }} et {{ max }} ans.')]
         public ?int $yearsOfExperience = null,
         public array $preferredContractTypes = [],
+        #[Assert\PositiveOrZero(message: 'Le salaire minimum doit être positif.')]
+        #[Assert\Range(min: 0, max: 500000, notInRangeMessage: 'Le salaire minimum doit être inférieur à {{ max }} €.')]
+        public ?int $minimumSalary = null,
+        #[Assert\PositiveOrZero(message: 'Le TJM minimum doit être positif.')]
+        #[Assert\Range(min: 0, max: 10000, notInRangeMessage: 'Le TJM minimum doit être inférieur à {{ max }} € / jour.')]
+        public ?int $minimumDailyRate = null,
     ) {
     }
 
@@ -28,6 +34,8 @@ final class CandidateProfileDetailsData
             $profile->getLocation(),
             $profile->getYearsOfExperience(),
             $profile->getPreferredContractTypes(),
+            $profile->getMinimumSalary(),
+            $profile->getMinimumDailyRate(),
         );
     }
 }

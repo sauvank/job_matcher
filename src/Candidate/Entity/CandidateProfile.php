@@ -29,6 +29,9 @@ final class CandidateProfile
     #[ORM\Column(nullable: true)]
     private ?int $minimumSalary = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $minimumDailyRate = null;
+
     /** @var list<string> */
     #[ORM\Column(type: Types::JSON)]
     private array $preferredContractTypes = [];
@@ -87,6 +90,11 @@ final class CandidateProfile
     public function getMinimumSalary(): ?int
     {
         return $this->minimumSalary;
+    }
+
+    public function getMinimumDailyRate(): ?int
+    {
+        return $this->minimumDailyRate;
     }
 
     /** @return list<string> */
@@ -165,12 +173,20 @@ final class CandidateProfile
     }
 
     /** @param list<string> $preferredContractTypes */
-    public function updateDetails(?string $title, ?string $location, ?int $yearsOfExperience, array $preferredContractTypes = []): void
-    {
+    public function updateDetails(
+        ?string $title,
+        ?string $location,
+        ?int $yearsOfExperience,
+        array $preferredContractTypes = [],
+        ?int $minimumSalary = null,
+        ?int $minimumDailyRate = null,
+    ): void {
         $this->title = $title !== null && trim($title) !== '' ? trim($title) : null;
         $this->location = $location !== null && trim($location) !== '' ? trim($location) : null;
         $this->yearsOfExperience = $yearsOfExperience;
         $this->preferredContractTypes = array_values(array_unique(array_filter($preferredContractTypes, static fn (string $v): bool => $v !== '')));
+        $this->minimumSalary = $minimumSalary;
+        $this->minimumDailyRate = $minimumDailyRate;
         $this->updatedAt = new \DateTimeImmutable();
 
         if ($this->activeCvDocument !== null) {

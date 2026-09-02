@@ -167,6 +167,28 @@ final class DeterministicJobScorerTest extends TestCase
         self::assertEqualsCanonicalizing(['PostgreSQL', 'SOAP', 'React', 'Webhooks'], $missingSkills);
     }
 
+    public function testItScoresFreelanceTjmExpectation(): void
+    {
+        $profile = new CandidateProfile();
+        $profile->updateDetails('Freelance PHP', 'Lyon', 5, ['FREELANCE'], null, 500);
+
+        $offer = $this->offer(
+            title: 'Mission Symfony Freelance',
+            location: 'Lyon',
+            contract: 'Freelance',
+            minimumSalary: (int) round(550 * 218),
+            maximumSalary: (int) round(600 * 218),
+            remotePolicy: 'HYBRID',
+            requiredExperience: 3,
+            description: 'Mission freelance',
+            requiredSkills: ['PHP', 'Symfony'],
+        );
+
+        $score = $this->scorer()->score($profile, $offer);
+
+        self::assertSame(100, $score->salaryScore);
+    }
+
     private function profile(): CandidateProfile
     {
         $profile = new CandidateProfile();

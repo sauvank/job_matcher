@@ -54,7 +54,14 @@ final class CandidateProfileController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $profile->updateDetails($data->title, $data->location, $data->yearsOfExperience, $data->preferredContractTypes);
+            $profile->updateDetails(
+                $data->title,
+                $data->location,
+                $data->yearsOfExperience,
+                $data->preferredContractTypes,
+                $data->minimumSalary,
+                $data->minimumDailyRate,
+            );
             $entityManager->flush();
             $this->addFlash('success', CandidateMessage::PROFILE_UPDATED);
         } else {
