@@ -909,10 +909,15 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $profile = $account->getCandidateProfile();
         $profile->updateFromCv('Dev Full Stack', 'Lyon', 5, 'CV PHP Symfony');
 
-        $phpSkill = new Skill('PHP', 'php', SkillCategory::BACKEND);
-        $symfonySkill = new Skill('Symfony', 'symfony', SkillCategory::BACKEND);
-        $entityManager->persist($phpSkill);
-        $entityManager->persist($symfonySkill);
+        $skillRepo = $entityManager->getRepository(Skill::class);
+        $phpSkill = $skillRepo->findOneBy(['normalizedName' => 'php']) ?? new Skill('PHP', 'php', SkillCategory::BACKEND);
+        $symfonySkill = $skillRepo->findOneBy(['normalizedName' => 'symfony']) ?? new Skill('Symfony', 'symfony', SkillCategory::BACKEND);
+        if ($phpSkill->getId() === null) {
+            $entityManager->persist($phpSkill);
+        }
+        if ($symfonySkill->getId() === null) {
+            $entityManager->persist($symfonySkill);
+        }
 
         $candSkill1 = new CandidateSkill($profile, $phpSkill, SkillLevel::EXPERT, isCoreSkill: true);
         $candSkill2 = new CandidateSkill($profile, $symfonySkill, SkillLevel::ADVANCED, isCoreSkill: true);
@@ -928,10 +933,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.smart-search-chip.selectable');
 
         // Select and submit multiple suggested searches at once
-        $suggestionForm = $crawler->filter('.smart-searches-form')->form([
+        $suggestionForm = $crawler->filter('.smart-searches-form')->form();
+        $client->submit($suggestionForm, [
             'titles' => ['Dev Full Stack PHP', 'Développeur Symfony'],
         ]);
-        $client->submit($suggestionForm);
 
         self::assertResponseRedirects('/sources');
         $client->followRedirect();
