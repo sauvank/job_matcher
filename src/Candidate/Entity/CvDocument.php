@@ -234,6 +234,14 @@ final class CvDocument
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public function updateAppliedDetails(?string $title, ?string $location, ?int $yearsOfExperience): void
+    {
+        $this->appliedTitle = $title;
+        $this->appliedLocation = $location;
+        $this->appliedYearsOfExperience = $yearsOfExperience;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function requestReanalysis(): void
     {
         $this->status = CvStatus::UPLOADED;

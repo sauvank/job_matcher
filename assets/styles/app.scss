@@ -210,6 +210,12 @@ p { color: var(--muted); }
 .profile-grid span, .profile-grid strong { display: block; }
 .profile-grid span { margin-bottom: .5rem; color: var(--subtle); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
 .profile-grid strong { font-size: 1.08rem; }
+.profile-edit-disclosure { margin-top: 1.25rem; margin-bottom: 2rem; }
+.profile-edit-body { padding: 1.25rem 1.4rem; background: white; }
+.profile-details-form { margin: 0; }
+.profile-details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem 1.25rem; margin-bottom: 1.25rem; }
+.profile-details-grid > div { margin: 0 !important; }
+.profile-details-actions { display: flex; justify-content: flex-end; }
 .skill-list, .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; }
 .skill-toolbar { display: flex; margin: -.15rem 0 1rem; align-items: flex-end; justify-content: space-between; gap: 1rem; }
 .skill-legend { display: flex; margin: 0; flex-wrap: wrap; gap: .65rem 1.15rem; color: var(--muted); font-size: .8rem; }

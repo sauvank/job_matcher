@@ -40,6 +40,22 @@ final class CvDocumentTest extends TestCase
         self::assertNull($document->getErrorMessage());
     }
 
+    public function testItCanUpdateAppliedDetails(): void
+    {
+        $document = $this->document();
+        $document->markApplied('Développeur PHP', 'Paris', 4);
+
+        self::assertSame('Développeur PHP', $document->getAppliedTitle());
+        self::assertSame('Paris', $document->getAppliedLocation());
+        self::assertSame(4, $document->getAppliedYearsOfExperience());
+
+        $document->updateAppliedDetails('Tech Lead', 'Bordeaux', 8);
+
+        self::assertSame('Tech Lead', $document->getAppliedTitle());
+        self::assertSame('Bordeaux', $document->getAppliedLocation());
+        self::assertSame(8, $document->getAppliedYearsOfExperience());
+    }
+
     private function document(): CvDocument
     {
         return new CvDocument(

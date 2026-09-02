@@ -73,6 +73,8 @@ final class CandidateMessage
     public const SKILL_DELETED = 'candidate.skill.deleted';
     public const SKILL_INVALID = 'candidate.skill.invalid';
     public const SKILL_NOT_FOUND = 'candidate.skill.not_found';
+    public const PROFILE_UPDATED = 'candidate.profile.updated';
+    public const PROFILE_INVALID = 'candidate.profile.invalid';
 
     private function __construct()
     {

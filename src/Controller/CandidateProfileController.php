@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Candidate\Application\DTO\CandidateProfileDetailsData;
 use App\Candidate\Application\DTO\CandidateSkillData;
 use App\Candidate\Application\Service\ManageCandidateSkillService;
 use App\Candidate\Entity\CandidateSkill;
 use App\Candidate\Enum\SkillLevel;
 use App\Candidate\Translation\CandidateMessage;
+use App\Form\CandidateProfileDetailsType;
 use App\Form\CandidateSkillType;
 use App\Security\Entity\Account;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,11 +32,36 @@ final class CandidateProfileController extends AbstractController
 
         return $this->render('candidate/profile.html.twig', [
             'profile' => $profile,
+            'profileDetailsForm' => $this->createForm(CandidateProfileDetailsType::class, CandidateProfileDetailsData::fromProfile($profile), [
+                'action' => $this->generateUrl('app_candidate_profile_details'),
+            ]),
             'skillForm' => $this->createForm(CandidateSkillType::class, new CandidateSkillData(), [
                 'action' => $this->generateUrl('app_candidate_skill_add'),
             ]),
             'skillLevels' => SkillLevel::cases(),
         ]);
+    }
+
+    #[Route('/profile/details', name: 'app_candidate_profile_details', methods: ['POST'])]
+    public function updateDetails(
+        Request $request,
+        #[CurrentUser] Account $account,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $profile = $account->getCandidateProfile();
+        $data = CandidateProfileDetailsData::fromProfile($profile);
+        $form = $this->createForm(CandidateProfileDetailsType::class, $data);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $profile->updateDetails($data->title, $data->location, $data->yearsOfExperience);
+            $entityManager->flush();
+            $this->addFlash('success', CandidateMessage::PROFILE_UPDATED);
+        } else {
+            $this->addFlash('error', CandidateMessage::PROFILE_INVALID);
+        }
+
+        return $this->redirectToRoute('app_candidate_profile');
     }
 
     #[Route('/profile/skills', name: 'app_candidate_skill_add', methods: ['POST'])]

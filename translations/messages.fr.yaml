@@ -1,4 +1,7 @@
 candidate:
+  profile:
+    updated: "Vos informations de profil et votre zone géographique ont été mises à jour."
+    invalid: "Vérifiez les informations saisies pour votre profil."
   skill:
     saved: "La compétence et son niveau ont été enregistrés."
     levels_updated: "Tous les niveaux ont été enregistrés."

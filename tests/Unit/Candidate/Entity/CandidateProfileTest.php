@@ -54,6 +54,33 @@ final class CandidateProfileTest extends TestCase
         self::assertCount(0, $profile->getCandidateSkills());
     }
 
+    public function testItCanUpdateDetailsAndSynchronizeActiveCv(): void
+    {
+        $profile = new CandidateProfile();
+        $cv = $this->appliedDocument($profile, 'dev.pdf', 'Développeur Junior', 'Paris', 1);
+        $profile->activateCvDocument($cv);
+
+        self::assertSame('Paris', $profile->getLocation());
+        self::assertSame('Paris', $cv->getAppliedLocation());
+
+        $profile->updateDetails('  Lead Developer  ', '  Lyon et périphérie  ', 7);
+
+        self::assertSame('Lead Developer', $profile->getTitle());
+        self::assertSame('Lyon et périphérie', $profile->getLocation());
+        self::assertSame(7, $profile->getYearsOfExperience());
+        self::assertSame('Lead Developer', $cv->getAppliedTitle());
+        self::assertSame('Lyon et périphérie', $cv->getAppliedLocation());
+        self::assertSame(7, $cv->getAppliedYearsOfExperience());
+
+        $profile->updateDetails('', '   ', null);
+        self::assertNull($profile->getTitle());
+        self::assertNull($profile->getLocation());
+        self::assertNull($profile->getYearsOfExperience());
+        self::assertNull($cv->getAppliedTitle());
+        self::assertNull($cv->getAppliedLocation());
+        self::assertNull($cv->getAppliedYearsOfExperience());
+    }
+
     private function appliedDocument(
         CandidateProfile $profile,
         string $filename,

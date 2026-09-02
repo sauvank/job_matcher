@@ -58,6 +58,32 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextNotContains('body', 'Laravel '.$uniqueId);
     }
 
+    public function testAccountCanUpdateItsProfileDetailsAndGeographicLocation(): void
+    {
+        $client = self::createClient();
+        $uniqueId = bin2hex(random_bytes(6));
+        $account = $this->account('profile-details-'.$uniqueId.'@example.test');
+        $client->loginUser($account);
+
+        $crawler = $client->request('GET', '/profile');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.profile-details-form');
+
+        $form = $crawler->selectButton('Enregistrer les modifications')->form([
+            'candidate_profile_details[title]' => 'Lead Developer PHP '.$uniqueId,
+            'candidate_profile_details[location]' => 'Lyon et périphérie (69)',
+            'candidate_profile_details[yearsOfExperience]' => 8,
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/profile');
+        $crawler = $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Vos informations de profil et votre zone géographique ont été mises à jour.');
+        self::assertSelectorTextContains('.profile-grid', 'Lead Developer PHP '.$uniqueId);
+        self::assertSelectorTextContains('.profile-grid', 'Lyon et périphérie (69)');
+        self::assertSelectorTextContains('.profile-grid', '8 ans');
+    }
+
     public function testAccountCannotManageAnotherAccountsSkill(): void
     {
         $client = self::createClient();

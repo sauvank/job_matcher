@@ -16,10 +16,33 @@
             </div>
         {% endif %}
         <section class="profile-grid">
-            <div class="card"><span>Titre</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>
-            <div class="card"><span>Localisation</span><strong>{{ profile.location ?? 'À renseigner' }}</strong></div>
+            <div class="card"><span>Intitulé de poste</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>
+            <div class="card"><span>Zone géographique</span><strong>{{ profile.location ?? 'À renseigner' }}</strong></div>
             <div class="card"><span>Expérience</span><strong>{{ profile.yearsOfExperience is not null ? profile.yearsOfExperience ~ ' ans' : 'À renseigner' }}</strong></div>
         </section>
+
+        <details class="optimization-disclosure profile-edit-disclosure">
+            <summary>
+                <span class="disclosure-indicator" aria-hidden="true"></span>
+                <div>
+                    <h3>✏️ Modifier mes critères et ma zone géographique</h3>
+                    <p>Ajustez votre intitulé de poste ciblé, votre zone géographique de recherche et vos années d’expérience</p>
+                </div>
+                <span class="disclosure-chevron" aria-hidden="true">▼</span>
+            </summary>
+            <div class="profile-edit-body">
+                {{ form_start(profileDetailsForm, {attr: {class: 'profile-details-form'}}) }}
+                    <div class="profile-details-grid">
+                        {{ form_row(profileDetailsForm.title) }}
+                        {{ form_row(profileDetailsForm.location) }}
+                        {{ form_row(profileDetailsForm.yearsOfExperience) }}
+                    </div>
+                    <div class="profile-details-actions">
+                        <button type="submit" class="button">💾 Enregistrer les modifications</button>
+                    </div>
+                {{ form_end(profileDetailsForm) }}
+            </div>
+        </details>
 
         <section class="section skills-section" id="skills" data-controller="skill-filter">
             <div class="section-heading skills-heading">

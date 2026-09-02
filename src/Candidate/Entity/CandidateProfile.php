@@ -164,6 +164,18 @@ final class CandidateProfile
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public function updateDetails(?string $title, ?string $location, ?int $yearsOfExperience): void
+    {
+        $this->title = $title !== null && trim($title) !== '' ? trim($title) : null;
+        $this->location = $location !== null && trim($location) !== '' ? trim($location) : null;
+        $this->yearsOfExperience = $yearsOfExperience;
+        $this->updatedAt = new \DateTimeImmutable();
+
+        if ($this->activeCvDocument !== null) {
+            $this->activeCvDocument->updateAppliedDetails($this->title, $this->location, $this->yearsOfExperience);
+        }
+    }
+
     /** @param list<string> $preferredContractTypes */
     public function updatePreferences(int $minimumSalary, array $preferredContractTypes, RemotePolicy $remotePolicy): void
     {
