@@ -164,15 +164,17 @@ final class CandidateProfile
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    public function updateDetails(?string $title, ?string $location, ?int $yearsOfExperience): void
+    /** @param list<string> $preferredContractTypes */
+    public function updateDetails(?string $title, ?string $location, ?int $yearsOfExperience, array $preferredContractTypes = []): void
     {
         $this->title = $title !== null && trim($title) !== '' ? trim($title) : null;
         $this->location = $location !== null && trim($location) !== '' ? trim($location) : null;
         $this->yearsOfExperience = $yearsOfExperience;
+        $this->preferredContractTypes = array_values(array_unique(array_filter($preferredContractTypes, static fn (string $v): bool => $v !== '')));
         $this->updatedAt = new \DateTimeImmutable();
 
         if ($this->activeCvDocument !== null) {
-            $this->activeCvDocument->updateAppliedDetails($this->title, $this->location, $this->yearsOfExperience);
+            $this->activeCvDocument->updateAppliedDetails($this->title, $this->location, $this->yearsOfExperience, $this->preferredContractTypes);
         }
     }
 
@@ -180,7 +182,7 @@ final class CandidateProfile
     public function updatePreferences(int $minimumSalary, array $preferredContractTypes, RemotePolicy $remotePolicy): void
     {
         $this->minimumSalary = $minimumSalary;
-        $this->preferredContractTypes = $preferredContractTypes;
+        $this->preferredContractTypes = array_values(array_unique(array_filter($preferredContractTypes, static fn (string $v): bool => $v !== '')));
         $this->preferredRemotePolicy = $remotePolicy;
         $this->updatedAt = new \DateTimeImmutable();
     }
@@ -231,6 +233,7 @@ final class CandidateProfile
         $this->title = $document->getAppliedTitle();
         $this->location = $document->getAppliedLocation();
         $this->yearsOfExperience = $document->getAppliedYearsOfExperience();
+        $this->preferredContractTypes = $document->getAppliedContractTypes();
         $this->rawCvText = $document->getExtractedText();
         $this->updatedAt = new \DateTimeImmutable();
     }

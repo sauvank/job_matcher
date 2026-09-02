@@ -73,6 +73,7 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
             'candidate_profile_details[title]' => 'Lead Developer PHP '.$uniqueId,
             'candidate_profile_details[location]' => 'Lyon et périphérie (69)',
             'candidate_profile_details[yearsOfExperience]' => 8,
+            'candidate_profile_details[preferredContractTypes]' => ['CDI', 'FREELANCE'],
         ]);
         $client->submit($form);
 
@@ -82,6 +83,7 @@ final class CandidateSkillControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.profile-grid', 'Lead Developer PHP '.$uniqueId);
         self::assertSelectorTextContains('.profile-grid', 'Lyon et périphérie (69)');
         self::assertSelectorTextContains('.profile-grid', '8 ans');
+        self::assertSelectorTextContains('.profile-grid', 'CDI, Freelance');
     }
 
     public function testAccountCannotManageAnotherAccountsSkill(): void

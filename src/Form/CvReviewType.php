@@ -7,6 +7,7 @@ namespace App\Form;
 use App\Candidate\Application\DTO\AnalyzedSkill;
 use App\Candidate\Application\DTO\CvAnalysisResult;
 use App\Candidate\Application\DTO\CvReviewData;
+use App\Candidate\Enum\ContractType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -27,6 +28,13 @@ final class CvReviewType extends AbstractType
             ->add('title', TextType::class, ['label' => 'Titre professionnel'])
             ->add('location', TextType::class, ['label' => 'Localisation'])
             ->add('yearsOfExperience', IntegerType::class, ['label' => 'Années d\'expérience', 'required' => false])
+            ->add('contractTypes', ChoiceType::class, [
+                'label' => 'Type(s) de contrat recherché(s)',
+                'choices' => ContractType::choices(),
+                'multiple' => true,
+                'expanded' => true,
+                'required' => false,
+            ])
             ->add('selectedSkills', ChoiceType::class, [
                 'label' => 'Compétences à conserver',
                 'choices' => array_combine($skillNames, $skillNames),

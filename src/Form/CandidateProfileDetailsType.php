@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Candidate\Application\DTO\CandidateProfileDetailsData;
+use App\Candidate\Enum\ContractType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -43,6 +45,14 @@ final class CandidateProfileDetailsType extends AbstractType
                     'max' => 80,
                 ],
                 'help' => 'Nombre total d’années d’expérience professionnelle.',
+            ])
+            ->add('preferredContractTypes', ChoiceType::class, [
+                'label' => 'Type(s) de contrat recherché(s)',
+                'choices' => ContractType::choices(),
+                'multiple' => true,
+                'expanded' => true,
+                'required' => false,
+                'help' => 'Cochez les types de contrat qui vous correspondent (CDI, Freelance, CDD, Alternance, Stage).',
             ]);
     }
 

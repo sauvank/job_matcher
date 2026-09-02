@@ -38,6 +38,7 @@ final class CvReviewDataTest extends TestCase
         self::assertSame('Marseille', $dto->location);
         self::assertSame(4, $dto->yearsOfExperience);
         self::assertSame(['PHP', 'Docker'], $dto->selectedSkills);
+        self::assertSame(['CDI'], $dto->contractTypes);
     }
 
     public function testFromDocumentPrefersAppliedValuesAndAppliedSkills(): void
@@ -52,7 +53,7 @@ final class CvReviewDataTest extends TestCase
             str_repeat('b', 64),
         );
         $document->markAnalyzing('Contenu du CV');
-        $document->markApplied('Architecte PHP', 'Toulouse', 10);
+        $document->markApplied('Architecte PHP', 'Toulouse', 10, ['FREELANCE', 'CDI']);
 
         $phpSkill = new Skill('PHP', 'php', SkillCategory::BACKEND);
         new CandidateSkill($profile, $phpSkill, cvDocument: $document);
@@ -75,17 +76,19 @@ final class CvReviewDataTest extends TestCase
         self::assertSame('Toulouse', $dto->location);
         self::assertSame(10, $dto->yearsOfExperience);
         self::assertSame(['PHP'], $dto->selectedSkills);
+        self::assertSame(['FREELANCE', 'CDI'], $dto->contractTypes);
     }
 
     public function testCandidateProfileDetailsDataFromProfile(): void
     {
         $profile = new CandidateProfile();
-        $profile->updateDetails('Lead Tech', 'Nantes', 8);
+        $profile->updateDetails('Lead Tech', 'Nantes', 8, ['CDI', 'APPRENTICESHIP']);
 
         $dto = CandidateProfileDetailsData::fromProfile($profile);
 
         self::assertSame('Lead Tech', $dto->title);
         self::assertSame('Nantes', $dto->location);
         self::assertSame(8, $dto->yearsOfExperience);
+        self::assertSame(['CDI', 'APPRENTICESHIP'], $dto->preferredContractTypes);
     }
 }

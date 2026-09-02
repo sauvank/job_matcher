@@ -23,13 +23,17 @@ final readonly class ApplyCvAnalysisService
     ) {
     }
 
-    /** @param list<string> $selectedSkillNames */
+    /**
+     * @param list<string> $selectedSkillNames
+     * @param list<string> $contractTypes
+     */
     public function apply(
         CvDocument $document,
         ?string $title,
         ?string $location,
         ?int $yearsOfExperience,
         array $selectedSkillNames,
+        array $contractTypes = [],
     ): void {
         if (!in_array($document->getStatus(), [CvStatus::READY, CvStatus::APPLIED], true) || $document->getAnalysisResult() === null || $document->getExtractedText() === null) {
             throw new \DomainException(CandidateMessage::ANALYSIS_NOT_APPLICABLE);
@@ -37,7 +41,7 @@ final readonly class ApplyCvAnalysisService
 
         $analysis = CvAnalysisResult::fromArray($document->getAnalysisResult());
         $profile = $document->getCandidateProfile();
-        $document->markApplied($title, $location, $yearsOfExperience);
+        $document->markApplied($title, $location, $yearsOfExperience, $contractTypes);
         $profile->activateCvDocument($document);
         $selectedNormalizedNames = array_values(array_unique(array_map(
             fn (string $skillName): string => $this->normalizer->normalize($skillName),

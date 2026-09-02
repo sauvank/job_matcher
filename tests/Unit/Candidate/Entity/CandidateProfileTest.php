@@ -57,36 +57,44 @@ final class CandidateProfileTest extends TestCase
     public function testItCanUpdateDetailsAndSynchronizeActiveCv(): void
     {
         $profile = new CandidateProfile();
-        $cv = $this->appliedDocument($profile, 'dev.pdf', 'Développeur Junior', 'Paris', 1);
+        $cv = $this->appliedDocument($profile, 'dev.pdf', 'Développeur Junior', 'Paris', 1, ['CDI']);
         $profile->activateCvDocument($cv);
 
         self::assertSame('Paris', $profile->getLocation());
         self::assertSame('Paris', $cv->getAppliedLocation());
+        self::assertSame(['CDI'], $profile->getPreferredContractTypes());
+        self::assertSame(['CDI'], $cv->getAppliedContractTypes());
 
-        $profile->updateDetails('  Lead Developer  ', '  Lyon et périphérie  ', 7);
+        $profile->updateDetails('  Lead Developer  ', '  Lyon et périphérie  ', 7, ['FREELANCE', 'CDI']);
 
         self::assertSame('Lead Developer', $profile->getTitle());
         self::assertSame('Lyon et périphérie', $profile->getLocation());
         self::assertSame(7, $profile->getYearsOfExperience());
+        self::assertSame(['FREELANCE', 'CDI'], $profile->getPreferredContractTypes());
         self::assertSame('Lead Developer', $cv->getAppliedTitle());
         self::assertSame('Lyon et périphérie', $cv->getAppliedLocation());
         self::assertSame(7, $cv->getAppliedYearsOfExperience());
+        self::assertSame(['FREELANCE', 'CDI'], $cv->getAppliedContractTypes());
 
-        $profile->updateDetails('', '   ', null);
+        $profile->updateDetails('', '   ', null, []);
         self::assertNull($profile->getTitle());
         self::assertNull($profile->getLocation());
         self::assertNull($profile->getYearsOfExperience());
+        self::assertSame([], $profile->getPreferredContractTypes());
         self::assertNull($cv->getAppliedTitle());
         self::assertNull($cv->getAppliedLocation());
         self::assertNull($cv->getAppliedYearsOfExperience());
+        self::assertSame([], $cv->getAppliedContractTypes());
     }
 
+    /** @param list<string> $contractTypes */
     private function appliedDocument(
         CandidateProfile $profile,
         string $filename,
         string $title,
         string $location,
         int $yearsOfExperience,
+        array $contractTypes = [],
     ): CvDocument {
         $document = new CvDocument(
             $profile,
@@ -97,7 +105,7 @@ final class CandidateProfileTest extends TestCase
             hash('sha256', $filename),
         );
         $document->markAnalyzing('Texte du '.$filename);
-        $document->markApplied($title, $location, $yearsOfExperience);
+        $document->markApplied($title, $location, $yearsOfExperience, $contractTypes);
 
         return $document;
     }

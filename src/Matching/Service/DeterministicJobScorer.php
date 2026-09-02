@@ -221,7 +221,37 @@ final readonly class DeterministicJobScorer
             return self::SCORE_UNKNOWN;
         }
 
-        if (in_array(mb_strtoupper($contract), $preferences, true)) {
+        $normalizedContract = mb_strtoupper($contract);
+        $matches = false;
+        foreach ($preferences as $preference) {
+            $pref = mb_strtoupper($preference);
+            if ($pref === $normalizedContract) {
+                $matches = true;
+                break;
+            }
+            if ($pref === 'FREELANCE' && (str_contains($normalizedContract, 'FREELANCE') || str_contains($normalizedContract, 'INDÉPENDANT') || str_contains($normalizedContract, 'INDEPENDANT'))) {
+                $matches = true;
+                break;
+            }
+            if (($pref === 'APPRENTICESHIP' || $pref === 'ALTERNANCE') && (str_contains($normalizedContract, 'APPRENT') || str_contains($normalizedContract, 'ALTERN') || str_contains($normalizedContract, 'CONTRAT PRO'))) {
+                $matches = true;
+                break;
+            }
+            if (($pref === 'INTERNSHIP' || $pref === 'STAGE') && (str_contains($normalizedContract, 'STAGE') || str_contains($normalizedContract, 'INTERN'))) {
+                $matches = true;
+                break;
+            }
+            if ($pref === 'CDI' && (str_contains($normalizedContract, 'CDI') || str_contains($normalizedContract, 'FULL_TIME') || str_contains($normalizedContract, 'PERMANENT'))) {
+                $matches = true;
+                break;
+            }
+            if ($pref === 'CDD' && (str_contains($normalizedContract, 'CDD') || str_contains($normalizedContract, 'TEMPORARY'))) {
+                $matches = true;
+                break;
+            }
+        }
+
+        if ($matches) {
             $strengths[] = new MatchReason(MatchingMessage::CONTRACT_COMPATIBLE, ['%contract%' => $contract]);
 
             return 100;

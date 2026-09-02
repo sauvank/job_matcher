@@ -122,6 +122,8 @@ final readonly class GeminiJobSemanticAnalyzer implements JobSemanticAnalyzerInt
         return json_encode([
             'candidate' => [
                 'title' => $profile->getTitle(),
+                'location' => $profile->getLocation(),
+                'preferredContractTypes' => $profile->getPreferredContractTypes(),
                 'yearsOfExperience' => $profile->getYearsOfExperience(),
                 'skillsValidated' => $skills,
                 'cvText' => mb_substr((string) $profile->getRawCvText(), 0, 50000),

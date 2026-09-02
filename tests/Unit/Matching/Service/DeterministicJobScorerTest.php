@@ -72,6 +72,40 @@ final class DeterministicJobScorerTest extends TestCase
         self::assertNotEmpty($score->unknowns);
     }
 
+    public function testItRecognizesContractAliases(): void
+    {
+        $profile = $this->profile();
+        $profile->updatePreferences(45000, ['FREELANCE', 'APPRENTICESHIP'], RemotePolicy::HYBRID);
+
+        $freelanceOffer = $this->offer(
+            title: 'Développeur PHP',
+            location: 'Lyon',
+            contract: 'Indépendant / Freelance',
+            minimumSalary: 45000,
+            maximumSalary: 55000,
+            remotePolicy: 'HYBRID',
+            requiredExperience: 3,
+            description: 'PHP Symfony',
+            requiredSkills: ['PHP', 'Symfony'],
+        );
+
+        $alternanceOffer = $this->offer(
+            title: 'Développeur PHP',
+            location: 'Lyon',
+            contract: 'Alternance',
+            minimumSalary: 45000,
+            maximumSalary: 55000,
+            remotePolicy: 'HYBRID',
+            requiredExperience: 3,
+            description: 'PHP Symfony',
+            requiredSkills: ['PHP', 'Symfony'],
+        );
+
+        $scorer = $this->scorer();
+        self::assertSame(100, $scorer->score($profile, $freelanceOffer)->contractScore);
+        self::assertSame(100, $scorer->score($profile, $alternanceOffer)->contractScore);
+    }
+
     public function testItRecognizesACompositeCvSkillFromItsMainLabel(): void
     {
         $profile = $this->profile();

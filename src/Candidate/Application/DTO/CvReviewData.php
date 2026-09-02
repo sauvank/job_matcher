@@ -9,7 +9,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 final class CvReviewData
 {
-    /** @param list<string> $selectedSkills */
+    /**
+     * @param list<string> $selectedSkills
+     * @param list<string> $contractTypes
+     */
     public function __construct(
         #[Assert\NotBlank]
         #[Assert\Length(max: 160)]
@@ -20,6 +23,7 @@ final class CvReviewData
         #[Assert\Range(min: 0, max: 80)]
         public ?int $yearsOfExperience,
         public array $selectedSkills,
+        public array $contractTypes = [],
     ) {
     }
 
@@ -30,6 +34,7 @@ final class CvReviewData
             $analysis->location,
             $analysis->yearsOfExperience,
             array_map(static fn (AnalyzedSkill $skill): string => $skill->name, $analysis->skills),
+            ['CDI'],
         );
     }
 
@@ -45,11 +50,20 @@ final class CvReviewData
             $selectedSkills = array_map(static fn (AnalyzedSkill $skill): string => $skill->name, $analysis->skills);
         }
 
+        $appliedContractTypes = $document->getAppliedContractTypes();
+        if ($appliedContractTypes === []) {
+            $appliedContractTypes = $document->getCandidateProfile()->getPreferredContractTypes();
+        }
+        if ($appliedContractTypes === []) {
+            $appliedContractTypes = ['CDI'];
+        }
+
         return new self(
             $document->getAppliedTitle() ?? $analysis->suggestedTitle,
             $document->getAppliedLocation() ?? $analysis->location,
             $document->getAppliedYearsOfExperience() ?? $analysis->yearsOfExperience,
             $selectedSkills,
+            $appliedContractTypes,
         );
     }
 }

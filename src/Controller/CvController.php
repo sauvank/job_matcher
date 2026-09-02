@@ -117,6 +117,7 @@ final class CvController extends AbstractController
                     $reviewData->location,
                     $reviewData->yearsOfExperience,
                     $reviewData->selectedSkills,
+                    $reviewData->contractTypes,
                 );
                 $jobSearchService->configure($document->getCandidateProfile());
                 $this->addFlash('success', CandidateMessage::ANALYSIS_APPLIED);

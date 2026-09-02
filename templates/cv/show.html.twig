@@ -65,6 +65,20 @@
                     {{ form_row(reviewForm.title) }}
                     {{ form_row(reviewForm.location) }}
                     {{ form_row(reviewForm.yearsOfExperience) }}
+                    <div class="cv-review-contracts">
+                        <span class="form-section-label">Type(s) de contrat recherché(s)</span>
+                        <p class="help-text">Sélectionnez les contrats qui vous correspondent (CDI, Freelance, CDD, Alternance, Stage).</p>
+                        <div class="contract-choice-grid">
+                            {% for choice in reviewForm.contractTypes %}
+                                <label class="contract-choice" for="{{ choice.vars.id }}">
+                                    {{ form_widget(choice) }}
+                                    <span>{{ choice.vars.label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {{ form_errors(reviewForm.contractTypes) }}
+                        {% do reviewForm.contractTypes.setRendered %}
+                    </div>
                     <div class="cv-review-skills">
                         <span class="form-section-label">Compétences à conserver</span>
                         <p>Décochez une compétence si elle ne doit pas rejoindre votre profil. Le niveau proposé pourra être ajusté ensuite dans « Mes compétences ».</p>

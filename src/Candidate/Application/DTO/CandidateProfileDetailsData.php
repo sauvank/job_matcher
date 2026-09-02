@@ -9,6 +9,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 final class CandidateProfileDetailsData
 {
+    /** @param list<string> $preferredContractTypes */
     public function __construct(
         #[Assert\Length(max: 160, maxMessage: 'Le titre ne doit pas dépasser {{ limit }} caractères.')]
         public ?string $title = null,
@@ -16,6 +17,7 @@ final class CandidateProfileDetailsData
         public ?string $location = null,
         #[Assert\Range(min: 0, max: 80, notInRangeMessage: 'L’expérience doit être comprise entre {{ min }} et {{ max }} ans.')]
         public ?int $yearsOfExperience = null,
+        public array $preferredContractTypes = [],
     ) {
     }
 
@@ -25,6 +27,7 @@ final class CandidateProfileDetailsData
             $profile->getTitle(),
             $profile->getLocation(),
             $profile->getYearsOfExperience(),
+            $profile->getPreferredContractTypes(),
         );
     }
 }

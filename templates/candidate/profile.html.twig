@@ -15,10 +15,32 @@
                 <a class="button button-compact secondary" href="{{ path('app_cv_file', {id: profile.activeCvDocument.id}) }}" target="_blank" rel="noopener noreferrer">📄 Voir le document original ↗</a>
             </div>
         {% endif %}
+        {% set contractLabels = {
+            'CDI': 'CDI',
+            'FREELANCE': 'Freelance',
+            'CDD': 'CDD',
+            'APPRENTICESHIP': 'Alternance',
+            'INTERNSHIP': 'Stage',
+            'OTHER': 'Autre'
+        } %}
         <section class="profile-grid">
             <div class="card"><span>Intitulé de poste</span><strong>{{ profile.title ?? 'À renseigner' }}</strong></div>
             <div class="card"><span>Zone géographique</span><strong>{{ profile.location ?? 'À renseigner' }}</strong></div>
             <div class="card"><span>Expérience</span><strong>{{ profile.yearsOfExperience is not null ? profile.yearsOfExperience ~ ' ans' : 'À renseigner' }}</strong></div>
+            <div class="card">
+                <span>Contrats recherchés</span>
+                <strong>
+                    {% if profile.preferredContractTypes is not empty %}
+                        {% set formattedContracts = [] %}
+                        {% for c in profile.preferredContractTypes %}
+                            {% set formattedContracts = formattedContracts|merge([contractLabels[c] ?? c]) %}
+                        {% endfor %}
+                        {{ formattedContracts|join(', ') }}
+                    {% else %}
+                        Tous types
+                    {% endif %}
+                </strong>
+            </div>
         </section>
 
         <details class="optimization-disclosure profile-edit-disclosure">
@@ -26,7 +48,7 @@
                 <span class="disclosure-indicator" aria-hidden="true"></span>
                 <div>
                     <h3>✏️ Modifier mes critères et ma zone géographique</h3>
-                    <p>Ajustez votre intitulé de poste ciblé, votre zone géographique de recherche et vos années d’expérience</p>
+                    <p>Ajustez votre intitulé de poste ciblé, votre zone géographique, vos années d’expérience et vos types de contrat souhaités</p>
                 </div>
                 <span class="disclosure-chevron" aria-hidden="true">▼</span>
             </summary>
@@ -36,6 +58,20 @@
                         {{ form_row(profileDetailsForm.title) }}
                         {{ form_row(profileDetailsForm.location) }}
                         {{ form_row(profileDetailsForm.yearsOfExperience) }}
+                    </div>
+                    <div class="profile-details-contracts">
+                        <span class="form-section-label">Type(s) de contrat recherché(s)</span>
+                        <p class="help-text">Sélectionnez les contrats qui vous correspondent (CDI, Freelance, CDD, Alternance, Stage).</p>
+                        <div class="contract-choice-grid">
+                            {% for choice in profileDetailsForm.preferredContractTypes %}
+                                <label class="contract-choice" for="{{ choice.vars.id }}">
+                                    {{ form_widget(choice) }}
+                                    <span>{{ choice.vars.label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {{ form_errors(profileDetailsForm.preferredContractTypes) }}
+                        {% do profileDetailsForm.preferredContractTypes.setRendered %}
                     </div>
                     <div class="profile-details-actions">
                         <button type="submit" class="button">💾 Enregistrer les modifications</button>

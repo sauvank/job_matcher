@@ -72,6 +72,10 @@ final class CvDocument
     #[ORM\Column(nullable: true)]
     private ?int $appliedYearsOfExperience = null;
 
+    /** @var list<string> */
+    #[ORM\Column(type: Types::JSON)]
+    private array $appliedContractTypes = [];
+
     public function __construct(
         CandidateProfile $candidateProfile,
         string $originalFilename,
@@ -225,21 +229,31 @@ final class CvDocument
         $this->errorMessage = null;
     }
 
-    public function markApplied(?string $title = null, ?string $location = null, ?int $yearsOfExperience = null): void
+    /** @param list<string> $appliedContractTypes */
+    public function markApplied(?string $title = null, ?string $location = null, ?int $yearsOfExperience = null, array $appliedContractTypes = []): void
     {
         $this->status = CvStatus::APPLIED;
         $this->appliedTitle = $title;
         $this->appliedLocation = $location;
         $this->appliedYearsOfExperience = $yearsOfExperience;
+        $this->appliedContractTypes = array_values(array_unique(array_filter($appliedContractTypes, static fn (string $v): bool => $v !== '')));
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    public function updateAppliedDetails(?string $title, ?string $location, ?int $yearsOfExperience): void
+    /** @param list<string> $appliedContractTypes */
+    public function updateAppliedDetails(?string $title, ?string $location, ?int $yearsOfExperience, array $appliedContractTypes = []): void
     {
         $this->appliedTitle = $title;
         $this->appliedLocation = $location;
         $this->appliedYearsOfExperience = $yearsOfExperience;
+        $this->appliedContractTypes = array_values(array_unique(array_filter($appliedContractTypes, static fn (string $v): bool => $v !== '')));
         $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /** @return list<string> */
+    public function getAppliedContractTypes(): array
+    {
+        return $this->appliedContractTypes;
     }
 
     public function requestReanalysis(): void
