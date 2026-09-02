@@ -1,0 +1,192 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Suivi des candidatures · Job Matcher{% endblock %}
+
+{% block body %}
+    {% set providerLabels = {
+        'FAKE': 'Démonstration',
+        'HELLOWORK': 'HelloWork',
+        'INDEED': 'Indeed',
+        'APEC': 'Apec',
+        'FRANCE_TRAVAIL': 'France Travail',
+        'WELCOME_TO_THE_JUNGLE': 'Welcome to the Jungle',
+        'FREE_WORK': 'Free-Work'
+    } %}
+
+    <div class="page-heading page-heading-actions">
+        <div>
+            <p class="eyebrow">Candidatures & Pipeline</p>
+            <h1>Suivi des candidatures</h1>
+            <p>Organisez vos démarches, suivez l'avancement de vos entretiens et annotez vos opportunités au même endroit.</p>
+        </div>
+        <div class="heading-actions">
+            <a class="button secondary" href="{{ path('app_job_offers') }}">📋 Voir la liste des offres</a>
+        </div>
+    </div>
+
+    <div data-controller="kanban" class="kanban-wrapper">
+        <div class="kanban-toolbar">
+            <div class="kanban-search-box">
+                <input
+                    type="search"
+                    placeholder="Filtrer par poste, entreprise, ville ou techno..."
+                    data-kanban-target="searchInput"
+                    data-action="input->kanban#filter"
+                    class="kanban-search-input"
+                    aria-label="Rechercher dans mes candidatures"
+                >
+            </div>
+            {% if searchLabels is not empty %}
+                <div class="kanban-tabs" role="tablist" aria-label="Filtrer par recherche">
+                    <button
+                        type="button"
+                        class="kanban-tab active"
+                        data-kanban-target="filterTab"
+                        data-search-label=""
+                        data-action="click->kanban#selectTab"
+                    >
+                        Toutes
+                    </button>
+                    {% for label in searchLabels %}
+                        <button
+                            type="button"
+                            class="kanban-tab"
+                            data-kanban-target="filterTab"
+                            data-search-label="{{ label }}"
+                            data-action="click->kanban#selectTab"
+                        >
+                            {{ label }}
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="kanban-board">
+            {% for status in kanbanStatuses %}
+                {% set statusMatches = columns[status.value] ?? [] %}
+                <section
+                    class="kanban-column kanban-column-{{ status.value|lower }}"
+                    data-kanban-target="column"
+                    data-kanban-column="{{ status.value }}"
+                    data-action="dragover->kanban#dragOver dragleave->kanban#dragLeave drop->kanban#drop"
+                >
+                    <div class="kanban-column-header">
+                        <div class="kanban-column-title">
+                            <span class="kanban-column-icon" aria-hidden="true">{{ status.icon() }}</span>
+                            <h2>{{ status.label() }}</h2>
+                        </div>
+                        <span class="badge {{ status.badgeClass() }} kanban-column-count" data-kanban-count>
+                            {{ statusMatches|length }}
+                        </span>
+                    </div>
+
+                    <div class="kanban-cards">
+                        {% for match in statusMatches %}
+                            {% set offer = match.jobOffer %}
+                            {% set score = match.semanticScore ?? match.globalScore %}
+                            <article
+                                class="card kanban-card"
+                                draggable="true"
+                                data-kanban-target="card"
+                                data-match-id="{{ match.id }}"
+                                data-status="{{ status.value }}"
+                                data-search-label="{{ offer.source.searchLabel ?? '' }}"
+                                data-token="{{ csrf_token('quick-status-' ~ match.id) }}"
+                                data-status-url="{{ path('app_job_offer_quick_status', {id: match.id}) }}"
+                                data-action="dragstart->kanban#dragStart dragend->kanban#dragEnd"
+                            >
+                                <div class="kanban-card-header">
+                                    <span class="kanban-card-company">{{ offer.company ?? 'Entreprise non précisée' }}</span>
+                                    <span class="badge badge-score {{ score >= 75 ? 'badge-score-high' : (score >= 50 ? 'badge-score-medium' : 'badge-score-low') }}">
+                                        {{ score }}%
+                                    </span>
+                                </div>
+
+                                <h3 class="kanban-card-title">
+                                    <a href="{{ path('app_job_offer_show', {id: match.id}) }}">{{ offer.title }}</a>
+                                </h3>
+
+                                <div class="kanban-card-meta">
+                                    {% if offer.location %}
+                                        <span class="kanban-meta-item">📍 {{ offer.location }}</span>
+                                    {% endif %}
+                                    {% if offer.contractType %}
+                                        <span class="badge">{{ offer.contractType }}</span>
+                                    {% endif %}
+                                    {% if offer.minimumSalary or offer.maximumSalary %}
+                                        <span class="kanban-meta-salary">
+                                            💰
+                                            {% if offer.contractType and 'FREELANCE' in offer.contractType|upper %}
+                                                {{ (offer.maximumSalary ?? offer.minimumSalary) ? ((((offer.maximumSalary ?? offer.minimumSalary) / 218)|round) ~ ' € / j') : '' }}
+                                            {% else %}
+                                                {{ (offer.maximumSalary ?? offer.minimumSalary)|number_format(0, ',', ' ') }} €
+                                            {% endif %}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if match.statusReason %}
+                                    <div class="kanban-card-note-box">
+                                        <p class="kanban-card-note-text">📝 {{ match.statusReason }}</p>
+                                    </div>
+                                {% else %}
+                                    <div class="kanban-card-note-box" hidden>
+                                        <p class="kanban-card-note-text"></p>
+                                    </div>
+                                {% endif %}
+
+                                <form method="post" action="{{ path('app_job_offer_update_note', {id: match.id}) }}" class="kanban-card-note-form" data-action="submit->kanban#saveNote" hidden>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('update-note-' ~ match.id) }}">
+                                    <textarea name="note" rows="2" placeholder="Ajouter une note ou compte-rendu...">{{ match.statusReason }}</textarea>
+                                    <div class="kanban-note-actions">
+                                        <button type="submit" class="button button-compact">Enregistrer</button>
+                                        <button type="button" class="button button-compact secondary" data-action="click->kanban#cancelNote">Annuler</button>
+                                    </div>
+                                </form>
+
+                                <div class="kanban-card-footer">
+                                    <div class="kanban-card-actions">
+                                        <select
+                                            class="kanban-status-select"
+                                            aria-label="Changer le statut"
+                                            data-action="change->kanban#changeStatus"
+                                        >
+                                            {% for opt in kanbanStatuses %}
+                                                <option value="{{ opt.value }}" {{ opt == status ? 'selected' : '' }}>
+                                                    {{ opt.icon() }} {{ opt.label() }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            class="kanban-note-toggle-btn {{ match.statusReason ? 'has-note' : '' }}"
+                                            title="{{ match.statusReason ? 'Modifier la note' : 'Ajouter une note' }}"
+                                            data-action="click->kanban#toggleNoteEditor"
+                                            aria-label="Éditer la note"
+                                        >
+                                            ✏️
+                                        </button>
+                                    </div>
+                                    <a
+                                        href="{{ offer.url }}"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="kanban-external-link"
+                                        title="Voir l'annonce sur {{ providerLabels[offer.source.provider.value] ?? offer.source.provider.value }}"
+                                    >
+                                        ↗
+                                    </a>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+
+                    <div class="kanban-empty-column" {{ statusMatches is not empty ? 'hidden' : '' }}>
+                        <p>Aucune offre</p>
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

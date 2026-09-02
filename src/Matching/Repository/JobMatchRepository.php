@@ -152,6 +152,35 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         return $queryBuilder->getQuery()->getResult();
     }
 
+    /** @return list<JobMatch> */
+    public function findForKanban(CandidateProfile $profile, int $limit = 300): array
+    {
+        $today = (new \DateTimeImmutable('today'))->setTime(0, 0);
+
+        $queryBuilder = $this->createQueryBuilder('jobMatch')
+            ->addSelect('CASE WHEN jobMatch.semanticScore IS NULL THEN 1 ELSE 0 END AS HIDDEN semanticScoreMissing')
+            ->addSelect('jobOffer', 'jobSource')
+            ->innerJoin('jobMatch.jobOffer', 'jobOffer')
+            ->innerJoin('jobOffer.source', 'jobSource')
+            ->andWhere('jobMatch.candidateProfile = :profile')
+            ->andWhere('jobOffer.status != :expiredStatus')
+            ->andWhere('(jobOffer.validThrough IS NULL OR jobOffer.validThrough >= :today)')
+            ->setParameter('profile', $profile)
+            ->setParameter('expiredStatus', JobOfferStatus::EXPIRED)
+            ->setParameter('today', $today)
+            ->orderBy('jobMatch.statusUpdatedAt', 'DESC')
+            ->addOrderBy('semanticScoreMissing', 'ASC')
+            ->addOrderBy('jobMatch.semanticScore', 'DESC')
+            ->addOrderBy('jobMatch.globalScore', 'DESC')
+            ->setMaxResults($limit);
+
+        $this->restrictToActiveCv($queryBuilder, $profile);
+        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+
+        /* @var list<JobMatch> */
+        return $queryBuilder->getQuery()->getResult();
+    }
+
     private function restrictToActiveCv(QueryBuilder $queryBuilder, CandidateProfile $profile): void
     {
         $activeCvDocument = $profile->getActiveCvDocument();

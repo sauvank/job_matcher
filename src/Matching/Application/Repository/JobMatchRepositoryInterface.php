@@ -25,4 +25,7 @@ interface JobMatchRepositoryInterface
 
     /** @return list<JobMatch> */
     public function findMatchesForDailyAlert(CandidateProfile $profile, int $minScore, \DateTimeImmutable $since, int $limit = 20, bool $force = false): array;
+
+    /** @return list<JobMatch> */
+    public function findForKanban(CandidateProfile $profile, int $limit = 300): array;
 }

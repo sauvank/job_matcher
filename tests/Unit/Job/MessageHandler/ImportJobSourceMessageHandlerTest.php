@@ -103,6 +103,11 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
                 return $this->match === null ? [] : [$this->match];
             }
+
+            public function findForKanban(CandidateProfile $profile, int $limit = 300): array
+            {
+                return $this->match === null ? [] : [$this->match];
+            }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(6))->method('flush');

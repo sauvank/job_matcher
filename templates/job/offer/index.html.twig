@@ -34,6 +34,9 @@
         <a href="{{ path('app_job_offers', {view: 'latest'}) }}" class="view-tab {{ (currentView ?? 'ranked') == 'latest' ? 'active' : '' }}" role="tab" aria-selected="{{ (currentView ?? 'ranked') == 'latest' ? 'true' : 'false' }}">
             <span aria-hidden="true">⏱️</span> Dernières annonces trouvées
         </a>
+        <a href="{{ path('app_applications_kanban') }}" class="view-tab" role="tab" data-turbo-frame="_top">
+            <span aria-hidden="true">📊</span> Tableau Kanban
+        </a>
     </div>
 
     {% if hasPendingAnalysis %}

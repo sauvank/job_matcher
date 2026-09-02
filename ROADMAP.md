@@ -38,9 +38,11 @@ Ce document centralise l’ensemble des axes d'évolution de **Job Matcher**, co
 - [ ] **Détection des doublons d'annonces multi-plateformes** : regrouper une même offre diffusée simultanément sur Apec, HelloWork et WTTJ.
 
 ### 1.3 Suivi des candidatures (Mini-ATS & Kanban)
-- [ ] **Tableau de bord de suivi (Kanban)** :
-  - Colonnes : *À postuler* ➔ *Candidature envoyée* ➔ *Entretien RH / Tech* ➔ *Offre reçue* ➔ *Refusé / Archivé*.
-- [ ] **Notes personnelles et contacts** : enregistrer les coordonnées du recruteur, lien de visioconférence et notes de compte-rendu.
+- [x] **Tableau de bord de suivi (Kanban)** :
+  - Colonnes : *À postuler* ➔ *Candidature envoyée* ➔ *En attente* ➔ *Entretien RH / Tech* ➔ *Offre reçue* ➔ *Refusé*.
+  - Glisser-déposer (Drag & Drop natif) réactif et changement de statut instantané sans rechargement.
+  - Filtre textuel et par recherche active.
+- [x] **Notes personnelles et mémo** : enregistrer et modifier les notes et comptes-rendus d'entretien directement sur la carte de candidature.
 - [ ] **Rappels automatiques de relance** : suggestion de relance à J+7 après l'envoi d'une candidature sans réponse.
 
 ### 1.4 Assistant IA pour postuler
