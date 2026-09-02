@@ -54,6 +54,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->addOrderBy('jobMatch.semanticAnalyzedAt', 'DESC')
             ->setMaxResults($limit);
         $this->restrictToActiveCv($queryBuilder, $profile);
+        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -78,6 +79,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->addOrderBy('jobMatch.id', 'DESC')
             ->setMaxResults($limit);
         $this->restrictToActiveCv($queryBuilder, $profile);
+        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -102,6 +104,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->orderBy('jobMatch.semanticAnalyzedAt', 'DESC')
             ->setMaxResults($limit);
         $this->restrictToActiveCv($queryBuilder, $profile);
+        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -143,6 +146,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->setMaxResults($limit);
 
         $this->restrictToActiveCv($queryBuilder, $profile);
+        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
 
         /* @var list<JobMatch> */
         return $queryBuilder->getQuery()->getResult();
@@ -159,5 +163,49 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
 
         $queryBuilder->andWhere('jobSource.cvDocument = :activeCv')
             ->setParameter('activeCv', $activeCvDocument);
+    }
+
+    private function restrictToPreferredContractTypes(QueryBuilder $queryBuilder, CandidateProfile $profile): void
+    {
+        $preferredContractTypes = array_values(array_filter(
+            $profile->getPreferredContractTypes(),
+            static fn (string $type): bool => trim($type) !== ''
+        ));
+
+        if ($preferredContractTypes === []) {
+            return;
+        }
+
+        $orConditions = [];
+        $paramIndex = 0;
+
+        foreach ($preferredContractTypes as $preference) {
+            $pref = mb_strtoupper(trim($preference));
+            if ($pref === 'CDI') {
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%CDI%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%FULL_TIME%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%PERMANENT%'";
+            } elseif ($pref === 'CDD') {
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%CDD%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%TEMPORARY%'";
+            } elseif ($pref === 'FREELANCE') {
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%FREELANCE%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%INDEPENDANT%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%INDÉPENDANT%'";
+            } elseif ($pref === 'APPRENTICESHIP' || $pref === 'ALTERNANCE') {
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%APPRENT%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%ALTERN%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%CONTRAT PRO%'";
+            } elseif ($pref === 'INTERNSHIP' || $pref === 'STAGE') {
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%STAGE%'";
+                $orConditions[] = "UPPER(jobOffer.contractType) LIKE '%INTERN%'";
+            } else {
+                $paramName = 'prefContract_'.$paramIndex++;
+                $orConditions[] = 'UPPER(jobOffer.contractType) LIKE :'.$paramName;
+                $queryBuilder->setParameter($paramName, '%'.$pref.'%');
+            }
+        }
+
+        $queryBuilder->andWhere('('.implode(' OR ', $orConditions).')');
     }
 }

@@ -1059,4 +1059,117 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextNotContains('.offer-list', 'Offre Expirée par Statut '.$uniqueId);
         self::assertSelectorTextNotContains('.offer-list', 'Offre Expirée par Date '.$uniqueId);
     }
+
+    public function testOffersAreFilteredByCandidatePreferredContractTypes(): void
+    {
+        $client = self::createClient();
+        $uniqueId = bin2hex(random_bytes(6));
+        $account = $this->account('contract-filter-'.$uniqueId.'@example.test');
+
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+
+        $profile = $account->getCandidateProfile();
+        $profile->updateDetails('Développeur Backend', 'Lyon', 5, ['CDI']);
+
+        $source = new JobSource(
+            $profile,
+            'HelloWork — Contract Test — '.$uniqueId,
+            'https://example.test/contract-test/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $entityManager->persist($source);
+
+        // 1. CDI offer (compatible)
+        $cdiOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'cdi-'.$uniqueId,
+            url: 'https://example.test/cdi-'.$uniqueId,
+            title: 'Offre CDI '.$uniqueId,
+            company: 'Tech Corp',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre en CDI',
+            publishedAt: new \DateTimeImmutable('yesterday'),
+            validThrough: new \DateTimeImmutable('+30 days'),
+            rawPayload: [],
+        ));
+        $cdiMatch = new JobMatch(
+            $profile,
+            $cdiOffer,
+            new MatchScore(90, 90, 90, 90, 90, 90, 90, 90, 90, [], [], [], []),
+        );
+        $entityManager->persist($cdiOffer);
+        $entityManager->persist($cdiMatch);
+
+        // 2. Freelance offer (incompatible with CDI-only preference)
+        $freelanceOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'freelance-'.$uniqueId,
+            url: 'https://example.test/freelance-'.$uniqueId,
+            title: 'Offre Freelance '.$uniqueId,
+            company: 'Tech Corp',
+            location: 'Lyon',
+            contractType: 'Freelance',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre en Freelance',
+            publishedAt: new \DateTimeImmutable('yesterday'),
+            validThrough: new \DateTimeImmutable('+30 days'),
+            rawPayload: [],
+        ));
+        $freelanceMatch = new JobMatch(
+            $profile,
+            $freelanceOffer,
+            new MatchScore(95, 95, 95, 95, 95, 95, 95, 95, 95, [], [], [], []),
+        );
+        $entityManager->persist($freelanceOffer);
+        $entityManager->persist($freelanceMatch);
+
+        // 3. Stage offer (incompatible with CDI-only preference)
+        $stageOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'stage-'.$uniqueId,
+            url: 'https://example.test/stage-'.$uniqueId,
+            title: 'Offre Stage '.$uniqueId,
+            company: 'Tech Corp',
+            location: 'Lyon',
+            contractType: 'Stage',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre en Stage',
+            publishedAt: new \DateTimeImmutable('yesterday'),
+            validThrough: new \DateTimeImmutable('+30 days'),
+            rawPayload: [],
+        ));
+        $stageMatch = new JobMatch(
+            $profile,
+            $stageOffer,
+            new MatchScore(80, 80, 80, 80, 80, 80, 80, 80, 80, [], [], [], []),
+        );
+        $entityManager->persist($stageOffer);
+        $entityManager->persist($stageMatch);
+        $entityManager->flush();
+
+        $client->loginUser($account);
+
+        // Check ranked view: only CDI should appear
+        $client->request('GET', '/jobs?view=ranked');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.offer-list', 'Offre CDI '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Freelance '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Stage '.$uniqueId);
+
+        // Check latest view: only CDI should appear
+        $client->request('GET', '/jobs?view=latest');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.offer-list', 'Offre CDI '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Freelance '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Stage '.$uniqueId);
+    }
 }
