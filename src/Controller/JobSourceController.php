@@ -55,6 +55,52 @@ final class JobSourceController extends AbstractController
         ]);
     }
 
+    #[Route('/sources/add-multiple', name: 'app_job_sources_add_multiple', methods: ['POST'])]
+    public function addMultiple(
+        Request $request,
+        #[CurrentUser] Account $account,
+        ConfigureCandidateJobSearchService $searchService,
+    ): Response {
+        $profile = $account->getCandidateProfile();
+        $location = $profile->getLocation();
+
+        if ($location === null) {
+            $this->addFlash('error', JobMessage::SEARCH_CRITERIA_REQUIRED);
+
+            return $this->redirectToRoute('app_job_sources');
+        }
+
+        if (!$this->isCsrfTokenValid('add-multiple-sources', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $titles = (array) $request->request->all('titles');
+        $validTitles = array_values(array_unique(array_filter(
+            $titles,
+            static fn (mixed $title): bool => is_string($title) && trim($title) !== '',
+        )));
+
+        if ($validTitles === []) {
+            $this->addFlash('error', 'Veuillez sélectionner au moins un intitulé de recherche.');
+
+            return $this->redirectToRoute('app_job_sources');
+        }
+
+        foreach ($validTitles as $title) {
+            $searchService->configureTitle($profile, $title, $location);
+        }
+
+        $this->addFlash('success', sprintf(
+            '%d recherche%s ajoutée%s et mise%s en attente d’import.',
+            count($validTitles),
+            count($validTitles) > 1 ? 's ont été' : ' a été',
+            count($validTitles) > 1 ? 's' : '',
+            count($validTitles) > 1 ? 's' : '',
+        ));
+
+        return $this->redirectToRoute('app_job_sources');
+    }
+
     #[Route('/sources/{id<\d+>}/sync', name: 'app_job_source_sync', methods: ['POST'])]
     public function sync(
         JobSource $source,

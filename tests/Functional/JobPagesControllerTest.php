@@ -925,13 +925,16 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.smart-searches-box');
         self::assertSelectorTextContains('.smart-searches-list', 'Dev Full Stack PHP');
         self::assertSelectorTextContains('.smart-searches-list', 'Développeur Symfony');
+        self::assertSelectorExists('.smart-search-chip.selectable');
 
-        // Click on the suggested search button
-        $suggestionForm = $crawler->filter('.smart-searches-list form')->first()->form();
+        // Select and submit multiple suggested searches at once
+        $suggestionForm = $crawler->filter('.smart-searches-form')->form([
+            'titles' => ['Dev Full Stack PHP', 'Développeur Symfony'],
+        ]);
         $client->submit($suggestionForm);
 
         self::assertResponseRedirects('/sources');
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash-success', 'La nouvelle recherche a été ajoutée et son import a été mis en attente.');
+        self::assertSelectorTextContains('.flash-success', '2 recherches ont été ajoutées et mises en attente d’import.');
     }
 }

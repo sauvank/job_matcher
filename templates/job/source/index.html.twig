@@ -10,14 +10,7 @@
     </div>
 
     <section class="card form-card">
-        <h2>Ajouter une recherche</h2>
         {% if profileLocation %}
-            <p>Chaque intitulé lance une recherche séparée autour de {{ profileLocation }}.</p>
-            {{ form_start(searchForm) }}
-                {{ form_row(searchForm.title) }}
-                {{ form_row(searchForm.add) }}
-            {{ form_end(searchForm) }}
-
             {% if suggestedSearches is defined and suggestedSearches is not empty %}
                 {% set configuredLabels = [] %}
                 {% for source in sources %}
@@ -25,38 +18,63 @@
                         {% set configuredLabels = configuredLabels|merge([source.searchLabel]) %}
                     {% endif %}
                 {% endfor %}
-                <div class="smart-searches-box">
+
+                <div class="smart-searches-box" data-controller="smart-search-selector">
                     <div class="smart-searches-header">
-                        <h3>💡 Suggestions de recherches intelligentes</h3>
-                        <p>Intitulés optimisés générés automatiquement à partir de votre CV et de vos technologies clés :</p>
+                        <h2>💡 Suggestions de recherches intelligentes</h2>
+                        <p>Sélectionnez un ou plusieurs intitulés ciblés générés à partir de votre CV pour lancer la recherche sur tous les job boards en 1 clic :</p>
                     </div>
-                    <div class="smart-searches-list">
-                        {% for suggestion in suggestedSearches %}
-                            {% set isAlreadyConfigured = false %}
-                            {% for label in configuredLabels %}
-                                {% if label|lower == suggestion|lower %}
-                                    {% set isAlreadyConfigured = true %}
+
+                    <form method="post" action="{{ path('app_job_sources_add_multiple') }}" class="smart-searches-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('add-multiple-sources') }}">
+                        <div class="smart-searches-list">
+                            {% for suggestion in suggestedSearches %}
+                                {% set isAlreadyConfigured = false %}
+                                {% for label in configuredLabels %}
+                                    {% if label|lower == suggestion|lower %}
+                                        {% set isAlreadyConfigured = true %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if isAlreadyConfigured %}
+                                    <span class="smart-search-chip active" title="Cette recherche est déjà configurée">
+                                        ✓ {{ suggestion }}
+                                    </span>
+                                {% else %}
+                                    <label class="smart-search-chip selectable" title="Cocher pour sélectionner « {{ suggestion }} »">
+                                        <input type="checkbox" name="titles[]" value="{{ suggestion }}" data-smart-search-selector-target="checkbox" data-action="change->smart-search-selector#updateCount">
+                                        <span>+ {{ suggestion }}</span>
+                                    </label>
                                 {% endif %}
                             {% endfor %}
+                        </div>
 
-                            {% if isAlreadyConfigured %}
-                                <span class="smart-search-chip active" title="Cette recherche est déjà configurée">
-                                    ✓ {{ suggestion }}
-                                </span>
-                            {% else %}
-                                <form method="post" action="{{ path('app_job_sources') }}" class="inline-form">
-                                    <input type="hidden" name="job_search[title]" value="{{ suggestion }}">
-                                    <input type="hidden" name="job_search[_token]" value="{{ csrf_token('job_search') }}">
-                                    <button type="submit" class="smart-search-chip clickable" title="Ajouter « {{ suggestion }} » sur tous les job boards">
-                                        + {{ suggestion }}
-                                    </button>
-                                </form>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+                        <div class="smart-searches-actions">
+                            <button type="button" class="button button-compact secondary" data-action="smart-search-selector#toggleAll" data-smart-search-selector-target="toggleBtn">
+                                Tout sélectionner
+                            </button>
+                            <button type="submit" class="button button-compact" data-smart-search-selector-target="submitBtn">
+                                🚀 Ajouter et rechercher les intitulés sélectionnés
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="custom-search-divider">
+                    <span>ou saisir un autre intitulé personnalisé</span>
                 </div>
             {% endif %}
+
+            <div class="custom-search-wrap">
+                <h2>Ajouter une recherche manuelle</h2>
+                <p>Chaque intitulé lance une recherche séparée autour de {{ profileLocation }}.</p>
+                {{ form_start(searchForm) }}
+                    {{ form_row(searchForm.title) }}
+                    {{ form_row(searchForm.add) }}
+                {{ form_end(searchForm) }}
+            </div>
         {% else %}
+            <h2>Ajouter une recherche</h2>
             <p>Validez d’abord la localisation de votre profil depuis un CV.</p>
         {% endif %}
     </section>
