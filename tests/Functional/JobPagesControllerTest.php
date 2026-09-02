@@ -909,8 +909,8 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
 
         $profile = $account->getCandidateProfile();
         $cv = new CvDocument($profile, 'cv.pdf', 'cv-'.$uniqueId.'.pdf', 'application/pdf', 1000, hash('sha256', 'cv-'.$uniqueId));
+        $cv->markApplied('Dev Full Stack', 'Lyon', 5, ['CDI']);
         $profile->activateCvDocument($cv);
-        $profile->updateFromCv('Dev Full Stack', 'Lyon', 5, 'CV PHP Symfony');
         $entityManager->persist($cv);
 
         $skillRepo = $entityManager->getRepository(Skill::class);
