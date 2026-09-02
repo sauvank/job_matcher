@@ -263,12 +263,13 @@ export default class extends Controller {
             const cardStatus = card.dataset.offerFilterStatus ?? 'UNPROCESSED';
             const rawScore = card.dataset.offerFilterScore;
             const cardScore = (rawScore !== '' && rawScore !== undefined) ? parseInt(rawScore, 10) : null;
+            const isAnalyzing = card.dataset.offerFilterAnalyzing === '1';
 
             const matchProvider = allSourcesChecked || selectedSources.includes(cardProvider);
             const matchEsn = !excludeEsn || cardEsn === '0';
             const matchStatus = allStatusesChecked || selectedStatuses.includes(cardStatus);
             const matchExcludeNotInterested = !excludeNotInterested || cardStatus !== 'NOT_INTERESTED';
-            const matchMinScore = minScore === 0 || (cardScore !== null && !isNaN(cardScore) && cardScore >= minScore);
+            const matchMinScore = minScore === 0 || isAnalyzing || (cardScore !== null && !isNaN(cardScore) && cardScore >= minScore);
 
             const visible = matchProvider && matchEsn && matchStatus && matchExcludeNotInterested && matchMinScore;
             card.hidden = !visible;

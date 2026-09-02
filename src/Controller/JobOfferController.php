@@ -9,6 +9,7 @@ use App\Matching\DTO\JobApplicationStatusData;
 use App\Matching\DTO\SemanticJobAnalysis;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Enum\JobApplicationStatus;
+use App\Matching\Enum\SemanticAnalysisStatus;
 use App\Matching\Message\AnalyzeJobMatchMessage;
 use App\Matching\Repository\JobMatchRepository;
 use App\Matching\Translation\MatchingMessage;
@@ -49,9 +50,15 @@ final class JobOfferController extends AbstractController
             ? $repository->findLatestForProfile($profile)
             : $repository->findRankedForProfile($profile);
 
+        $hasPendingAnalysis = array_any(
+            $matches,
+            static fn (JobMatch $match): bool => in_array($match->getSemanticAnalysisStatus(), [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)
+        );
+
         return $this->render('job/offer/index.html.twig', [
             'matches' => $matches,
             'currentView' => $view,
+            'hasPendingAnalysis' => $hasPendingAnalysis,
         ]);
     }
 

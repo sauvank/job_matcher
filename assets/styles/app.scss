@@ -196,13 +196,15 @@ p { color: var(--muted); }
 .auth-card input[type="email"], .auth-card input[type="password"] { width: 100%; min-height: 48px; padding: .78rem .9rem; border: 1px solid var(--border-strong); border-radius: .72rem; outline: none; background: var(--surface-soft); color: var(--text); }
 .auth-card input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgb(91 91 214 / 10%); }
 .auth-submit, .google-button { width: 100%; }
-.google-button { border-color: var(--border-strong); background: white; color: var(--text); box-shadow: none; }
-.google-button:hover { border-color: #c7cbd8; background: var(--surface-soft); color: var(--text); }
-.google-button.disabled { opacity: .55; }
-.google-mark { display: grid; width: 1.45rem; height: 1.45rem; margin-right: .55rem; place-items: center; border-radius: 50%; background: #4285f4; color: white; font-size: .78rem; font-weight: 850; }
+.google-button { border: 1px solid var(--border-strong) !important; background: white !important; color: var(--text) !important; box-shadow: var(--shadow-sm); font-weight: 700; }
+.google-button:hover { border-color: #c7cbd8 !important; background: var(--surface-soft) !important; color: var(--text) !important; box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.google-button.disabled { opacity: .55; pointer-events: none; }
+.google-mark { display: inline-grid; width: 1.5rem; height: 1.5rem; margin-right: .65rem; place-items: center; border-radius: 50%; background: #4285f4; color: white !important; font-size: .82rem; font-weight: 850; flex-shrink: 0; }
 .auth-separator { display: flex; margin: 1.4rem 0; align-items: center; gap: .8rem; color: var(--subtle); font-size: .78rem; }
 .auth-separator::before, .auth-separator::after { height: 1px; flex: 1; background: var(--border); content: ""; }
 .auth-error { margin-bottom: 1.2rem; padding: .8rem; border-radius: .7rem; background: var(--danger-soft); color: var(--danger); font-size: .88rem; }
+.analysis-pending-banner { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; padding: .85rem 1.15rem; border: 1px solid #c8def5; border-radius: .85rem; background: var(--info-soft); color: var(--info); font-size: .88rem; font-weight: 600; }
+.analysis-pending-banner .spinner-sm { border-color: #b8d4f0; border-top-color: var(--primary); flex-shrink: 0; }
 .auth-note, .auth-footer { margin: 1rem 0 0; text-align: center; }
 .auth-footer { font-size: .88rem; }
 

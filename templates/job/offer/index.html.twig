@@ -34,6 +34,16 @@
         </a>
     </div>
 
+    {% if hasPendingAnalysis %}
+        <div class="analysis-pending-banner card" data-controller="poll" data-poll-interval-value="3000">
+            <span class="spinner-sm" aria-hidden="true"></span>
+            <div>
+                <strong>Analyse IA en cours :</strong>
+                <span>De nouvelles offres sont actuellement analysées en arrière-plan. Cette page se met à jour automatiquement dès que les scores sont prêts.</span>
+            </div>
+        </div>
+    {% endif %}
+
     {% if matches is empty %}
         <section class="card empty-state">
             <span class="empty-state-icon" aria-hidden="true">⌕</span>
@@ -162,7 +172,8 @@
                 {% set provider = offer.source.provider.value %}
                 {% set isEsn = offer.isEsn %}
                 {% set isNotInterested = match.applicationStatus.value == 'NOT_INTERESTED' %}
-                <article class="offer-card {{ isNotInterested ? 'offer-card-not-interested' : '' }}" id="job-match-{{ match.id }}" data-offer-filter-target="card" data-offer-filter-value="{{ provider }}" data-offer-filter-provider="{{ provider }}" data-offer-filter-esn="{{ isEsn ? '1' : '0' }}" data-offer-filter-status="{{ match.applicationStatus.value }}" data-offer-filter-score="{{ match.semanticScore is not null ? match.semanticScore : '' }}">
+                {% set isAnalyzing = match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
+                <article class="offer-card {{ isNotInterested ? 'offer-card-not-interested' : '' }}" id="job-match-{{ match.id }}" data-offer-filter-target="card" data-offer-filter-value="{{ provider }}" data-offer-filter-provider="{{ provider }}" data-offer-filter-esn="{{ isEsn ? '1' : '0' }}" data-offer-filter-status="{{ match.applicationStatus.value }}" data-offer-filter-score="{{ match.semanticScore is not null ? match.semanticScore : '' }}" data-offer-filter-analyzing="{{ isAnalyzing ? '1' : '0' }}">
                     <div class="offer-score">
                         {% if match.semanticAnalysisStatus.value == 'COMPLETED' %}
                             <span class="score score-{{ match.semanticScore >= 75 ? 'good' : (match.semanticScore >= 50 ? 'medium' : 'low') }}"><strong>{{ match.semanticScore }}</strong><small>%</small></span>

@@ -839,4 +839,55 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         ]);
         self::assertResponseStatusCodeSame(404);
     }
+
+    public function testPendingAnalysisOffersDisplayPendingBannerAndAreNotHidden(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — Loading — '.$uniqueId,
+            'https://example.test/loading-test/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $offer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'loading-'.$uniqueId,
+            url: 'https://example.test/loading-test/'.$uniqueId.'/offer',
+            title: 'Offre en cours d’analyse '.$uniqueId,
+            company: 'Tech Company',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre importée en attente d’analyse sémantique',
+            publishedAt: null,
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $match = new JobMatch(
+            $account->getCandidateProfile(),
+            $offer,
+            new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []),
+        );
+        $match->queueSemanticAnalysis();
+
+        $entityManager->persist($source);
+        $entityManager->persist($offer);
+        $entityManager->persist($match);
+        $entityManager->flush();
+
+        $client->request('GET', '/jobs');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.analysis-pending-banner');
+        self::assertSelectorTextContains('.analysis-pending-banner', 'Analyse IA en cours');
+        self::assertSelectorExists('.offer-card[data-offer-filter-analyzing="1"]');
+        self::assertSelectorTextContains('.offer-score', 'Analyse');
+    }
 }
