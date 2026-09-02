@@ -22,6 +22,9 @@ final class CandidateProfileFunctionalTest extends AuthenticatedWebTestCase
         $crawler = $client->request('GET', '/profile');
 
         self::assertResponseIsSuccessful();
+        self::assertSelectorCount(2, '[data-controller="tag-input"]');
+        self::assertSelectorExists('[data-tag-input-target="value"][name="candidate_profile_details[excludedCompaniesText]"]');
+        self::assertSelectorExists('.remote-policy-field select[name="candidate_profile_details[preferredRemotePolicy]"]');
 
         $form = $crawler->selectButton('💾 Enregistrer les modifications')->form([
             'candidate_profile_details[title]' => 'Senior Backend Engineer',
@@ -47,6 +50,9 @@ final class CandidateProfileFunctionalTest extends AuthenticatedWebTestCase
         self::assertSame(RemotePolicy::REMOTE, $updatedProfile->getPreferredRemotePolicy());
         self::assertSame(['BadCorp', 'EvilESN'], $updatedProfile->getExcludedCompanies());
         self::assertSame(['WordPress', 'Legacy'], $updatedProfile->getExcludedKeywords());
+
+        $updatedProfile->updateDetails(null, null, null);
+        $em->flush();
     }
 
     public function testJobMatchingFiltersOutExcludedCompaniesAndKeywords(): void
@@ -164,5 +170,8 @@ final class CandidateProfileFunctionalTest extends AuthenticatedWebTestCase
         self::assertSelectorTextNotContains('body', 'Lead Symfony Full Remote');
         self::assertSelectorTextNotContains('body', 'CoolTech');
         self::assertSelectorTextNotContains('body', 'OfficeCorp');
+
+        $profile->updateDetails(null, null, null);
+        $em->flush();
     }
 }

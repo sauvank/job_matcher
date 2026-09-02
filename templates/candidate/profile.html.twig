@@ -48,9 +48,16 @@
                 </strong>
             </div>
             {% if profile.excludedCompanies is not empty or profile.excludedKeywords is not empty %}
-                <div class="card">
+                <div class="card profile-exclusions-card">
                     <span>Exclusions actives</span>
-                    <strong>{{ profile.excludedCompanies|length }} boîte(s), {{ profile.excludedKeywords|length }} mot(s)-clé(s)</strong>
+                    <div class="profile-exclusion-summary">
+                        {% for company in profile.excludedCompanies %}
+                            <span class="profile-exclusion-chip">{{ company }}</span>
+                        {% endfor %}
+                        {% for keyword in profile.excludedKeywords %}
+                            <span class="profile-exclusion-chip profile-exclusion-chip-keyword">{{ keyword }}</span>
+                        {% endfor %}
+                    </div>
                 </div>
             {% endif %}
         </section>
@@ -68,12 +75,12 @@
                     <div class="profile-details-grid">
                         {{ form_row(profileDetailsForm.title) }}
                         {{ form_row(profileDetailsForm.location) }}
-                        {{ form_row(profileDetailsForm.preferredRemotePolicy) }}
+                        <div class="remote-policy-field">
+                            {{ form_row(profileDetailsForm.preferredRemotePolicy) }}
+                        </div>
                         {{ form_row(profileDetailsForm.yearsOfExperience) }}
                         {{ form_row(profileDetailsForm.minimumSalary) }}
                         {{ form_row(profileDetailsForm.minimumDailyRate) }}
-                        {{ form_row(profileDetailsForm.excludedCompaniesText) }}
-                        {{ form_row(profileDetailsForm.excludedKeywordsText) }}
                     </div>
                     <div class="profile-details-contracts">
                         <span class="form-section-label">Type(s) de contrat recherché(s)</span>
@@ -88,6 +95,38 @@
                         </div>
                         {{ form_errors(profileDetailsForm.preferredContractTypes) }}
                         {% do profileDetailsForm.preferredContractTypes.setRendered %}
+                    </div>
+                    <div class="profile-exclusions">
+                        <div class="profile-exclusions-heading">
+                            <span class="form-section-label">Exclusions automatiques</span>
+                            <p class="help-text">Ajoutez un terme avec Entrée ou une virgule. Cliquez sur × pour le retirer.</p>
+                        </div>
+                        <div class="profile-exclusion-grid">
+                            {% for field, variant in {
+                                excludedCompaniesText: 'companies',
+                                excludedKeywordsText: 'keywords'
+                            } %}
+                                {% set exclusionField = attribute(profileDetailsForm, field) %}
+                                <div class="profile-tag-field profile-tag-field-{{ variant }}" data-controller="tag-input">
+                                    {{ form_label(exclusionField) }}
+                                    <div class="tag-editor" data-action="click->tag-input#focus">
+                                        <div class="tag-editor-tags" data-tag-input-target="tags"></div>
+                                        <input
+                                            class="tag-editor-input"
+                                            type="text"
+                                            placeholder="{{ variant == 'companies' ? 'Ajouter une entreprise…' : 'Ajouter un mot-clé…' }}"
+                                            autocomplete="off"
+                                            aria-label="{{ variant == 'companies' ? 'Ajouter une entreprise à exclure' : 'Ajouter un mot-clé à exclure' }}"
+                                            data-tag-input-target="input"
+                                            data-action="keydown->tag-input#keydown blur->tag-input#commit paste->tag-input#paste"
+                                        >
+                                    </div>
+                                    {{ form_widget(exclusionField, {attr: {class: 'tag-editor-value', 'data-tag-input-target': 'value'}}) }}
+                                    {{ form_help(exclusionField) }}
+                                    {{ form_errors(exclusionField) }}
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
                     <div class="profile-details-actions">
                         <button type="submit" class="button">💾 Enregistrer les modifications</button>
