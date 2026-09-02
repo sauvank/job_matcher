@@ -932,6 +932,6 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
 
         self::assertResponseRedirects('/sources');
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash-success', 'Recherche enregistrée.');
+        self::assertSelectorTextContains('.flash-success', 'La nouvelle recherche a été ajoutée et son import a été mis en attente.');
     }
 }
