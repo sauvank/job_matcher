@@ -22,6 +22,7 @@ use App\Matching\Enum\JobApplicationStatus;
 use App\Matching\Enum\RequirementAssessment;
 use App\Matching\Enum\RequirementCategory;
 use App\Matching\Enum\RequirementImportance;
+use App\Matching\Repository\JobMatchRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class JobPagesControllerTest extends AuthenticatedWebTestCase
@@ -1171,5 +1172,14 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.offer-list', 'Offre CDI '.$uniqueId);
         self::assertSelectorTextNotContains('.offer-list', 'Offre Freelance '.$uniqueId);
         self::assertSelectorTextNotContains('.offer-list', 'Offre Stage '.$uniqueId);
+
+        // Check daily alerts query: only CDI should be returned
+        $matchRepo = self::getContainer()->get(JobMatchRepository::class);
+        self::assertInstanceOf(JobMatchRepository::class, $matchRepo);
+        $alertMatches = $matchRepo->findMatchesForDailyAlert($profile, 70, new \DateTimeImmutable('-2 days'), 10, true);
+        $alertTitles = array_map(static fn (JobMatch $m): string => $m->getJobOffer()->getTitle(), $alertMatches);
+        self::assertContains('Offre CDI '.$uniqueId, $alertTitles);
+        self::assertNotContains('Offre Freelance '.$uniqueId, $alertTitles);
+        self::assertNotContains('Offre Stage '.$uniqueId, $alertTitles);
     }
 }
