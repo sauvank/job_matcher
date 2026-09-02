@@ -50,12 +50,30 @@ turbo-frame { display: block; }
 .header-inner { display: flex; max-width: 1180px; min-height: 72px; margin: 0 auto; padding: 0 1.5rem; align-items: center; justify-content: space-between; gap: 2rem; }
 .brand { display: inline-flex; align-items: center; gap: .7rem; color: var(--text); font-weight: 750; letter-spacing: -.02em; text-decoration: none; }
 .brand-mark { display: grid; width: 2.15rem; height: 2.15rem; place-items: center; border-radius: .7rem; background: var(--primary); color: white; box-shadow: 0 8px 18px rgb(91 91 214 / 24%); font-size: .72rem; }
-.site-header nav { display: flex; align-items: center; gap: .25rem; }
-.site-header nav form { margin: 0; }
-.site-header nav a, .nav-logout { padding: .65rem .85rem; border: 0; border-radius: .65rem; background: transparent; color: var(--muted); box-shadow: none; font-size: .93rem; font-weight: 600; text-decoration: none; transition: .18s ease; }
-.site-header nav a:hover { background: var(--surface-soft); color: var(--text); }
-.site-header nav a.active { background: var(--primary-soft); color: var(--primary-dark); }
-.nav-logout:hover { background: var(--surface-soft); color: var(--danger); box-shadow: none; transform: none; }
+.site-header nav { display: flex; align-items: center; gap: .65rem; }
+.nav-primary { display: flex; align-items: center; gap: .25rem; }
+.site-header .nav-link, .nav-account-trigger { padding: .65rem .85rem; border: 0; border-radius: .65rem; background: transparent; color: var(--muted); font-size: .93rem; font-weight: 650; text-decoration: none; transition: .18s ease; }
+.site-header .nav-link:hover, .nav-account-trigger:hover { background: var(--surface-soft); color: var(--text); }
+.site-header .nav-link.active, .nav-account-trigger.active { background: var(--primary-soft); color: var(--primary-dark); }
+.nav-account { position: relative; }
+.nav-account summary { list-style: none; }
+.nav-account summary::-webkit-details-marker { display: none; }
+.nav-account-trigger { display: flex; align-items: center; gap: .55rem; cursor: pointer; user-select: none; }
+.nav-account-trigger::after { margin-left: .1rem; border: solid currentcolor; border-width: 0 1.5px 1.5px 0; padding: .2rem; content: ""; transform: translateY(-.1rem) rotate(45deg); transition: transform .18s ease; }
+.nav-account[open] .nav-account-trigger::after { transform: translateY(.1rem) rotate(225deg); }
+.nav-avatar { display: grid; width: 1.65rem; height: 1.65rem; place-items: center; border-radius: .5rem; background: var(--text); color: white; font-size: .72rem; font-weight: 800; }
+.nav-dropdown { position: absolute; top: calc(100% + .65rem); right: 0; display: grid; width: 235px; padding: .65rem; border: 1px solid var(--border); border-radius: .9rem; background: var(--surface); box-shadow: var(--shadow-md); gap: .15rem; }
+.nav-dropdown-label { padding: .35rem .65rem .25rem; color: var(--subtle); font-size: .67rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.nav-dropdown a, .nav-logout { width: 100%; min-height: auto; padding: .6rem .65rem; border: 0; border-radius: .55rem; justify-content: flex-start; background: transparent; color: var(--muted) !important; box-shadow: none; font-size: .88rem; font-weight: 650; text-align: left; text-decoration: none; transition: .18s ease; }
+.nav-dropdown a:hover { background: var(--surface-soft); color: var(--text) !important; }
+.nav-dropdown a.active { background: var(--primary-soft); color: var(--primary-dark) !important; }
+.nav-dropdown form { margin: 0; }
+.nav-dropdown-divider { height: 1px; margin: .4rem .35rem; background: var(--border); }
+.nav-logout:hover { background: var(--danger-soft); color: var(--danger) !important; box-shadow: none; transform: none; }
+.nav-toggle { display: none; min-height: 40px; padding: .55rem .7rem; border-color: var(--border-strong); background: var(--surface); color: var(--text) !important; box-shadow: none; gap: .5rem; font-size: .85rem; }
+.nav-toggle:hover { border-color: var(--border-strong); background: var(--surface-soft); color: var(--text) !important; box-shadow: none; transform: none; }
+.nav-toggle-lines { display: grid; width: 1rem; gap: .2rem; }
+.nav-toggle-lines i { display: block; height: 1.5px; border-radius: 999px; background: currentcolor; }
 .container { width: min(100% - 3rem, 1120px); margin-inline: auto; }
 .main-content { min-height: calc(100vh - 145px); padding-block: clamp(3rem, 6vw, 5.5rem); }
 .site-footer { display: flex; width: min(100% - 3rem, 1120px); min-height: 72px; margin: 0 auto; border-top: 1px solid var(--border); align-items: center; justify-content: space-between; color: var(--subtle); font-size: .84rem; }
@@ -1658,9 +1676,17 @@ button.copied {
 }
 
 @include viewport-at-most(680px) {
-    .header-inner { min-height: auto; padding-block: .8rem; align-items: flex-start; flex-direction: column; gap: .65rem; }
-    .site-header nav { width: 100%; overflow-x: auto; overflow-y: hidden; }
-    .site-header nav a { padding: .55rem .7rem; white-space: nowrap; }
+    .header-inner { min-height: auto; padding: .75rem 1rem; align-items: center; flex-wrap: wrap; gap: .65rem; }
+    .site-header.nav-ready .nav-toggle { display: inline-flex; margin-left: auto; }
+    .site-header nav { width: 100%; padding-top: .35rem; border-top: 1px solid var(--border); align-items: stretch; flex-direction: column; gap: .35rem; }
+    .site-header.nav-ready nav { display: none; }
+    .site-header.nav-ready.nav-open nav { display: flex; }
+    .nav-primary { align-items: stretch; flex-direction: column; }
+    .site-header .nav-link { width: 100%; padding: .65rem .75rem; }
+    .nav-account { width: 100%; }
+    .nav-account-trigger { width: 100%; padding: .65rem .75rem; }
+    .nav-account-trigger::after { margin-right: .2rem; margin-left: auto; }
+    .nav-dropdown { position: static; width: 100%; margin-top: .35rem; border-radius: .7rem; background: var(--surface-soft); box-shadow: none; }
     .container, .site-footer { width: min(100% - 2rem, 1120px); }
     .main-content { padding-block: 2.5rem; }
     .page-heading-actions { align-items: flex-start; flex-direction: column; gap: 1rem; }

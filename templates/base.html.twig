@@ -21,29 +21,49 @@
                 </div>
             </aside>
         {% endif %}
-        <header class="site-header">
+        <header class="site-header" data-controller="navigation">
             {% set currentRoute = app.request.attributes.get('_route') ?? '' %}
             <div class="header-inner">
                 <a class="brand" href="{{ path('app_home') }}" aria-label="Job Matcher — Accueil">
                     <span class="brand-mark" aria-hidden="true">JM</span>
-                    <span>Job Matcher</span>
+                    <span class="brand-name">Job Matcher</span>
                 </a>
                 {% if app.user %}
-                    <nav aria-label="Navigation principale">
-                        <a class="{{ currentRoute starts with 'app_cv' ? 'active' : '' }}" href="{{ path('app_cv_upload') }}">Mon CV</a>
-                        <a class="{{ currentRoute == 'app_candidate_profile' ? 'active' : '' }}" href="{{ path('app_candidate_profile') }}">Mon profil</a>
-                        <a class="{{ currentRoute == 'app_candidate_cv_optimization' ? 'active' : '' }}" href="{{ path('app_candidate_cv_optimization') }}">Optimiser mon CV</a>
-                        <a class="{{ currentRoute starts with 'app_job_source' ? 'active' : '' }}" href="{{ path('app_job_sources') }}">Sources</a>
-                        <a class="{{ currentRoute starts with 'app_job_offer' ? 'active' : '' }}" href="{{ path('app_job_offers') }}">Offres</a>
-                        <a class="{{ currentRoute == 'app_applications_kanban' ? 'active' : '' }}" href="{{ path('app_applications_kanban') }}">Candidatures</a>
-                        {% if is_granted('ROLE_ADMIN') %}
-                            <a class="{{ currentRoute starts with 'app_admin' ? 'active' : '' }}" href="{{ path('app_admin_dashboard') }}">Administration</a>
-                        {% endif %}
-                        <a class="{{ currentRoute starts with 'app_account_' ? 'active' : '' }}" href="{{ path('app_account_settings') }}">Paramètres</a>
-                        <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-                            <button class="nav-logout" type="submit">Déconnexion</button>
-                        </form>
+                    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-navigation" data-navigation-target="toggle" data-action="navigation#toggle">
+                        <span class="nav-toggle-lines" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span>Menu</span>
+                    </button>
+                    <nav id="main-navigation" aria-label="Navigation principale" data-navigation-target="menu">
+                        <div class="nav-primary">
+                            <a class="nav-link {{ currentRoute starts with 'app_job_offer' ? 'active' : '' }}" href="{{ path('app_job_offers') }}">Offres</a>
+                            <a class="nav-link {{ currentRoute == 'app_applications_kanban' ? 'active' : '' }}" href="{{ path('app_applications_kanban') }}">Candidatures</a>
+                            <a class="nav-link {{ currentRoute starts with 'app_job_source' ? 'active' : '' }}" href="{{ path('app_job_sources') }}">Sources</a>
+                        </div>
+                        {% set spaceIsActive = currentRoute starts with 'app_cv'
+                            or currentRoute starts with 'app_candidate_'
+                            or currentRoute starts with 'app_account_'
+                            or currentRoute starts with 'app_admin' %}
+                        <details class="nav-account">
+                            <summary class="nav-account-trigger {{ spaceIsActive ? 'active' : '' }}">
+                                <span class="nav-avatar" aria-hidden="true">{{ app.user.userIdentifier|first|upper }}</span>
+                                <span>Mon espace</span>
+                            </summary>
+                            <div class="nav-dropdown">
+                                <span class="nav-dropdown-label">CV et profil</span>
+                                <a class="{{ currentRoute == 'app_candidate_profile' ? 'active' : '' }}" href="{{ path('app_candidate_profile') }}">Mon profil</a>
+                                <a class="{{ currentRoute starts with 'app_cv' ? 'active' : '' }}" href="{{ path('app_cv_upload') }}">Mes CV</a>
+                                <a class="{{ currentRoute == 'app_candidate_cv_optimization' ? 'active' : '' }}" href="{{ path('app_candidate_cv_optimization') }}">Optimiser mon CV</a>
+                                <span class="nav-dropdown-divider" aria-hidden="true"></span>
+                                <a class="{{ currentRoute starts with 'app_account_' ? 'active' : '' }}" href="{{ path('app_account_settings') }}">Paramètres</a>
+                                {% if is_granted('ROLE_ADMIN') %}
+                                    <a class="{{ currentRoute starts with 'app_admin' ? 'active' : '' }}" href="{{ path('app_admin_dashboard') }}">Administration</a>
+                                {% endif %}
+                                <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                                    <button class="nav-logout" type="submit">Déconnexion</button>
+                                </form>
+                            </div>
+                        </details>
                     </nav>
                 {% else %}
                     <nav aria-label="Navigation principale">

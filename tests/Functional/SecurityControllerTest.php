@@ -22,6 +22,11 @@ final class SecurityControllerTest extends AuthenticatedWebTestCase
 
         $crawler = $client->request('GET', '/profile');
         self::assertSelectorExists('form[action="/deconnexion"][data-turbo="false"]');
+        self::assertSelectorCount(3, '#main-navigation > .nav-primary > a');
+        self::assertSelectorTextContains('.nav-account-trigger', 'Mon espace');
+        self::assertSelectorExists('.nav-dropdown a[href="/cv"]');
+        self::assertSelectorExists('.nav-dropdown a[href="/profile/optimisation-cv"]');
+        self::assertSelectorExists('button.nav-toggle[aria-controls="main-navigation"][aria-expanded="false"]');
         $client->submit($crawler->selectButton('Déconnexion')->form());
 
         self::assertResponseRedirects('/');
