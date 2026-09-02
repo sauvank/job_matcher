@@ -11,6 +11,7 @@
         'FRANCE_TRAVAIL': 'France Travail',
         'WELCOME_TO_THE_JUNGLE': 'Welcome to the Jungle'
     } %}
+    <turbo-frame id="job-offers-frame" target="_top" {% if hasPendingAnalysis %}data-controller="poll" data-poll-interval-value="3000" data-poll-url-value="{{ path('app_job_offers', {view: currentView ?? 'ranked'}) }}"{% endif %}>
     <div data-controller="offer-filter">
     <div class="page-heading page-heading-actions">
         <div>
@@ -35,7 +36,7 @@
     </div>
 
     {% if hasPendingAnalysis %}
-        <div class="analysis-pending-banner card" data-controller="poll" data-poll-interval-value="3000">
+        <div class="analysis-pending-banner card">
             <span class="spinner-sm" aria-hidden="true"></span>
             <div>
                 <strong>Analyse IA en cours :</strong>
@@ -263,4 +264,5 @@
         </section>
     {% endif %}
     </div>
+    </turbo-frame>
 {% endblock %}

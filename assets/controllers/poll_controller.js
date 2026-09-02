@@ -16,13 +16,27 @@ export default class extends Controller {
 
     startPolling() {
         this.timer = setInterval(() => {
-            const frame = this.element.closest('turbo-frame') || this.element;
-            if (typeof frame.reload === 'function') {
-                frame.reload();
-            } else if (window.Turbo) {
-                window.Turbo.visit(this.urlValue || window.location.href, { action: 'replace' });
+            const frame = this.element.closest('turbo-frame') || (this.element.tagName === 'TURBO-FRAME' ? this.element : null);
+            if (frame && typeof frame.reload === 'function') {
+                if (this.urlValue && frame.src && frame.src !== this.urlValue) {
+                    frame.src = this.urlValue;
+                } else {
+                    frame.reload();
+                }
             } else {
-                window.location.reload();
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+
+                if (window.Turbo) {
+                    const restoreScroll = () => {
+                        window.scrollTo(scrollX, scrollY);
+                        document.removeEventListener('turbo:load', restoreScroll);
+                    };
+                    document.addEventListener('turbo:load', restoreScroll, { once: true });
+                    window.Turbo.visit(this.urlValue || window.location.href, { action: 'replace' });
+                } else {
+                    window.location.reload();
+                }
             }
         }, this.intervalValue);
     }
