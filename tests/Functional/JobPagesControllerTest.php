@@ -847,10 +847,11 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
     public function testPendingAnalysisOffersDisplayPendingBannerAndAreNotHidden(): void
     {
         $client = self::createClient();
-        $account = $this->loginOwner($client);
+        $uniqueId = bin2hex(random_bytes(5));
+        $account = $this->account('pending-analysis-'.$uniqueId.'@example.test');
+        $client->loginUser($account);
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
-        $uniqueId = bin2hex(random_bytes(5));
 
         $source = new JobSource(
             $account->getCandidateProfile(),
@@ -892,7 +893,7 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.analysis-pending-banner');
         self::assertSelectorTextContains('.analysis-pending-banner', 'Analyse IA en cours');
         self::assertSelectorExists('.offer-card[data-offer-filter-analyzing="1"]');
-        self::assertSelectorTextContains('.offer-score', 'Analyse');
+        self::assertSelectorTextContains('.offer-card[data-offer-filter-analyzing="1"] .offer-score', 'Analyse');
     }
 
     public function testSmartJobSearchSuggestionsAreDisplayedAndCanBeAdded(): void
