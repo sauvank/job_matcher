@@ -15,6 +15,30 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final class CandidateProfileFunctionalTest extends AuthenticatedWebTestCase
 {
+    public function testRemotePolicyCanBeCleared(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $profile = $account->getCandidateProfile();
+        $profile->setPreferredRemotePolicy(RemotePolicy::REMOTE);
+        /** @var EntityManagerInterface $em */
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->flush();
+
+        $crawler = $client->request('GET', '/profile');
+        self::assertSelectorTextContains('.remote-policy-field option[value=""]', 'Aucune préférence');
+        $form = $crawler->selectButton('💾 Enregistrer les modifications')->form([
+            'candidate_profile_details[preferredRemotePolicy]' => '',
+        ]);
+        $client->submit($form);
+
+        self::assertResponseRedirects('/profile');
+        $em->clear();
+        $updatedProfile = $em->find(\App\Candidate\Entity\CandidateProfile::class, $profile->getId());
+        self::assertNotNull($updatedProfile);
+        self::assertSame(RemotePolicy::UNKNOWN, $updatedProfile->getPreferredRemotePolicy());
+    }
+
     public function testProfileCanBeUpdatedWithRemoteAndExclusions(): void
     {
         $client = self::createClient();

@@ -8,6 +8,7 @@ use App\Candidate\Application\DTO\CandidateProfileDetailsData;
 use App\Candidate\Application\DTO\CandidateSkillData;
 use App\Candidate\Application\Service\ManageCandidateSkillService;
 use App\Candidate\Entity\CandidateSkill;
+use App\Candidate\Enum\RemotePolicy;
 use App\Candidate\Enum\SkillLevel;
 use App\Candidate\Translation\CandidateMessage;
 use App\Form\CandidateProfileDetailsType;
@@ -61,7 +62,7 @@ final class CandidateProfileController extends AbstractController
                 $data->preferredContractTypes,
                 $data->minimumSalary,
                 $data->minimumDailyRate,
-                $data->preferredRemotePolicy,
+                $data->preferredRemotePolicy ?? RemotePolicy::UNKNOWN,
                 $data->getExcludedCompaniesList(),
                 $data->getExcludedKeywordsList(),
             );

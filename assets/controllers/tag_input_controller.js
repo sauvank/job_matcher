@@ -11,7 +11,11 @@ export default class extends Controller {
         this.add(initialTags);
     }
 
-    focus() {
+    focus(event) {
+        if (event.target.closest('.tag-editor-remove')) {
+            return;
+        }
+
         this.inputTarget.focus();
     }
 
@@ -46,6 +50,8 @@ export default class extends Controller {
     }
 
     remove(event) {
+        event.preventDefault();
+        event.stopPropagation();
         const index = Number.parseInt(event.currentTarget.dataset.index, 10);
 
         if (!Number.isInteger(index)) {

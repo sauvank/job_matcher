@@ -19,7 +19,7 @@ enum RemotePolicy: string
             self::HYBRID => 'Hybride',
             self::REMOTE => 'Télétravail complet',
             self::FLEXIBLE => 'Flexible',
-            self::UNKNOWN => 'Non spécifié',
+            self::UNKNOWN => 'Aucune préférence',
         };
     }
 }

@@ -41,12 +41,19 @@ final class CandidateProfileDetailsType extends AbstractType
             ->add('preferredRemotePolicy', EnumType::class, [
                 'class' => RemotePolicy::class,
                 'label' => 'Politique de télétravail souhaitée',
+                'choices' => [
+                    RemotePolicy::REMOTE,
+                    RemotePolicy::HYBRID,
+                    RemotePolicy::ON_SITE,
+                    RemotePolicy::FLEXIBLE,
+                ],
+                'placeholder' => 'Aucune préférence',
                 'choice_label' => static fn (RemotePolicy $policy): string => match ($policy) {
-                    RemotePolicy::UNKNOWN => 'Indifférent / Tous les modes',
                     RemotePolicy::REMOTE => '100% Full Remote (Télétravail complet)',
                     RemotePolicy::HYBRID => 'Hybride (Télétravail partiel)',
                     RemotePolicy::ON_SITE => 'Sur site uniquement',
                     RemotePolicy::FLEXIBLE => 'Flexible',
+                    RemotePolicy::UNKNOWN => 'Aucune préférence',
                 },
                 'required' => false,
                 'help' => 'Mode d’organisation du travail préféré.',

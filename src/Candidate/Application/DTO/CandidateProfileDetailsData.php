@@ -25,7 +25,7 @@ final class CandidateProfileDetailsData
         #[Assert\PositiveOrZero(message: 'Le TJM minimum doit être positif.')]
         #[Assert\Range(min: 0, max: 10000, notInRangeMessage: 'Le TJM minimum doit être inférieur à {{ max }} € / jour.')]
         public ?int $minimumDailyRate = null,
-        public RemotePolicy $preferredRemotePolicy = RemotePolicy::UNKNOWN,
+        public ?RemotePolicy $preferredRemotePolicy = null,
         public ?string $excludedCompaniesText = null,
         public ?string $excludedKeywordsText = null,
     ) {
@@ -40,7 +40,7 @@ final class CandidateProfileDetailsData
             $profile->getPreferredContractTypes(),
             $profile->getMinimumSalary(),
             $profile->getMinimumDailyRate(),
-            $profile->getPreferredRemotePolicy(),
+            $profile->getPreferredRemotePolicy() === RemotePolicy::UNKNOWN ? null : $profile->getPreferredRemotePolicy(),
             implode(', ', $profile->getExcludedCompanies()),
             implode(', ', $profile->getExcludedKeywords()),
         );

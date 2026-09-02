@@ -90,5 +90,6 @@ final class CvReviewDataTest extends TestCase
         self::assertSame('Nantes', $dto->location);
         self::assertSame(8, $dto->yearsOfExperience);
         self::assertSame(['CDI', 'APPRENTICESHIP'], $dto->preferredContractTypes);
+        self::assertNull($dto->preferredRemotePolicy);
     }
 }
