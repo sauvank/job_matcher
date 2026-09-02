@@ -188,7 +188,6 @@ p { color: var(--muted); }
 .configured-search-main > strong { overflow: hidden; color: var(--text); font-size: .95rem; text-overflow: ellipsis; white-space: nowrap; }
 .configured-search-providers { display: flex; flex-wrap: wrap; gap: .3rem; }
 .source-provider-chip { display: inline-flex; padding: .22rem .5rem; border: 1px solid var(--border); border-radius: 999px; background: white; color: var(--muted); font-size: .68rem; font-weight: 750; }
-.source-provider-chip-freelance, .badge-freelance { border-color: #b8ddd0; background: var(--success-soft); color: var(--success); }
 .source-provider-chip-missing { border-style: dashed; border-color: #f0d9ab; background: var(--warning-soft); color: var(--warning); }
 .configured-search form { margin: 0; flex: 0 0 auto; }
 .source-filter-tabs { display: flex; max-width: 100%; margin-bottom: 1rem; padding: 2px 2px 6px; align-items: center; overflow-x: auto; overflow-y: hidden; gap: .5rem; scrollbar-width: thin; }

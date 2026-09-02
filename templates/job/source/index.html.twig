@@ -101,7 +101,7 @@
                                     <strong>{{ searchLabel }}</strong>
                                     <div class="configured-search-providers" aria-label="{{ group.sources|length }} plateformes configurées">
                                         {% for groupedSource in group.sources %}
-                                            <span class="source-provider-chip {{ groupedSource.provider.value == 'FREE_WORK' ? 'source-provider-chip-freelance' : '' }}">
+                                            <span class="source-provider-chip">
                                                 {{ groupedSource.provider.label() }}
                                             </span>
                                         {% endfor %}
@@ -132,7 +132,7 @@
                     {% for source in sources %}
                         <tr id="job-source-{{ source.id }}" data-source-filter-target="row" data-source-filter-value="{{ source.searchLabel }}">
                             <td><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></td>
-                            <td><span class="badge {{ source.provider.value == 'FREE_WORK' ? 'badge-freelance' : '' }}">{{ source.provider.label() }}</span></td>
+                            <td><span class="badge">{{ source.provider.label() }}</span></td>
                             <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</td>
                             <td>
                                 {% if source.syncStatus.value == 'QUEUED' %}
