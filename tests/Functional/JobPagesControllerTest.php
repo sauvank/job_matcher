@@ -902,7 +902,6 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $client = self::createClient();
         $uniqueId = bin2hex(random_bytes(6));
         $account = $this->account('smart-search-'.$uniqueId.'@example.test');
-        $client->loginUser($account);
 
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
@@ -930,6 +929,8 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $entityManager->persist($candSkill2);
         $entityManager->flush();
 
+        $client->loginUser($account);
+
         $crawler = $client->request('GET', '/sources');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('.smart-searches-box');
@@ -938,8 +939,9 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorExists('.smart-search-chip.selectable');
 
         // Select and submit multiple suggested searches at once
-        $suggestionForm = $crawler->filter('.smart-searches-form')->form();
-        $client->submit($suggestionForm, [
+        $token = (string) $crawler->filter('.smart-searches-form input[name="_token"]')->attr('value');
+        $client->request('POST', '/sources/add-multiple', [
+            '_token' => $token,
             'titles' => ['Dev Full Stack PHP', 'Développeur Symfony'],
         ]);
 
