@@ -22,6 +22,7 @@ parameters:
     app.apec.max_offers: 10
     app.francetravail.max_offers: 10
     app.wttj.max_offers: 10
+    app.freework.max_offers: 10
     app.matching.weights:
         stack: 35
         experience: 15
@@ -162,6 +163,10 @@ services:
     App\Job\Provider\WelcomeToTheJungleJobProvider:
         arguments:
             $maxOffers: '%app.wttj.max_offers%'
+
+    App\Job\Provider\FreeWorkJobProvider:
+        arguments:
+            $maxOffers: '%app.freework.max_offers%'
 
     App\Job\Scheduler\JobSyncSchedule:
         arguments:

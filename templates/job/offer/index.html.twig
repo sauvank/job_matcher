@@ -9,7 +9,8 @@
         'INDEED': 'Indeed',
         'APEC': 'Apec',
         'FRANCE_TRAVAIL': 'France Travail',
-        'WELCOME_TO_THE_JUNGLE': 'Welcome to the Jungle'
+        'WELCOME_TO_THE_JUNGLE': 'Welcome to the Jungle',
+        'FREE_WORK': 'Free-Work'
     } %}
     <turbo-frame id="job-offers-frame" target="_top" {% if hasPendingAnalysis %}data-controller="poll" data-poll-interval-value="3000" data-poll-url-value="{{ path('app_job_offers', {view: currentView ?? 'ranked'}) }}"{% endif %}>
     <div data-controller="offer-filter">
