@@ -4,4 +4,5 @@
 - Réaliser un commit après chaque fonctionnalité ou correction cohérente, une fois les vérifications adaptées terminées.
 - Garder les commits atomiques : ne pas mélanger des changements sans rapport et ne pas inclure les modifications préexistantes de l'utilisateur.
 - Employer un message de commit court au format Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `refactor:` ou `chore:`).
+- Toujours exécuter la suite complète des tests (`vendor/bin/phpunit` incluant tests unitaires et fonctionnels) et tous les contrôles QA (PHPStan, PHP-CS-Fixer, linters Twig/YAML) avant chaque commit.
 - Ne pas créer de commit de sauvegarde intermédiaire lorsque le code est incomplet ou que les contrôles requis échouent.
