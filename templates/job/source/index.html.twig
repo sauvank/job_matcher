@@ -17,6 +17,45 @@
                 {{ form_row(searchForm.title) }}
                 {{ form_row(searchForm.add) }}
             {{ form_end(searchForm) }}
+
+            {% if suggestedSearches is defined and suggestedSearches is not empty %}
+                {% set configuredLabels = [] %}
+                {% for source in sources %}
+                    {% if source.searchLabel not in configuredLabels %}
+                        {% set configuredLabels = configuredLabels|merge([source.searchLabel]) %}
+                    {% endif %}
+                {% endfor %}
+                <div class="smart-searches-box">
+                    <div class="smart-searches-header">
+                        <h3>💡 Suggestions de recherches intelligentes</h3>
+                        <p>Intitulés optimisés générés automatiquement à partir de votre CV et de vos technologies clés :</p>
+                    </div>
+                    <div class="smart-searches-list">
+                        {% for suggestion in suggestedSearches %}
+                            {% set isAlreadyConfigured = false %}
+                            {% for label in configuredLabels %}
+                                {% if label|lower == suggestion|lower %}
+                                    {% set isAlreadyConfigured = true %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if isAlreadyConfigured %}
+                                <span class="smart-search-chip active" title="Cette recherche est déjà configurée">
+                                    ✓ {{ suggestion }}
+                                </span>
+                            {% else %}
+                                <form method="post" action="{{ path('app_job_sources') }}" class="inline-form">
+                                    <input type="hidden" name="job_search[title]" value="{{ suggestion }}">
+                                    <input type="hidden" name="job_search[_token]" value="{{ csrf_token('job_search') }}">
+                                    <button type="submit" class="smart-search-chip clickable" title="Ajouter « {{ suggestion }} » sur tous les job boards">
+                                        + {{ suggestion }}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         {% else %}
             <p>Validez d’abord la localisation de votre profil depuis un CV.</p>
         {% endif %}

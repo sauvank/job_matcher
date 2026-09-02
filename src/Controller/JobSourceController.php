@@ -44,12 +44,14 @@ final class JobSourceController extends AbstractController
         }
 
         $sources = $repository->findForProfile($profile);
+        $suggestedSearches = $searchService->getSmartQueries($profile);
 
         return $this->render('job/source/index.html.twig', [
             'sources' => $sources,
             'hasActiveSync' => array_any($sources, static fn (JobSource $source): bool => $source->isSyncPending()),
             'searchForm' => $form,
             'profileLocation' => $profile->getLocation(),
+            'suggestedSearches' => $suggestedSearches,
         ]);
     }
 

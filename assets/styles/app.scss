@@ -167,6 +167,14 @@ p { color: var(--muted); }
 .source-filter-tab:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary) !important; box-shadow: none; transform: none; }
 .source-filter-tab.active { border-color: var(--primary); background: var(--primary); color: white !important; }
 .source-filter-empty { padding: 1rem; border-radius: .75rem; background: var(--surface-soft); color: var(--muted); }
+.smart-searches-box { margin-top: 1.25rem; padding: 1rem 1.25rem; border: 1px solid #b8ddd0; border-radius: .85rem; background: var(--success-soft); }
+.smart-searches-header h3 { margin: 0 0 .25rem; color: var(--text); font-size: .98rem; font-weight: 700; }
+.smart-searches-header p { margin: 0 0 .75rem; color: var(--muted); font-size: .84rem; }
+.smart-searches-list { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.smart-searches-list form { margin: 0; }
+.smart-search-chip { display: inline-flex !important; align-items: center; padding: .42rem .8rem; border: 1px solid var(--border-strong); border-radius: 999px; background: white; color: var(--text) !important; font-size: .84rem; font-weight: 650; text-decoration: none; cursor: pointer; transition: all .15s ease; box-shadow: var(--shadow-sm); min-height: auto; }
+.smart-search-chip.clickable:hover { border-color: var(--primary); background: var(--primary-soft) !important; color: var(--primary) !important; transform: translateY(-1px); }
+.smart-search-chip.active { border-color: #b8ddd0; background: #e8f5f0 !important; color: var(--success) !important; cursor: default; box-shadow: none; }
 
 .upload-card { max-width: 760px; margin-inline: auto; }
 .upload-field { margin: 0; }

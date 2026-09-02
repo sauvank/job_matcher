@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\Candidate\Entity\CandidateSkill;
+use App\Candidate\Entity\Skill;
+use App\Candidate\Enum\SkillCategory;
+use App\Candidate\Enum\SkillLevel;
 use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
@@ -889,5 +893,44 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.analysis-pending-banner', 'Analyse IA en cours');
         self::assertSelectorExists('.offer-card[data-offer-filter-analyzing="1"]');
         self::assertSelectorTextContains('.offer-score', 'Analyse');
+    }
+
+    public function testSmartJobSearchSuggestionsAreDisplayedAndCanBeAdded(): void
+    {
+        $client = self::createClient();
+        $uniqueId = bin2hex(random_bytes(6));
+        $account = $this->account('smart-search-'.$uniqueId.'@example.test');
+        $client->loginUser($account);
+
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+
+        $profile = $account->getCandidateProfile();
+        $profile->updateFromCv('Dev Full Stack', 'Lyon', 5, 'CV PHP Symfony');
+
+        $phpSkill = new Skill('PHP', 'php', SkillCategory::BACKEND);
+        $symfonySkill = new Skill('Symfony', 'symfony', SkillCategory::BACKEND);
+        $entityManager->persist($phpSkill);
+        $entityManager->persist($symfonySkill);
+
+        $candSkill1 = new CandidateSkill($profile, $phpSkill, SkillLevel::EXPERT, isCoreSkill: true);
+        $candSkill2 = new CandidateSkill($profile, $symfonySkill, SkillLevel::ADVANCED, isCoreSkill: true);
+        $entityManager->persist($candSkill1);
+        $entityManager->persist($candSkill2);
+        $entityManager->flush();
+
+        $crawler = $client->request('GET', '/sources');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('.smart-searches-box');
+        self::assertSelectorTextContains('.smart-searches-list', 'Dev Full Stack PHP');
+        self::assertSelectorTextContains('.smart-searches-list', 'Développeur Symfony');
+
+        // Click on the suggested search button
+        $suggestionForm = $crawler->filter('.smart-searches-list form')->first()->form();
+        $client->submit($suggestionForm);
+
+        self::assertResponseRedirects('/sources');
+        $client->followRedirect();
+        self::assertSelectorTextContains('.flash-success', 'Recherche enregistrée.');
     }
 }

@@ -29,6 +29,7 @@ final readonly class ConfigureCandidateJobSearchService
         private WelcomeToTheJungleSearchUrlBuilder $wttjUrlBuilder,
         private EntityManagerInterface $entityManager,
         private MessageBusInterface $messageBus,
+        private SmartJobSearchQueryGenerator $queryGenerator = new SmartJobSearchQueryGenerator(),
     ) {
     }
 
@@ -42,7 +43,28 @@ final readonly class ConfigureCandidateJobSearchService
             throw new \DomainException(JobMessage::SEARCH_CRITERIA_REQUIRED);
         }
 
-        return $this->configureAllProviders($profile, $title, $location);
+        $queries = $this->queryGenerator->generate($profile);
+        if ($queries === []) {
+            $queries = [$title];
+        }
+
+        // Auto-configure the top 3 intelligent queries based on CV skills
+        $queriesToConfigure = array_slice($queries, 0, 3);
+        $allSources = [];
+
+        foreach ($queriesToConfigure as $query) {
+            foreach ($this->configureAllProviders($profile, $query, $location) as $source) {
+                $allSources[] = $source;
+            }
+        }
+
+        return $allSources;
+    }
+
+    /** @return list<string> */
+    public function getSmartQueries(CandidateProfile $profile): array
+    {
+        return $this->queryGenerator->generate($profile);
     }
 
     public function configureTitle(CandidateProfile $profile, string $title, string $location): JobSource
