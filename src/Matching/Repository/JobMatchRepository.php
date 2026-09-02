@@ -36,13 +36,19 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     /** @return list<JobMatch> */
     public function findRankedForProfile(CandidateProfile $profile, int $limit = 100): array
     {
+        $today = (new \DateTimeImmutable('today'))->setTime(0, 0);
+
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('CASE WHEN jobMatch.semanticScore IS NULL THEN 1 ELSE 0 END AS HIDDEN semanticScoreMissing')
             ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
+            ->andWhere('jobOffer.status != :expiredStatus')
+            ->andWhere('(jobOffer.validThrough IS NULL OR jobOffer.validThrough >= :today)')
             ->setParameter('profile', $profile)
+            ->setParameter('expiredStatus', JobOfferStatus::EXPIRED)
+            ->setParameter('today', $today)
             ->orderBy('semanticScoreMissing', 'ASC')
             ->addOrderBy('jobMatch.semanticScore', 'DESC')
             ->addOrderBy('jobMatch.semanticAnalyzedAt', 'DESC')
@@ -55,12 +61,18 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     /** @return list<JobMatch> */
     public function findLatestForProfile(CandidateProfile $profile, int $limit = 100): array
     {
+        $today = (new \DateTimeImmutable('today'))->setTime(0, 0);
+
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
+            ->andWhere('jobOffer.status != :expiredStatus')
+            ->andWhere('(jobOffer.validThrough IS NULL OR jobOffer.validThrough >= :today)')
             ->setParameter('profile', $profile)
+            ->setParameter('expiredStatus', JobOfferStatus::EXPIRED)
+            ->setParameter('today', $today)
             ->orderBy('jobOffer.firstSeenAt', 'DESC')
             ->addOrderBy('jobOffer.publishedAt', 'DESC')
             ->addOrderBy('jobMatch.id', 'DESC')
@@ -73,14 +85,20 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
     /** @return list<JobMatch> */
     public function findCompletedForProfile(CandidateProfile $profile, int $limit = 100): array
     {
+        $today = (new \DateTimeImmutable('today'))->setTime(0, 0);
+
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('jobOffer', 'jobSource')
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
             ->andWhere('jobMatch.semanticAnalysisStatus = :status')
+            ->andWhere('jobOffer.status != :expiredStatus')
+            ->andWhere('(jobOffer.validThrough IS NULL OR jobOffer.validThrough >= :today)')
             ->setParameter('profile', $profile)
             ->setParameter('status', SemanticAnalysisStatus::COMPLETED)
+            ->setParameter('expiredStatus', JobOfferStatus::EXPIRED)
+            ->setParameter('today', $today)
             ->orderBy('jobMatch.semanticAnalyzedAt', 'DESC')
             ->setMaxResults($limit);
         $this->restrictToActiveCv($queryBuilder, $profile);
@@ -96,6 +114,8 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         int $limit = 20,
         bool $force = false,
     ): array {
+        $today = (new \DateTimeImmutable('today'))->setTime(0, 0);
+
         $queryBuilder = $this->createQueryBuilder('jobMatch')
             ->addSelect('CASE WHEN jobMatch.semanticScore IS NOT NULL THEN jobMatch.semanticScore ELSE jobMatch.globalScore END AS HIDDEN effectiveScore')
             ->addSelect('jobOffer', 'jobSource')
@@ -104,6 +124,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->andWhere('jobMatch.candidateProfile = :profile')
             ->andWhere('jobMatch.applicationStatus != :notInterested')
             ->andWhere('jobOffer.status != :expired')
+            ->andWhere('(jobOffer.validThrough IS NULL OR jobOffer.validThrough >= :today)')
             ->andWhere('(jobMatch.semanticScore >= :minScore OR (jobMatch.semanticScore IS NULL AND jobMatch.globalScore >= :minScore))');
 
         if (!$force) {
@@ -114,6 +135,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->setParameter('profile', $profile)
             ->setParameter('notInterested', JobApplicationStatus::NOT_INTERESTED)
             ->setParameter('expired', JobOfferStatus::EXPIRED)
+            ->setParameter('today', $today)
             ->setParameter('minScore', $minScore)
             ->setParameter('since', $since)
             ->orderBy('effectiveScore', 'DESC')

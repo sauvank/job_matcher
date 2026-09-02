@@ -937,4 +937,114 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         $client->followRedirect();
         self::assertSelectorTextContains('.flash-success', '2 recherches ont été ajoutées et mises en attente d’import.');
     }
+
+    public function testExpiredJobOffersAreExcludedFromJobListings(): void
+    {
+        $client = self::createClient();
+        $uniqueId = bin2hex(random_bytes(6));
+        $account = $this->account('expired-offers-'.$uniqueId.'@example.test');
+        $client->loginUser($account);
+
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+
+        $source = new JobSource(
+            $account->getCandidateProfile(),
+            'HelloWork — Expired Test — '.$uniqueId,
+            'https://example.test/expired-test/'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        );
+        $entityManager->persist($source);
+
+        // 1. Active offer
+        $activeOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'active-'.$uniqueId,
+            url: 'https://example.test/active-'.$uniqueId,
+            title: 'Offre Active '.$uniqueId,
+            company: 'Tech Corp',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre toujours active',
+            publishedAt: new \DateTimeImmutable('yesterday'),
+            validThrough: new \DateTimeImmutable('+30 days'),
+            rawPayload: [],
+        ));
+        $activeMatch = new JobMatch(
+            $account->getCandidateProfile(),
+            $activeOffer,
+            new MatchScore(85, 85, 85, 85, 85, 85, 85, 85, 85, [], [], [], []),
+        );
+        $entityManager->persist($activeOffer);
+        $entityManager->persist($activeMatch);
+
+        // 2. Expired by status
+        $expiredStatusOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'expired-status-'.$uniqueId,
+            url: 'https://example.test/expired-status-'.$uniqueId,
+            title: 'Offre Expirée par Statut '.$uniqueId,
+            company: 'Tech Corp',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre au statut expiré',
+            publishedAt: new \DateTimeImmutable('-10 days'),
+            validThrough: null,
+            rawPayload: [],
+        ));
+        $expiredStatusOffer->markExpired();
+        $expiredStatusMatch = new JobMatch(
+            $account->getCandidateProfile(),
+            $expiredStatusOffer,
+            new MatchScore(90, 90, 90, 90, 90, 90, 90, 90, 90, [], [], [], []),
+        );
+        $entityManager->persist($expiredStatusOffer);
+        $entityManager->persist($expiredStatusMatch);
+
+        // 3. Expired by date (validThrough in the past)
+        $expiredDateOffer = new JobOffer($source, new NormalizedJobOffer(
+            externalId: 'expired-date-'.$uniqueId,
+            url: 'https://example.test/expired-date-'.$uniqueId,
+            title: 'Offre Expirée par Date '.$uniqueId,
+            company: 'Tech Corp',
+            location: 'Lyon',
+            contractType: 'CDI',
+            minimumSalary: null,
+            maximumSalary: null,
+            remotePolicy: null,
+            yearsOfExperience: null,
+            description: 'Offre avec date de fin dépassée',
+            publishedAt: new \DateTimeImmutable('-20 days'),
+            validThrough: new \DateTimeImmutable('-2 days'),
+            rawPayload: [],
+        ));
+        $expiredDateMatch = new JobMatch(
+            $account->getCandidateProfile(),
+            $expiredDateOffer,
+            new MatchScore(95, 95, 95, 95, 95, 95, 95, 95, 95, [], [], [], []),
+        );
+        $entityManager->persist($expiredDateOffer);
+        $entityManager->persist($expiredDateMatch);
+        $entityManager->flush();
+
+        // Check ranked view
+        $client->request('GET', '/jobs?view=ranked');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.offer-list', 'Offre Active '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Expirée par Statut '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Expirée par Date '.$uniqueId);
+
+        // Check latest view
+        $client->request('GET', '/jobs?view=latest');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.offer-list', 'Offre Active '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Expirée par Statut '.$uniqueId);
+        self::assertSelectorTextNotContains('.offer-list', 'Offre Expirée par Date '.$uniqueId);
+    }
 }
