@@ -210,6 +210,4 @@ docker compose exec -T php php bin/console app:matches:analyze 18 26
 
 ## Roadmap
 
-1. filtres du dashboard Twig ;
-2. pagination des sources ;
-3. préférences candidat : salaire minimum, contrats et télétravail.
+La feuille de route globale et les prochains jalons (fonctionnalités produit, IA, alertes et sécurité) sont centralisés dans [ROADMAP.md](ROADMAP.md).
