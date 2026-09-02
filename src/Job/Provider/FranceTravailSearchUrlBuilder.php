@@ -20,7 +20,8 @@ final class FranceTravailSearchUrlBuilder
         }
 
         return self::BASE_URL.'?'.http_build_query([
-            'motsCles' => sprintf('%s %s', $title, $location),
+            'motsCles' => $title,
+            'lieux' => $location,
             'offresPartenaires' => 'true',
             'tri' => '0',
         ]);

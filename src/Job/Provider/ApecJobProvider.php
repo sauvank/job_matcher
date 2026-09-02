@@ -36,17 +36,22 @@ final readonly class ApecJobProvider implements JobProviderInterface
 
         if ($searchKeyword !== '') {
             try {
+                $jsonPayload = [
+                    'motsCles' => $motsCles !== '' ? $motsCles : $searchKeyword,
+                    'pagination' => ['range' => $this->maxOffers, 'startIndex' => 0],
+                    'activeFiltre' => false,
+                    'typeClient' => 'CADRE',
+                ];
+                if ($lieux !== '') {
+                    $jsonPayload['lieux'] = [$lieux];
+                }
+
                 $response = $this->httpClient->request('POST', 'https://www.apec.fr/cms/webservices/rechercheOffre', [
                     'headers' => [
                         'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                         'Content-Type' => 'application/json',
                     ],
-                    'json' => [
-                        'motsCles' => $searchKeyword,
-                        'pagination' => ['range' => $this->maxOffers, 'startIndex' => 0],
-                        'activeFiltre' => false,
-                        'typeClient' => 'CADRE',
-                    ],
+                    'json' => $jsonPayload,
                     'timeout' => 15,
                 ]);
 

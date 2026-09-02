@@ -68,7 +68,8 @@ final class WelcomeToTheJungleJobProviderTest extends TestCase
 
         $requestBody = $response->getRequestOptions()['body'] ?? null;
         self::assertIsString($requestBody);
-        self::assertStringContainsString('query=PHP%20Lyon', $requestBody);
+        self::assertStringContainsString('query=PHP', $requestBody);
+        self::assertStringContainsString('aroundQuery=Lyon', $requestBody);
         self::assertStringContainsString('website.reference%3Awttj_fr', $requestBody);
     }
 }

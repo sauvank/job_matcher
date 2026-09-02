@@ -32,17 +32,21 @@ final readonly class WelcomeToTheJungleJobProvider implements JobProviderInterfa
     public function fetch(JobSource $source): iterable
     {
         [$title, $location] = $this->extractCriteria($source->getUrl());
-        $query = trim($title.' '.$location);
-        if ($query === '') {
+        if ($title === '' && $location === '') {
             throw new \RuntimeException(JobMessage::INVALID_URL);
         }
 
-        $params = http_build_query([
-            'query' => $query,
+        $paramsArray = [
+            'query' => $title !== '' ? $title : $location,
             'hitsPerPage' => $this->maxOffers,
             'page' => 0,
             'filters' => 'website.reference:wttj_fr',
-        ], '', '&', PHP_QUERY_RFC3986);
+        ];
+        if ($location !== '') {
+            $paramsArray['aroundQuery'] = $location;
+        }
+
+        $params = http_build_query($paramsArray, '', '&', PHP_QUERY_RFC3986);
 
         $response = $this->httpClient->request('POST', self::SEARCH_ENDPOINT, [
             'headers' => [
