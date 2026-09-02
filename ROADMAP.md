@@ -9,10 +9,10 @@ Ce document centralise l’ensemble des axes d'évolution de **Job Matcher**, co
 | Thème | Statut global | Prochaine étape prioritaire |
 |---|---|---|
 | **1. Collecte & Connecteurs** | 🟢 Opérationnel (6 fournisseurs) | Connecteur Malt & flux RSS tech |
-| **2. Profil & Préférences** | 🟢 Opérationnel | Préférence stricte de télétravail (Full Remote) |
-| **3. Moteur de Matching & IA** | 🟢 Opérationnel (Déterministe + LLM) | Blacklist d'entreprises & mots-clés repoussoirs |
-| **4. Suivi des candidatures (ATS)** | 🟡 Planifié | Tableau Kanban de suivi & historique de candidature |
-| **5. Assistant de postulation IA** | 🟡 Planifié | Générateur de lettre / pitch sur-mesure |
+| **2. Profil & Préférences** | 🟢 Opérationnel | Gestion multi-profils / multi-CV |
+| **3. Moteur de Matching & IA** | 🟢 Opérationnel (Déterministe + LLM) | Pondérations personnalisables et détection des doublons |
+| **4. Suivi des candidatures (ATS)** | 🟢 Opérationnel | Enrichir l'historique des candidatures |
+| **5. Assistant de postulation IA** | 🟢 Opérationnel | Exporter les contenus générés |
 | **6. Alertes & Notifications** | 🟢 Opérationnel (Emails quotidiens) | Notifications instantanées Telegram / Webhook |
 | **7. Sécurité & Infrastructure** | 🟡 En cours (Sandbox & Auth OK) | Headers HTTP (CSP, HSTS) & Sauvegardes chiffrées |
 
@@ -26,8 +26,8 @@ Ce document centralise l’ensemble des axes d'évolution de **Job Matcher**, co
 - [x] Gestion des compétences principales et complémentaires avec auto-complétion et niveau de maîtrise.
 - [x] Prétentions de salaire annuel brut minimum et de TJM minimum (Freelance).
 - [x] Filtrage strict des annonces et alertes selon les types de contrat choisis (CDI, Freelance, CDD, Alternance, Stage).
-- [ ] **Filtrage strict par politique de télétravail** : masquer les annonces ne correspondant pas au mode de travail souhaité (ex: 100% Full Remote uniquement).
-- [ ] **Blacklist d'entreprises & mots-clés repoussoirs** : exclure les ESN non désirées ou les annonces contenant certaines technologies (ex: *WordPress*, *Prestashop*, *Legacy*).
+- [x] **Filtrage strict par politique de télétravail** : masquer les annonces ne correspondant pas au mode de travail souhaité (ex: télétravail requis).
+- [x] **Blacklist d'entreprises & mots-clés repoussoirs** : exclure les ESN non désirées ou les annonces contenant certaines technologies (ex: *WordPress*, *Prestashop*, *Legacy*).
 - [ ] **Gestion Multi-profils / Multi-CVs** : pouvoir basculer entre plusieurs CVs ciblés (ex: *Lead Tech CDI* vs *Expert Backend Freelance*).
 
 ### 1.2 Moteur de Matching & Analyse sémantique

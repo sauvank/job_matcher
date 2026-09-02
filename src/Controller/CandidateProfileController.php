@@ -61,6 +61,9 @@ final class CandidateProfileController extends AbstractController
                 $data->preferredContractTypes,
                 $data->minimumSalary,
                 $data->minimumDailyRate,
+                $data->preferredRemotePolicy,
+                $data->getExcludedCompaniesList(),
+                $data->getExcludedKeywordsList(),
             );
             $entityManager->flush();
             $this->addFlash('success', CandidateMessage::PROFILE_UPDATED);

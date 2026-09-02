@@ -6,8 +6,10 @@ namespace App\Form;
 
 use App\Candidate\Application\DTO\CandidateProfileDetailsData;
 use App\Candidate\Enum\ContractType;
+use App\Candidate\Enum\RemotePolicy;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -35,6 +37,19 @@ final class CandidateProfileDetailsType extends AbstractType
                     'autocomplete' => 'address-level2',
                 ],
                 'help' => 'Ville, département, région ou zone de mobilité ciblée.',
+            ])
+            ->add('preferredRemotePolicy', EnumType::class, [
+                'class' => RemotePolicy::class,
+                'label' => 'Politique de télétravail souhaitée',
+                'choice_label' => static fn (RemotePolicy $policy): string => match ($policy) {
+                    RemotePolicy::UNKNOWN => 'Indifférent / Tous les modes',
+                    RemotePolicy::REMOTE => '100% Full Remote (Télétravail complet)',
+                    RemotePolicy::HYBRID => 'Hybride (Télétravail partiel)',
+                    RemotePolicy::ON_SITE => 'Sur site uniquement',
+                    RemotePolicy::FLEXIBLE => 'Flexible',
+                },
+                'required' => false,
+                'help' => 'Mode d’organisation du travail préféré.',
             ])
             ->add('yearsOfExperience', IntegerType::class, [
                 'label' => 'Années d’expérience globale',
@@ -73,6 +88,22 @@ final class CandidateProfileDetailsType extends AbstractType
                 'expanded' => true,
                 'required' => false,
                 'help' => 'Cochez les types de contrat qui vous correspondent (CDI, Freelance, CDD, Alternance, Stage).',
+            ])
+            ->add('excludedCompaniesText', TextType::class, [
+                'label' => 'Entreprises ou ESN à exclure (Blacklist)',
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Ex : Capgemini, Alten, Sopra Steria, AncienneBoite...',
+                ],
+                'help' => 'Séparez les noms d’entreprises par des virgules. Les offres de ces entreprises seront masquées.',
+            ])
+            ->add('excludedKeywordsText', TextType::class, [
+                'label' => 'Mots-clés / Technologies repoussoirs à exclure',
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'Ex : WordPress, Prestashop, Cobol, Windev, Legacy...',
+                ],
+                'help' => 'Séparez les termes par des virgules. Les offres contenant ces mots-clés seront masquées.',
             ]);
     }
 

@@ -30,6 +30,10 @@
             <div class="card"><span>Salaire min. souhaité</span><strong>{{ profile.minimumSalary ? profile.minimumSalary|number_format(0, ',', ' ') ~ ' € / an' : 'Non renseigné' }}</strong></div>
             <div class="card"><span>TJM min. souhaité</span><strong>{{ profile.minimumDailyRate ? profile.minimumDailyRate ~ ' € / j' : 'Non renseigné' }}</strong></div>
             <div class="card">
+                <span>Télétravail</span>
+                <strong>{{ profile.preferredRemotePolicy.label() }}</strong>
+            </div>
+            <div class="card">
                 <span>Contrats recherchés</span>
                 <strong>
                     {% if profile.preferredContractTypes is not empty %}
@@ -43,13 +47,19 @@
                     {% endif %}
                 </strong>
             </div>
+            {% if profile.excludedCompanies is not empty or profile.excludedKeywords is not empty %}
+                <div class="card">
+                    <span>Exclusions actives</span>
+                    <strong>{{ profile.excludedCompanies|length }} boîte(s), {{ profile.excludedKeywords|length }} mot(s)-clé(s)</strong>
+                </div>
+            {% endif %}
         </section>
 
         <details class="profile-edit-disclosure">
             <summary>
                 <div>
-                    <h3>✏️ Modifier mes critères et rémunération</h3>
-                    <p>Ajustez votre intitulé de poste ciblé, votre zone géographique, vos années d’expérience, votre prétention salariale / TJM et vos types de contrat</p>
+                    <h3>✏️ Modifier mes critères, préférences & exclusions</h3>
+                    <p>Ajustez votre intitulé, localisation, télétravail, prétentions financières, types de contrat et termes exclus (blacklist)</p>
                 </div>
                 <span class="disclosure-chevron" aria-hidden="true">▼</span>
             </summary>
@@ -58,9 +68,12 @@
                     <div class="profile-details-grid">
                         {{ form_row(profileDetailsForm.title) }}
                         {{ form_row(profileDetailsForm.location) }}
+                        {{ form_row(profileDetailsForm.preferredRemotePolicy) }}
                         {{ form_row(profileDetailsForm.yearsOfExperience) }}
                         {{ form_row(profileDetailsForm.minimumSalary) }}
                         {{ form_row(profileDetailsForm.minimumDailyRate) }}
+                        {{ form_row(profileDetailsForm.excludedCompaniesText) }}
+                        {{ form_row(profileDetailsForm.excludedKeywordsText) }}
                     </div>
                     <div class="profile-details-contracts">
                         <span class="form-section-label">Type(s) de contrat recherché(s)</span>

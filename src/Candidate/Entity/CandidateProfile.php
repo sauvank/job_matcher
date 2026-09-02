@@ -39,6 +39,14 @@ final class CandidateProfile
     #[ORM\Column(enumType: RemotePolicy::class)]
     private RemotePolicy $preferredRemotePolicy = RemotePolicy::UNKNOWN;
 
+    /** @var list<string> */
+    #[ORM\Column(type: Types::JSON)]
+    private array $excludedCompanies = [];
+
+    /** @var list<string> */
+    #[ORM\Column(type: Types::JSON)]
+    private array $excludedKeywords = [];
+
     #[ORM\Column(nullable: true)]
     private ?int $yearsOfExperience = null;
 
@@ -108,6 +116,44 @@ final class CandidateProfile
         return $this->preferredRemotePolicy;
     }
 
+    public function setPreferredRemotePolicy(RemotePolicy $remotePolicy): void
+    {
+        $this->preferredRemotePolicy = $remotePolicy;
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /** @return list<string> */
+    public function getExcludedCompanies(): array
+    {
+        return $this->excludedCompanies;
+    }
+
+    /** @param list<string> $excludedCompanies */
+    public function setExcludedCompanies(array $excludedCompanies): void
+    {
+        $this->excludedCompanies = array_values(array_unique(array_filter(
+            array_map(static fn (string $c): string => trim($c), $excludedCompanies),
+            static fn (string $c): bool => $c !== '',
+        )));
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /** @return list<string> */
+    public function getExcludedKeywords(): array
+    {
+        return $this->excludedKeywords;
+    }
+
+    /** @param list<string> $excludedKeywords */
+    public function setExcludedKeywords(array $excludedKeywords): void
+    {
+        $this->excludedKeywords = array_values(array_unique(array_filter(
+            array_map(static fn (string $k): string => trim($k), $excludedKeywords),
+            static fn (string $k): bool => $k !== '',
+        )));
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
     public function getYearsOfExperience(): ?int
     {
         return $this->yearsOfExperience;
@@ -172,7 +218,11 @@ final class CandidateProfile
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    /** @param list<string> $preferredContractTypes */
+    /**
+     * @param list<string> $preferredContractTypes
+     * @param list<string> $excludedCompanies
+     * @param list<string> $excludedKeywords
+     */
     public function updateDetails(
         ?string $title,
         ?string $location,
@@ -180,6 +230,9 @@ final class CandidateProfile
         array $preferredContractTypes = [],
         ?int $minimumSalary = null,
         ?int $minimumDailyRate = null,
+        RemotePolicy $preferredRemotePolicy = RemotePolicy::UNKNOWN,
+        array $excludedCompanies = [],
+        array $excludedKeywords = [],
     ): void {
         $this->title = $title !== null && trim($title) !== '' ? trim($title) : null;
         $this->location = $location !== null && trim($location) !== '' ? trim($location) : null;
@@ -187,6 +240,15 @@ final class CandidateProfile
         $this->preferredContractTypes = array_values(array_unique(array_filter($preferredContractTypes, static fn (string $v): bool => $v !== '')));
         $this->minimumSalary = $minimumSalary;
         $this->minimumDailyRate = $minimumDailyRate;
+        $this->preferredRemotePolicy = $preferredRemotePolicy;
+        $this->excludedCompanies = array_values(array_unique(array_filter(
+            array_map(static fn (string $c): string => trim($c), $excludedCompanies),
+            static fn (string $c): bool => $c !== '',
+        )));
+        $this->excludedKeywords = array_values(array_unique(array_filter(
+            array_map(static fn (string $k): string => trim($k), $excludedKeywords),
+            static fn (string $k): bool => $k !== '',
+        )));
         $this->updatedAt = new \DateTimeImmutable();
 
         if ($this->activeCvDocument !== null) {

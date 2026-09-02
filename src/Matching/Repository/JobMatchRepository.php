@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Matching\Repository;
 
 use App\Candidate\Entity\CandidateProfile;
+use App\Candidate\Enum\RemotePolicy;
 use App\Job\Entity\JobOffer;
 use App\Job\Enum\JobOfferStatus;
 use App\Matching\Application\Repository\JobMatchRepositoryInterface;
@@ -53,8 +54,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->addOrderBy('jobMatch.semanticScore', 'DESC')
             ->addOrderBy('jobMatch.semanticAnalyzedAt', 'DESC')
             ->setMaxResults($limit);
-        $this->restrictToActiveCv($queryBuilder, $profile);
-        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+        $this->applyProfileFilters($queryBuilder, $profile);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -78,8 +78,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->addOrderBy('jobOffer.publishedAt', 'DESC')
             ->addOrderBy('jobMatch.id', 'DESC')
             ->setMaxResults($limit);
-        $this->restrictToActiveCv($queryBuilder, $profile);
-        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+        $this->applyProfileFilters($queryBuilder, $profile);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -103,8 +102,7 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->setParameter('today', $today)
             ->orderBy('jobMatch.semanticAnalyzedAt', 'DESC')
             ->setMaxResults($limit);
-        $this->restrictToActiveCv($queryBuilder, $profile);
-        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+        $this->applyProfileFilters($queryBuilder, $profile);
 
         return $queryBuilder->getQuery()->getResult();
     }
@@ -143,10 +141,10 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->setParameter('since', $since)
             ->orderBy('effectiveScore', 'DESC')
             ->addOrderBy('jobOffer.firstSeenAt', 'DESC')
+            ->addOrderBy('jobMatch.analyzedAt', 'DESC')
             ->setMaxResults($limit);
 
-        $this->restrictToActiveCv($queryBuilder, $profile);
-        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+        $this->applyProfileFilters($queryBuilder, $profile);
 
         /* @var list<JobMatch> */
         return $queryBuilder->getQuery()->getResult();
@@ -174,11 +172,19 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->addOrderBy('jobMatch.globalScore', 'DESC')
             ->setMaxResults($limit);
 
-        $this->restrictToActiveCv($queryBuilder, $profile);
-        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+        $this->applyProfileFilters($queryBuilder, $profile);
 
         /* @var list<JobMatch> */
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    private function applyProfileFilters(QueryBuilder $queryBuilder, CandidateProfile $profile): void
+    {
+        $this->restrictToActiveCv($queryBuilder, $profile);
+        $this->restrictToPreferredContractTypes($queryBuilder, $profile);
+        $this->restrictToExcludedCompanies($queryBuilder, $profile);
+        $this->restrictToExcludedKeywords($queryBuilder, $profile);
+        $this->restrictToRemotePolicy($queryBuilder, $profile);
     }
 
     private function restrictToActiveCv(QueryBuilder $queryBuilder, CandidateProfile $profile): void
@@ -236,5 +242,51 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         }
 
         $queryBuilder->andWhere('('.implode(' OR ', $orConditions).')');
+    }
+
+    private function restrictToExcludedCompanies(QueryBuilder $queryBuilder, CandidateProfile $profile): void
+    {
+        $companies = $profile->getExcludedCompanies();
+        if ($companies === []) {
+            return;
+        }
+
+        foreach ($companies as $idx => $company) {
+            $trimmed = trim($company);
+            if ($trimmed === '') {
+                continue;
+            }
+            $paramName = 'excludedCompany_'.$idx;
+            $queryBuilder->andWhere('(jobOffer.company IS NULL OR UPPER(jobOffer.company) NOT LIKE :'.$paramName.')')
+                ->setParameter($paramName, '%'.mb_strtoupper($trimmed).'%');
+        }
+    }
+
+    private function restrictToExcludedKeywords(QueryBuilder $queryBuilder, CandidateProfile $profile): void
+    {
+        $keywords = $profile->getExcludedKeywords();
+        if ($keywords === []) {
+            return;
+        }
+
+        foreach ($keywords as $idx => $keyword) {
+            $trimmed = trim($keyword);
+            if ($trimmed === '') {
+                continue;
+            }
+            $paramName = 'excludedKeyword_'.$idx;
+            $queryBuilder->andWhere('(UPPER(jobOffer.title) NOT LIKE :'.$paramName.' AND (jobOffer.description IS NULL OR UPPER(jobOffer.description) NOT LIKE :'.$paramName.'))')
+                ->setParameter($paramName, '%'.mb_strtoupper($trimmed).'%');
+        }
+    }
+
+    private function restrictToRemotePolicy(QueryBuilder $queryBuilder, CandidateProfile $profile): void
+    {
+        $policy = $profile->getPreferredRemotePolicy();
+        if ($policy === RemotePolicy::REMOTE) {
+            $queryBuilder->andWhere("(UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%REMOTE%' OR UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%TELETRAVAIL%' OR UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%TÉLÉTRAVAIL%' OR UPPER(jobOffer.title) LIKE '%REMOTE%' OR UPPER(jobOffer.title) LIKE '%TELETRAVAIL%' OR UPPER(jobOffer.title) LIKE '%TÉLÉTRAVAIL%')");
+        } elseif ($policy === RemotePolicy::HYBRID) {
+            $queryBuilder->andWhere("(UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%REMOTE%' OR UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%HYBRID%' OR UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%HYBRIDE%' OR UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%TELETRAVAIL%' OR UPPER(COALESCE(jobOffer.remotePolicy, '')) LIKE '%TÉLÉTRAVAIL%' OR UPPER(jobOffer.title) LIKE '%REMOTE%' OR UPPER(jobOffer.title) LIKE '%HYBRID%')");
+        }
     }
 }
