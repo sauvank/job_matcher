@@ -126,6 +126,12 @@
                                     {% endif %}
                                 </div>
 
+                                {% if status.value == 'APPLIED' and match.statusUpdatedAt and (date().timestamp - match.statusUpdatedAt.timestamp) >= (7 * 86400) %}
+                                    <div class="kanban-card-followup-badge" title="Candidature envoyée il y a plus de 7 jours sans retour">
+                                        <span>⏳ Relance conseillée</span>
+                                    </div>
+                                {% endif %}
+
                                 {% if match.statusReason %}
                                     <div class="kanban-card-note-box">
                                         <p class="kanban-card-note-text">📝 {{ match.statusReason }}</p>

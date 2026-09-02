@@ -135,6 +135,12 @@ services:
             $apiKey: '%env(GEMINI_API_KEY)%'
             $model: '%env(JOB_GEMINI_MODEL)%'
 
+    App\Matching\Service\JobApplicationAssistantService:
+        arguments:
+            $openAiApiKey: '%env(OPENAI_API_KEY)%'
+            $openAiModel: '%env(JOB_OPENAI_MODEL)%'
+            $mode: '%env(CV_ANALYZER)%'
+
     App\Job\Provider\JobProviderRegistry:
         arguments:
             $providers: !tagged_iterator app.job_provider

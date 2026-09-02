@@ -43,12 +43,14 @@ Ce document centralise l’ensemble des axes d'évolution de **Job Matcher**, co
   - Glisser-déposer (Drag & Drop natif) réactif et changement de statut instantané sans rechargement.
   - Filtre textuel et par recherche active.
 - [x] **Notes personnelles et mémo** : enregistrer et modifier les notes et comptes-rendus d'entretien directement sur la carte de candidature.
-- [ ] **Rappels automatiques de relance** : suggestion de relance à J+7 après l'envoi d'une candidature sans réponse.
+- [x] **Rappels automatiques de relance** : suggestion de relance à J+7 après l'envoi d'une candidature sans réponse (badges d'alerte sur le Kanban et la fiche de l'offre).
 
 ### 1.4 Assistant IA pour postuler
-- [ ] **Générateur de pitch / mail d'accroche** : rédaction d'un message concis mettant en valeur les compétences communes identifiées par le matching.
-- [ ] **Générateur de lettre de motivation sur-mesure** : génération d'un document personnalisé adapté à l'offre et au CV actif.
-- [ ] **Préparateur d'entretien technique** : génération de questions pièges ou techniques basées sur les exigences de l'annonce et les écarts du CV.
+- [x] **Générateur de pitch / mail d'accroche** : rédaction d'un message concis et percutant mettant en valeur les compétences clés et les points forts du matching.
+- [x] **Générateur de lettre de motivation sur-mesure** : génération d'un document personnalisé structuré (Vous / Moi / Nous) adapté à l'offre et au CV actif.
+- [x] **Préparateur d'entretien technique & RH** : génération des questions probables du recruteur, décryptage de ses attentes et conseils de réponse recommandés.
+- [x] **Message de relance à J+7** : modèle de relance poli et concis prêt à l'emploi.
+- [x] **Copie en un clic** : contrôleur Stimulus Clipboard avec confirmation visuelle immédiate.
 
 ### 1.5 Connecteurs & Sources d'offres
 - [x] **HelloWork** (synchronisation automatique).

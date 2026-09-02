@@ -1431,6 +1431,205 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monos
     }
 }
 
+.kanban-card-followup-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .5rem;
+    border-radius: .4rem;
+    background: var(--warning-soft);
+    border: 1px solid rgba(164, 100, 8, 0.25);
+    color: var(--warning);
+    font-size: .75rem;
+    font-weight: 700;
+    margin-bottom: .45rem;
+}
+
+.followup-alert-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    border-radius: .85rem;
+    background: var(--warning-soft);
+    border: 1px solid rgba(164, 100, 8, 0.3);
+    color: var(--warning);
+    margin-bottom: 1.25rem;
+
+    .followup-alert-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    strong {
+        display: block;
+        font-size: .88rem;
+        margin-bottom: .2rem;
+    }
+
+    p {
+        margin: 0;
+        font-size: .8rem;
+        color: #7b4a04;
+        line-height: 1.4;
+    }
+}
+
+/* Assistant IA de postulation styles */
+.assistant-card {
+    margin-top: 1.5rem;
+}
+
+.assistant-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+    margin-top: 1.25rem;
+}
+
+.assistant-disclosure {
+    border: 1px solid var(--border);
+    border-radius: .85rem;
+    background: var(--surface-soft);
+    overflow: hidden;
+    transition: border-color .15s ease;
+
+    &[open] {
+        border-color: var(--primary);
+        background: var(--surface);
+
+        summary {
+            background: var(--surface-soft);
+            border-bottom: 1px solid var(--border);
+        }
+    }
+
+    summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: .85rem 1.15rem;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 700;
+        font-size: .92rem;
+        color: var(--text);
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &:hover {
+            background: var(--surface-soft);
+            color: var(--primary);
+        }
+    }
+}
+
+.assistant-disclosure-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.assistant-disclosure-hint {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface);
+    padding: .15rem .55rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+}
+
+.assistant-content {
+    padding: 1rem 1.15rem;
+}
+
+.assistant-copy-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .65rem;
+}
+
+.assistant-badge {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--subtle);
+}
+
+.assistant-textarea {
+    width: 100%;
+    padding: .85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: .65rem;
+    background: var(--surface-soft);
+    color: var(--text);
+    font-size: .88rem;
+    line-height: 1.6;
+    resize: vertical;
+    font-family: inherit;
+    box-sizing: border-box;
+
+    &:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: var(--surface);
+    }
+}
+
+.interview-questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.interview-question-card {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    background: var(--surface-soft);
+
+    h4 {
+        margin: 0 0 .5rem;
+        font-size: .93rem;
+        font-weight: 750;
+        color: var(--text);
+    }
+}
+
+.interview-context {
+    margin: 0 0 .5rem;
+    font-size: .82rem;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.interview-advice {
+    background: var(--surface);
+    border-left: 3px solid var(--primary);
+    padding: .5rem .75rem;
+    border-radius: .4rem;
+
+    p {
+        margin: 0;
+        font-size: .82rem;
+        color: var(--text);
+        line-height: 1.45;
+    }
+}
+
+button.copied {
+    background: var(--success) !important;
+    border-color: var(--success) !important;
+    color: white !important;
+}
+
 @include viewport-at-most(850px) {
     .settings-grid { grid-template-columns: 1fr; }
     .auth-shell { max-width: 520px; grid-template-columns: 1fr; gap: 2rem; }

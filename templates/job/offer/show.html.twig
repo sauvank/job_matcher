@@ -149,6 +149,83 @@
                     <p>L’analyse complète lit toutes les missions, exigences, responsabilités, qualités attendues et conditions de travail, puis les compare au texte du CV avec des preuves.</p>
                 {% endif %}
             </section>
+
+            {% if assistantResult %}
+                <section class="card assistant-card" id="assistant-postulation">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Aide à la candidature</p>
+                            <h2>✍️ Assistant de postulation & Entretien</h2>
+                        </div>
+                    </div>
+                    <p class="help-text">Documents prêts à l'emploi rédigés sur-mesure à partir de vos points forts et des exigences de l'offre.</p>
+
+                    <div class="assistant-tabs" role="tablist">
+                        <details class="assistant-disclosure" open>
+                            <summary>
+                                <span class="assistant-disclosure-title">📨 Message d’accroche (LinkedIn / Email court)</span>
+                                <span class="assistant-disclosure-hint">Pour premier contact</span>
+                            </summary>
+                            <div class="assistant-content" data-controller="clipboard">
+                                <div class="assistant-copy-bar">
+                                    <span class="assistant-badge">Format court</span>
+                                    <button type="button" class="button button-compact secondary" data-clipboard-target="button" data-action="click->clipboard#copy">📋 Copier le message</button>
+                                </div>
+                                <textarea readonly class="assistant-textarea" data-clipboard-target="source" rows="7">{{ assistantResult.pitch }}</textarea>
+                            </div>
+                        </details>
+
+                        <details class="assistant-disclosure">
+                            <summary>
+                                <span class="assistant-disclosure-title">📄 Lettre de motivation sur-mesure</span>
+                                <span class="assistant-disclosure-hint">Pour dossier formel</span>
+                            </summary>
+                            <div class="assistant-content" data-controller="clipboard">
+                                <div class="assistant-copy-bar">
+                                    <span class="assistant-badge">Format complet</span>
+                                    <button type="button" class="button button-compact secondary" data-clipboard-target="button" data-action="click->clipboard#copy">📋 Copier la lettre</button>
+                                </div>
+                                <textarea readonly class="assistant-textarea" data-clipboard-target="source" rows="14">{{ assistantResult.coverLetter }}</textarea>
+                            </div>
+                        </details>
+
+                        <details class="assistant-disclosure">
+                            <summary>
+                                <span class="assistant-disclosure-title">🗣️ Préparateur d’entretien (Questions & Réponses)</span>
+                                <span class="assistant-disclosure-hint">{{ assistantResult.interviewQuestions|length }} questions clés</span>
+                            </summary>
+                            <div class="assistant-content">
+                                <div class="interview-questions-list">
+                                    {% for item in assistantResult.interviewQuestions %}
+                                        <article class="interview-question-card">
+                                            <h4>❓ {{ item.question }}</h4>
+                                            <p class="interview-context"><span class="field-label">Objectif recruteur :</span> {{ item.context }}</p>
+                                            <div class="interview-advice">
+                                                <span class="field-label">Conseil de réponse :</span>
+                                                <p>{{ item.suggestedAnswer }}</p>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="assistant-disclosure">
+                            <summary>
+                                <span class="assistant-disclosure-title">⏳ Message de relance (J+7)</span>
+                                <span class="assistant-disclosure-hint">Sans réponse</span>
+                            </summary>
+                            <div class="assistant-content" data-controller="clipboard">
+                                <div class="assistant-copy-bar">
+                                    <span class="assistant-badge">Relance polie</span>
+                                    <button type="button" class="button button-compact secondary" data-clipboard-target="button" data-action="click->clipboard#copy">📋 Copier la relance</button>
+                                </div>
+                                <textarea readonly class="assistant-textarea" data-clipboard-target="source" rows="7">{{ assistantResult.followUpMessage }}</textarea>
+                            </div>
+                        </details>
+                    </div>
+                </section>
+            {% endif %}
         </div>
 
         <aside class="offer-detail-sidebar">
@@ -164,6 +241,16 @@
                 </div>
 
                 <div class="status-tracking-layout">
+                    {% if match.applicationStatus.value == 'APPLIED' and match.statusUpdatedAt and (date().timestamp - match.statusUpdatedAt.timestamp) >= (7 * 86400) %}
+                        <div class="followup-alert-banner">
+                            <span class="followup-alert-icon" aria-hidden="true">⏳</span>
+                            <div>
+                                <strong>Relance recommandée</strong>
+                                <p>Candidature transmise il y a plus de 7 jours sans retour. Vous pouvez utiliser le message de relance rédigé par l'assistant.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
                     <div class="status-current-display">
                         <div class="status-current-badge-wrap">
                             <span class="status-current-label">Statut actuel</span>

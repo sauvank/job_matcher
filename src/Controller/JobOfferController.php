@@ -63,10 +63,14 @@ final class JobOfferController extends AbstractController
     }
 
     #[Route('/jobs/{id<\d+>}', name: 'app_job_offer_show', methods: ['GET'])]
-    public function show(JobMatch $match, #[CurrentUser] Account $account): Response
-    {
+    public function show(
+        JobMatch $match,
+        #[CurrentUser] Account $account,
+        \App\Matching\Service\JobApplicationAssistantService $assistantService,
+    ): Response {
         $this->assertOwnsMatch($account, $match);
         $semanticAnalysis = $match->getSemanticAnalysis();
+        $parsedAnalysis = $semanticAnalysis === null ? null : SemanticJobAnalysis::fromArray($semanticAnalysis);
 
         $statusData = new JobApplicationStatusData();
         $statusData->status = $match->getApplicationStatus();
@@ -75,10 +79,13 @@ final class JobOfferController extends AbstractController
             'action' => $this->generateUrl('app_job_offer_update_status', ['id' => $match->getId()]),
         ]);
 
+        $assistantResult = $assistantService->generate($account->getCandidateProfile(), $match->getJobOffer(), $parsedAnalysis);
+
         return $this->render('job/offer/show.html.twig', [
             'match' => $match,
-            'semanticAnalysis' => $semanticAnalysis === null ? null : SemanticJobAnalysis::fromArray($semanticAnalysis),
+            'semanticAnalysis' => $parsedAnalysis,
             'statusForm' => $statusForm->createView(),
+            'assistantResult' => $assistantResult,
         ]);
     }
 
