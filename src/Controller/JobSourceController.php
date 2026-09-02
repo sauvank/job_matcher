@@ -8,6 +8,7 @@ use App\Form\JobSearchType;
 use App\Job\Application\Service\ConfigureCandidateJobSearchService;
 use App\Job\DTO\JobSearchData;
 use App\Job\Entity\JobSource;
+use App\Job\Enum\JobProviderType;
 use App\Job\Message\ImportJobSourceMessage;
 use App\Job\Repository\JobSourceRepository;
 use App\Job\Translation\JobMessage;
@@ -44,15 +45,93 @@ final class JobSourceController extends AbstractController
         }
 
         $sources = $repository->findForProfile($profile);
+        $sourceGroups = $this->groupSourcesBySearch($sources);
         $suggestedSearches = $searchService->getSmartQueries($profile);
 
         return $this->render('job/source/index.html.twig', [
             'sources' => $sources,
+            'sourceGroups' => $sourceGroups,
+            'hasMissingFreelanceSources' => array_any($sourceGroups, static fn (array $group): bool => !$group['hasFreelance']),
             'hasActiveSync' => array_any($sources, static fn (JobSource $source): bool => $source->isSyncPending()),
             'searchForm' => $form,
             'profileLocation' => $profile->getLocation(),
             'suggestedSearches' => $suggestedSearches,
         ]);
+    }
+
+    #[Route('/sources/add-freelance', name: 'app_job_sources_add_freelance', methods: ['POST'])]
+    public function addFreelanceSources(
+        Request $request,
+        #[CurrentUser] Account $account,
+        JobSourceRepository $repository,
+        ConfigureCandidateJobSearchService $searchService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('add-freelance-sources', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $profile = $account->getCandidateProfile();
+        $location = $profile->getLocation();
+        if ($location === null) {
+            $this->addFlash('error', JobMessage::SEARCH_CRITERIA_REQUIRED);
+
+            return $this->redirectToRoute('app_job_sources');
+        }
+
+        $addedCount = 0;
+        foreach ($this->groupSourcesBySearch($repository->findForProfile($profile)) as $group) {
+            if ($group['hasFreelance']) {
+                continue;
+            }
+
+            $searchService->configureProviderSource($profile, $group['label'], $location, JobProviderType::FREE_WORK);
+            ++$addedCount;
+        }
+
+        $this->addFlash('success', $addedCount > 0
+            ? sprintf('Free-Work a été ajouté à %d intitulé%s de recherche.', $addedCount, $addedCount > 1 ? 's' : '')
+            : 'Free-Work est déjà présent pour tous les intitulés.');
+
+        return $this->redirectToRoute('app_job_sources');
+    }
+
+    #[Route('/sources/delete-search', name: 'app_job_sources_delete_search', methods: ['POST'])]
+    public function deleteSearch(
+        Request $request,
+        #[CurrentUser] Account $account,
+        JobSourceRepository $repository,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $searchLabel = trim((string) $request->request->get('search_label'));
+        if (!$this->isCsrfTokenValid('delete-search-'.$searchLabel, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $sources = array_values(array_filter(
+            $repository->findForProfile($account->getCandidateProfile()),
+            static fn (JobSource $source): bool => $source->getSearchLabel() === $searchLabel,
+        ));
+        if ($searchLabel === '' || $sources === []) {
+            throw $this->createNotFoundException(JobMessage::SOURCE_NOT_FOUND);
+        }
+        if (array_any($sources, static fn (JobSource $source): bool => $source->isSyncPending())) {
+            $this->addFlash('error', JobMessage::SOURCE_DELETE_SYNC_PENDING);
+
+            return $this->redirectToRoute('app_job_sources');
+        }
+
+        foreach ($sources as $source) {
+            $entityManager->remove($source);
+        }
+        $entityManager->flush();
+        $this->addFlash('success', sprintf(
+            'L’intitulé « %s » et ses %d source%s ont été supprimés.',
+            $searchLabel,
+            count($sources),
+            count($sources) > 1 ? 's' : '',
+        ));
+
+        return $this->redirectToRoute('app_job_sources');
     }
 
     #[Route('/sources/add-multiple', name: 'app_job_sources_add_multiple', methods: ['POST'])]
@@ -167,5 +246,29 @@ final class JobSourceController extends AbstractController
             || !$source->belongsToActiveCv()) {
             throw $this->createNotFoundException(JobMessage::SOURCE_NOT_FOUND);
         }
+    }
+
+    /**
+     * @param list<JobSource> $sources
+     *
+     * @return array<string, array{label: string, sources: list<JobSource>, syncPending: bool, hasFreelance: bool}>
+     */
+    private function groupSourcesBySearch(array $sources): array
+    {
+        $groups = [];
+        foreach ($sources as $source) {
+            $label = $source->getSearchLabel();
+            $groups[$label] ??= [
+                'label' => $label,
+                'sources' => [],
+                'syncPending' => false,
+                'hasFreelance' => false,
+            ];
+            $groups[$label]['sources'][] = $source;
+            $groups[$label]['syncPending'] = $groups[$label]['syncPending'] || $source->isSyncPending();
+            $groups[$label]['hasFreelance'] = $groups[$label]['hasFreelance'] || $source->getProvider() === JobProviderType::FREE_WORK;
+        }
+
+        return $groups;
     }
 }

@@ -12,12 +12,7 @@
     <section class="card form-card">
         {% if profileLocation %}
             {% if suggestedSearches is defined and suggestedSearches is not empty %}
-                {% set configuredLabels = [] %}
-                {% for source in sources %}
-                    {% if source.searchLabel not in configuredLabels %}
-                        {% set configuredLabels = configuredLabels|merge([source.searchLabel]) %}
-                    {% endif %}
-                {% endfor %}
+                {% set configuredLabels = sourceGroups|keys %}
 
                 <div class="smart-searches-box" data-controller="smart-search-selector">
                     <div class="smart-searches-header">
@@ -83,19 +78,46 @@
         <section class="card">
             <div class="section-heading">
                 <h2>Sources configurées</h2>
-                <a href="{{ path('app_job_offers') }}" data-turbo-frame="_top">Voir les offres</a>
+                <div class="source-heading-actions">
+                    {% if hasMissingFreelanceSources %}
+                        <form method="post" action="{{ path('app_job_sources_add_freelance') }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('add-freelance-sources') }}">
+                            <button class="button button-compact secondary" type="submit">+ Ajouter Free-Work (freelance)</button>
+                        </form>
+                    {% endif %}
+                    <a href="{{ path('app_job_offers') }}" data-turbo-frame="_top">Voir les offres</a>
+                </div>
             </div>
 
             {% if sources is empty %}
                 <p>Aucune recherche configurée. Déposez un CV, puis validez son intitulé de poste et sa localisation.</p>
             {% else %}
-                {% set searchLabels = [] %}
-                {% for source in sources %}
-                    {% if source.searchLabel not in searchLabels %}
-                        {% set searchLabels = searchLabels|merge([source.searchLabel]) %}
-                    {% endif %}
-                {% endfor %}
+                {% set searchLabels = sourceGroups|keys %}
                 <div data-controller="source-filter">
+                    <div class="configured-searches" aria-label="Intitulés de recherche configurés">
+                        {% for searchLabel, group in sourceGroups %}
+                            <article class="configured-search" data-search-label="{{ searchLabel }}">
+                                <div class="configured-search-main">
+                                    <strong>{{ searchLabel }}</strong>
+                                    <div class="configured-search-providers" aria-label="{{ group.sources|length }} plateformes configurées">
+                                        {% for groupedSource in group.sources %}
+                                            <span class="source-provider-chip {{ groupedSource.provider.value == 'FREE_WORK' ? 'source-provider-chip-freelance' : '' }}">
+                                                {{ groupedSource.provider.label() }}
+                                            </span>
+                                        {% endfor %}
+                                        {% if not group.hasFreelance %}
+                                            <span class="source-provider-chip source-provider-chip-missing">Free-Work manquant</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <form method="post" action="{{ path('app_job_sources_delete_search') }}" data-turbo-confirm="Supprimer l’intitulé « {{ searchLabel }} », toutes ses sources et toutes ses offres importées ?">
+                                    <input type="hidden" name="search_label" value="{{ searchLabel }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete-search-' ~ searchLabel) }}">
+                                    <button class="button button-compact danger" type="submit" {{ group.syncPending ? 'disabled' : '' }}>Supprimer l’intitulé</button>
+                                </form>
+                            </article>
+                        {% endfor %}
+                    </div>
                     <div class="source-filter-tabs" role="tablist" aria-label="Filtrer les sources par recherche">
                         <button type="button" class="source-filter-tab active" role="tab" aria-selected="true" data-source-filter-target="tab" data-source-filter-value="" data-action="source-filter#select">Toutes</button>
                         {% for searchLabel in searchLabels %}
@@ -110,7 +132,7 @@
                     {% for source in sources %}
                         <tr id="job-source-{{ source.id }}" data-source-filter-target="row" data-source-filter-value="{{ source.searchLabel }}">
                             <td><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a></td>
-                            <td><span class="badge">{{ source.provider.value }}</span></td>
+                            <td><span class="badge {{ source.provider.value == 'FREE_WORK' ? 'badge-freelance' : '' }}">{{ source.provider.label() }}</span></td>
                             <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</td>
                             <td>
                                 {% if source.syncStatus.value == 'QUEUED' %}

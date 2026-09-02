@@ -347,6 +347,84 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertNull($repository->find($sourceId));
     }
 
+    public function testACompleteSearchTitleCanBeDeleted(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+        $searchLabel = 'Backend '.$uniqueId;
+        $keptLabel = 'Frontend '.$uniqueId;
+        $helloWork = new JobSource($account->getCandidateProfile(), 'HelloWork — '.$searchLabel.' — Lyon', 'https://example.test/group-hw-'.$uniqueId, JobProviderType::HELLOWORK);
+        $apec = new JobSource($account->getCandidateProfile(), 'Apec — '.$searchLabel.' — Lyon', 'https://example.test/group-apec-'.$uniqueId, JobProviderType::APEC);
+        $kept = new JobSource($account->getCandidateProfile(), 'HelloWork — '.$keptLabel.' — Lyon', 'https://example.test/group-kept-'.$uniqueId, JobProviderType::HELLOWORK);
+        $entityManager->persist($helloWork);
+        $entityManager->persist($apec);
+        $entityManager->persist($kept);
+        $entityManager->flush();
+        $deletedIds = [$helloWork->getId(), $apec->getId()];
+        $keptId = $kept->getId();
+
+        $crawler = $client->request('GET', '/sources');
+        self::assertSelectorCount(1, sprintf('.configured-search[data-search-label="%s"]', $searchLabel));
+        $form = $crawler->filter(sprintf('input[name="search_label"][value="%s"]', $searchLabel))->ancestors()->filter('form')->form();
+        $client->submit($form);
+
+        self::assertResponseRedirects('/sources');
+        $entityManager->clear();
+        $repository = self::getContainer()->get(JobSourceRepository::class);
+        self::assertInstanceOf(JobSourceRepository::class, $repository);
+        foreach ($deletedIds as $deletedId) {
+            self::assertNotNull($deletedId);
+            self::assertNull($repository->find($deletedId));
+        }
+        self::assertNotNull($keptId);
+        self::assertNotNull($repository->find($keptId));
+    }
+
+    public function testMissingFreelanceSourcesCanBeAddedToExistingSearches(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $profile = $account->getCandidateProfile();
+        $profile->updateDetails('Développeur backend', 'Lyon', null);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+        $searchLabel = 'Symfony '.$uniqueId;
+        $entityManager->persist(new JobSource(
+            $profile,
+            'HelloWork — '.$searchLabel.' — Lyon',
+            'https://example.test/freelance-missing-'.$uniqueId,
+            JobProviderType::HELLOWORK,
+        ));
+        $entityManager->flush();
+
+        $crawler = $client->request('GET', '/sources');
+        self::assertSelectorTextContains(sprintf('.configured-search[data-search-label="%s"]', $searchLabel), 'Free-Work manquant');
+        $form = $crawler->filter('form[action="/sources/add-freelance"]')->form();
+        $client->submit($form);
+
+        self::assertResponseRedirects('/sources');
+        $entityManager->clear();
+        $repository = self::getContainer()->get(JobSourceRepository::class);
+        self::assertInstanceOf(JobSourceRepository::class, $repository);
+        $freelanceSources = array_values(array_filter(
+            $repository->findForProfile($profile),
+            static fn (JobSource $source): bool => $source->getProvider() === JobProviderType::FREE_WORK
+                && $source->getSearchLabel() === $searchLabel,
+        ));
+        self::assertCount(1, $freelanceSources);
+        $freelanceSource = $freelanceSources[0];
+        self::assertSame($searchLabel, $freelanceSource->getSearchLabel());
+
+        $managedProfile = $entityManager->find(\App\Candidate\Entity\CandidateProfile::class, $profile->getId());
+        self::assertNotNull($managedProfile);
+        $managedProfile->updateDetails(null, null, null);
+        $entityManager->flush();
+    }
+
     public function testAnotherAccountsSourcesAndMatchesAreHidden(): void
     {
         $client = self::createClient();
