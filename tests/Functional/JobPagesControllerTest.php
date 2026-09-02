@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional;
 
 use App\Candidate\Entity\CandidateSkill;
+use App\Candidate\Entity\CvDocument;
 use App\Candidate\Entity\Skill;
 use App\Candidate\Enum\SkillCategory;
 use App\Candidate\Enum\SkillLevel;
@@ -907,7 +908,10 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
 
         $profile = $account->getCandidateProfile();
+        $cv = new CvDocument($profile, 'cv.pdf', 'cv-'.$uniqueId.'.pdf', 'application/pdf', 1000, hash('sha256', 'cv-'.$uniqueId));
+        $profile->activateCvDocument($cv);
         $profile->updateFromCv('Dev Full Stack', 'Lyon', 5, 'CV PHP Symfony');
+        $entityManager->persist($cv);
 
         $skillRepo = $entityManager->getRepository(Skill::class);
         $phpSkill = $skillRepo->findOneBy(['normalizedName' => 'php']) ?? new Skill('PHP', 'php', SkillCategory::BACKEND);
@@ -919,8 +923,8 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
             $entityManager->persist($symfonySkill);
         }
 
-        $candSkill1 = new CandidateSkill($profile, $phpSkill, SkillLevel::EXPERT, isCoreSkill: true);
-        $candSkill2 = new CandidateSkill($profile, $symfonySkill, SkillLevel::ADVANCED, isCoreSkill: true);
+        $candSkill1 = new CandidateSkill($profile, $phpSkill, SkillLevel::EXPERT, isCoreSkill: true, cvDocument: $cv);
+        $candSkill2 = new CandidateSkill($profile, $symfonySkill, SkillLevel::ADVANCED, isCoreSkill: true, cvDocument: $cv);
         $entityManager->persist($candSkill1);
         $entityManager->persist($candSkill2);
         $entityManager->flush();
