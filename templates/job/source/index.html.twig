@@ -110,7 +110,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                <form method="post" action="{{ path('app_job_sources_delete_search') }}" data-turbo-confirm="Supprimer l’intitulé « {{ searchLabel }} », toutes ses sources et toutes ses offres importées ?">
+                                <form method="post" action="{{ path('app_job_sources_delete_search') }}" data-turbo-frame="_top" data-turbo-confirm="Supprimer l’intitulé « {{ searchLabel }} », toutes ses sources et toutes ses offres importées ?">
                                     <input type="hidden" name="search_label" value="{{ searchLabel }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete-search-' ~ searchLabel) }}">
                                     <button class="button button-compact danger" type="submit" {{ group.syncPending ? 'disabled' : '' }}>Supprimer l’intitulé</button>
@@ -187,17 +187,5 @@
                 </div>
             {% endif %}
         </section>
-        {% if hasActiveSync %}
-            <script>
-                window.setTimeout(() => {
-                    const frame = document.getElementById('job-sources-list');
-                    if (frame?.src) {
-                        frame.reload();
-                    } else if (frame) {
-                        frame.src = '{{ path('app_job_sources') }}';
-                    }
-                }, 2000);
-            </script>
-        {% endif %}
     </turbo-frame>
 {% endblock %}

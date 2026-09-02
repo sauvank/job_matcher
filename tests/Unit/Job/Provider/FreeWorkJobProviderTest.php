@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Job\Provider;
 
 use App\Candidate\Entity\CandidateProfile;
+use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
 use App\Job\Provider\FreeWorkJobPostingParser;
@@ -38,6 +39,8 @@ final class FreeWorkJobProviderTest extends TestCase
                         'locality' => 'Lyon',
                         'shortLabel' => 'Lyon (69)',
                         'label' => 'Lyon, Auvergne-Rhône-Alpes',
+                        'country' => 'France',
+                        'countryCode' => 'FR',
                     ],
                 ],
             ],
@@ -72,5 +75,62 @@ final class FreeWorkJobProviderTest extends TestCase
             'https://www.free-work.com/fr/tech-it/jobs/job-posting/developpeur-symfony-freelance',
             $offers[0]->url,
         );
+    }
+
+    public function testItKeepsLocalOffersAndFrenchFullRemoteOffersOnly(): void
+    {
+        $payload = [
+            'hydra:member' => [
+                $this->offerPayload(1, 'Mission hybride Lyon', 'partial', 'Lyon', 'Auvergne-Rhône-Alpes', 'France', 'FR'),
+                $this->offerPayload(2, 'Mission sur site Zurich', 'no', 'Zurich', 'Zurich', 'Suisse', 'CH'),
+                $this->offerPayload(3, 'Mission full remote Paris', 'full', 'Paris', 'Île-de-France', 'France', 'FR'),
+                $this->offerPayload(4, 'Mission full remote Genève', 'full', 'Genève', 'Genève', 'Suisse', 'CH'),
+                $this->offerPayload(5, 'Mission hybride Paris', 'partial', 'Paris', 'Île-de-France', 'France', 'FR'),
+            ],
+        ];
+        $provider = new FreeWorkJobProvider(
+            new MockHttpClient(new MockResponse(json_encode($payload, JSON_THROW_ON_ERROR), ['http_code' => 200])),
+            new FreeWorkJobPostingParser(),
+            10,
+        );
+        $source = new JobSource(
+            new CandidateProfile(),
+            'Free-Work — Symfony — Lyon et périphérie',
+            'https://www.free-work.com/fr/tech-it/jobs?query=Symfony&locations=Lyon+et+p%C3%A9riph%C3%A9rie&contracts=contractor',
+            JobProviderType::FREE_WORK,
+        );
+
+        $offers = iterator_to_array($provider->fetch($source));
+
+        self::assertSame(
+            ['Mission hybride Lyon', 'Mission full remote Paris'],
+            array_map(static fn (NormalizedJobOffer $offer): string => $offer->title, $offers),
+        );
+    }
+
+    /** @return array<string, mixed> */
+    private function offerPayload(
+        int $id,
+        string $title,
+        string $remoteMode,
+        string $locality,
+        string $adminLevel1,
+        string $country,
+        string $countryCode,
+    ): array {
+        return [
+            'id' => $id,
+            'title' => $title,
+            'slug' => 'mission-'.$id,
+            'remoteMode' => $remoteMode,
+            'contracts' => ['contractor'],
+            'location' => [
+                'locality' => $locality,
+                'adminLevel1' => $adminLevel1,
+                'country' => $country,
+                'countryCode' => $countryCode,
+                'label' => sprintf('%s, %s', $locality, $country),
+            ],
+        ];
     }
 }

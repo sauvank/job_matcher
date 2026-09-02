@@ -22,6 +22,7 @@ final class JobSourceTest extends TestCase
         );
 
         self::assertSame('Développeur PHP — Symfony', $source->getSearchLabel());
+        self::assertSame('Lyon', $source->getSearchLocation());
     }
 
     public function testItUsesTheWholeNameForANonGeneratedSource(): void
@@ -29,6 +30,7 @@ final class JobSourceTest extends TestCase
         $source = new JobSource(new CandidateProfile(), 'Recherche personnalisée', 'https://example.test/jobs', JobProviderType::FAKE);
 
         self::assertSame('Recherche personnalisée', $source->getSearchLabel());
+        self::assertNull($source->getSearchLocation());
     }
 
     public function testItUpdatesItsGeneratedSearch(): void

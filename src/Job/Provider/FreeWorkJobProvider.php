@@ -68,8 +68,13 @@ final readonly class FreeWorkJobProvider implements JobProviderInterface
         }
 
         foreach ($members as $item) {
-            if (is_array($item)) {
-                yield $this->parser->parseOffer($item);
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $offer = $this->parser->parseOffer($item);
+            if ($this->matchesSearchArea($item, $offer->remotePolicy, $location)) {
+                yield $offer;
             }
         }
     }
@@ -114,5 +119,72 @@ final readonly class FreeWorkJobProvider implements JobProviderInterface
         $contracts = isset($parameters['contracts']) && is_string($parameters['contracts']) ? trim($parameters['contracts']) : '';
 
         return [$title, $location, $contracts];
+    }
+
+    /** @param array<string, mixed> $item */
+    private function matchesSearchArea(array $item, ?string $remotePolicy, string $searchLocation): bool
+    {
+        $location = $item['location'] ?? null;
+        if (!is_array($location)) {
+            return false;
+        }
+
+        $expectedCountry = $this->expectedCountryCode($searchLocation);
+        $countryCode = $location['countryCode'] ?? null;
+        if (!is_string($countryCode) || mb_strtoupper(trim($countryCode)) !== $expectedCountry) {
+            return false;
+        }
+
+        if ($remotePolicy === 'REMOTE' || $this->isCountryWideSearch($searchLocation)) {
+            return true;
+        }
+
+        $area = $this->normalize($searchLocation);
+        $ignoredWords = ['et', 'peripherie', 'alentours', 'region', 'metropole', 'france', 'suisse', 'belgique', 'luxembourg'];
+        $searchWords = array_values(array_filter(
+            explode(' ', $area),
+            static fn (string $word): bool => mb_strlen($word) >= 3 && !in_array($word, $ignoredWords, true),
+        ));
+        if ($searchWords === []) {
+            return false;
+        }
+
+        $locationText = $this->normalize(implode(' ', array_filter(
+            $location,
+            static fn (mixed $value): bool => is_string($value),
+        )));
+
+        return array_any($searchWords, static fn (string $word): bool => str_contains($locationText, $word));
+    }
+
+    private function expectedCountryCode(string $searchLocation): string
+    {
+        $location = $this->normalize($searchLocation);
+
+        return match (true) {
+            str_contains($location, 'suisse'), str_contains($location, 'switzerland') => 'CH',
+            str_contains($location, 'belgique'), str_contains($location, 'belgium') => 'BE',
+            str_contains($location, 'luxembourg') => 'LU',
+            default => 'FR',
+        };
+    }
+
+    private function isCountryWideSearch(string $searchLocation): bool
+    {
+        $location = $this->normalize($searchLocation);
+
+        return str_contains($location, 'entiere')
+            || in_array($location, ['france', 'suisse', 'switzerland', 'belgique', 'belgium', 'luxembourg'], true);
+    }
+
+    private function normalize(string $value): string
+    {
+        $value = mb_strtolower(trim($value));
+        $value = strtr($value, [
+            'à' => 'a', 'â' => 'a', 'ä' => 'a', 'ç' => 'c', 'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'î' => 'i', 'ï' => 'i', 'ô' => 'o', 'ö' => 'o', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ÿ' => 'y',
+        ]);
+
+        return trim((string) preg_replace('/[^a-z0-9]+/', ' ', $value));
     }
 }

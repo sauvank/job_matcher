@@ -45,13 +45,19 @@ final class JobSourceController extends AbstractController
         }
 
         $sources = $repository->findForProfile($profile);
+        if ($profile->getLocation() !== null && $sources !== []) {
+            $addedFreelanceSources = $this->ensureFreelanceSources($profile, $sources, $profile->getLocation(), $searchService);
+            if ($addedFreelanceSources > 0) {
+                $sources = $repository->findForProfile($profile);
+            }
+        }
         $sourceGroups = $this->groupSourcesBySearch($sources);
         $suggestedSearches = $searchService->getSmartQueries($profile);
 
         return $this->render('job/source/index.html.twig', [
             'sources' => $sources,
             'sourceGroups' => $sourceGroups,
-            'hasMissingFreelanceSources' => array_any($sourceGroups, static fn (array $group): bool => !$group['hasFreelance']),
+            'hasMissingFreelanceSources' => array_any($sourceGroups, static fn (array $group): bool => $group['supportsFreelance'] && !$group['hasFreelance']),
             'hasActiveSync' => array_any($sources, static fn (JobSource $source): bool => $source->isSyncPending()),
             'searchForm' => $form,
             'profileLocation' => $profile->getLocation(),
@@ -78,15 +84,7 @@ final class JobSourceController extends AbstractController
             return $this->redirectToRoute('app_job_sources');
         }
 
-        $addedCount = 0;
-        foreach ($this->groupSourcesBySearch($repository->findForProfile($profile)) as $group) {
-            if ($group['hasFreelance']) {
-                continue;
-            }
-
-            $searchService->configureProviderSource($profile, $group['label'], $location, JobProviderType::FREE_WORK);
-            ++$addedCount;
-        }
+        $addedCount = $this->ensureFreelanceSources($profile, $repository->findForProfile($profile), $location, $searchService);
 
         $this->addFlash('success', $addedCount > 0
             ? sprintf('Free-Work a été ajouté à %d intitulé%s de recherche.', $addedCount, $addedCount > 1 ? 's' : '')
@@ -251,7 +249,7 @@ final class JobSourceController extends AbstractController
     /**
      * @param list<JobSource> $sources
      *
-     * @return array<string, array{label: string, sources: list<JobSource>, syncPending: bool, hasFreelance: bool}>
+     * @return array<string, array{label: string, location: ?string, sources: list<JobSource>, syncPending: bool, hasFreelance: bool, supportsFreelance: bool}>
      */
     private function groupSourcesBySearch(array $sources): array
     {
@@ -260,15 +258,39 @@ final class JobSourceController extends AbstractController
             $label = $source->getSearchLabel();
             $groups[$label] ??= [
                 'label' => $label,
+                'location' => $source->getSearchLocation(),
                 'sources' => [],
                 'syncPending' => false,
                 'hasFreelance' => false,
+                'supportsFreelance' => false,
             ];
             $groups[$label]['sources'][] = $source;
             $groups[$label]['syncPending'] = $groups[$label]['syncPending'] || $source->isSyncPending();
             $groups[$label]['hasFreelance'] = $groups[$label]['hasFreelance'] || $source->getProvider() === JobProviderType::FREE_WORK;
+            $groups[$label]['supportsFreelance'] = $groups[$label]['supportsFreelance'] || $source->getProvider() !== JobProviderType::FAKE;
+            $groups[$label]['location'] ??= $source->getSearchLocation();
         }
 
         return $groups;
+    }
+
+    /** @param list<JobSource> $sources */
+    private function ensureFreelanceSources(
+        \App\Candidate\Entity\CandidateProfile $profile,
+        array $sources,
+        string $location,
+        ConfigureCandidateJobSearchService $searchService,
+    ): int {
+        $addedCount = 0;
+        foreach ($this->groupSourcesBySearch($sources) as $group) {
+            if (!$group['supportsFreelance'] || $group['hasFreelance']) {
+                continue;
+            }
+
+            $searchService->configureProviderSource($profile, $group['label'], $group['location'] ?? $location, JobProviderType::FREE_WORK);
+            ++$addedCount;
+        }
+
+        return $addedCount;
     }
 }

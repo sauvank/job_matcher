@@ -121,6 +121,19 @@ final class JobSource
         return mb_substr($this->name, $start, $lastSeparator - $start);
     }
 
+    public function getSearchLocation(): ?string
+    {
+        $separator = ' — ';
+        $lastSeparator = mb_strrpos($this->name, $separator);
+        if ($lastSeparator === false) {
+            return null;
+        }
+
+        $location = trim(mb_substr($this->name, $lastSeparator + mb_strlen($separator)));
+
+        return $location !== '' ? $location : null;
+    }
+
     public function getUrl(): string
     {
         return $this->url;

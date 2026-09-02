@@ -18,7 +18,19 @@ export default class extends Controller {
         this.timer = setInterval(() => {
             const frame = this.element.closest('turbo-frame') || (this.element.tagName === 'TURBO-FRAME' ? this.element : null);
             if (frame && typeof frame.reload === 'function') {
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+                const restoreScroll = (event) => {
+                    if (event.target !== frame) return;
+
+                    window.scrollTo(scrollX, scrollY);
+                    frame.removeEventListener('turbo:frame-load', restoreScroll);
+                };
+                frame.addEventListener('turbo:frame-load', restoreScroll);
+
                 if (this.urlValue && frame.src && frame.src !== this.urlValue) {
+                    frame.src = this.urlValue;
+                } else if (this.urlValue && !frame.src) {
                     frame.src = this.urlValue;
                 } else {
                     frame.reload();
