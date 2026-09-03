@@ -106,51 +106,6 @@
                 </section>
             {% endif %}
 
-            <section class="card analysis-card" id="rapport-detaille">
-                <div class="section-heading">
-                    <div>
-                        <p class="eyebrow">Rapport détaillé</p>
-                        <h2>Pourquoi ce score ?</h2>
-                    </div>
-                    {% if match.semanticAnalyzedAt %}<span class="help-text">Mis à jour le {{ match.semanticAnalyzedAt|date('d/m/Y à H:i') }}</span>{% endif %}
-                </div>
-
-                {% if match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
-                    <div class="progress-block">
-                        <span>{{ match.semanticAnalysisStatus.value == 'QUEUED' ? 'Analyse en attente…' : 'Analyse du texte complet et du CV…' }}</span>
-                        <progress max="100">Analyse en cours</progress>
-                    </div>
-                {% elseif match.semanticAnalysisStatus.value == 'FAILED' %}
-                    <p class="text-error">{{ match.semanticError|trans }}</p>
-                {% elseif semanticAnalysis %}
-                    <div class="semantic-summary"><p>{{ semanticAnalysis.summary }}</p></div>
-
-                    <div class="requirement-list">
-                        {% for requirement in semanticAnalysis.requirements %}
-                            <article class="requirement-card">
-                                <div class="requirement-heading">
-                                    <div><h3>{{ requirement.label }}</h3><div class="tag-row"><span class="badge">{{ requirement.category.value }}</span><span class="badge badge-neutral">{{ requirement.importance.value }}</span></div></div>
-                                    <span class="badge verdict-{{ requirement.assessment.value|lower }}">{{ requirement.assessment.value }}</span>
-                                </div>
-                                <div class="evidence-grid">
-                                    <div><span class="field-label">Dans l’annonce</span><blockquote>{{ requirement.offerEvidence }}</blockquote></div>
-                                    <div><span class="field-label">Dans votre CV</span><blockquote>{{ requirement.cvEvidence ?? 'Aucune preuve explicite trouvée' }}</blockquote></div>
-                                </div>
-                                <p class="requirement-explanation">{{ requirement.explanation }}</p>
-                            </article>
-                        {% endfor %}
-                    </div>
-
-                    <div class="explanation-grid">
-                        <div class="insight insight-positive"><h3>Forces</h3><ul>{% for item in semanticAnalysis.strengths %}<li>{{ item }}</li>{% else %}<li>Aucune force certaine.</li>{% endfor %}</ul></div>
-                        <div class="insight insight-warning"><h3>Points de vigilance</h3><ul>{% for item in semanticAnalysis.concerns %}<li>{{ item }}</li>{% else %}<li>Aucun point de vigilance certain.</li>{% endfor %}</ul></div>
-                        <div class="insight insight-info"><h3>Questions à poser</h3><ul>{% for item in semanticAnalysis.questions %}<li>{{ item }}</li>{% else %}<li>Aucune question supplémentaire.</li>{% endfor %}</ul></div>
-                    </div>
-                {% else %}
-                    <p>L’analyse complète lit toutes les missions, exigences, responsabilités, qualités attendues et conditions de travail, puis les compare au texte du CV avec des preuves.</p>
-                {% endif %}
-            </section>
-
             {% if assistantResult %}
                 <section class="card assistant-card" id="assistant-postulation">
                     <div class="section-heading">
@@ -227,6 +182,51 @@
                     </div>
                 </section>
             {% endif %}
+
+            <section class="card analysis-card" id="rapport-detaille">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">Rapport détaillé</p>
+                        <h2>Pourquoi ce score ?</h2>
+                    </div>
+                    {% if match.semanticAnalyzedAt %}<span class="help-text">Mis à jour le {{ match.semanticAnalyzedAt|date('d/m/Y à H:i') }}</span>{% endif %}
+                </div>
+
+                {% if match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
+                    <div class="progress-block">
+                        <span>{{ match.semanticAnalysisStatus.value == 'QUEUED' ? 'Analyse en attente…' : 'Analyse du texte complet et du CV…' }}</span>
+                        <progress max="100">Analyse en cours</progress>
+                    </div>
+                {% elseif match.semanticAnalysisStatus.value == 'FAILED' %}
+                    <p class="text-error">{{ match.semanticError|trans }}</p>
+                {% elseif semanticAnalysis %}
+                    <div class="semantic-summary"><p>{{ semanticAnalysis.summary }}</p></div>
+
+                    <div class="requirement-list">
+                        {% for requirement in semanticAnalysis.requirements %}
+                            <article class="requirement-card">
+                                <div class="requirement-heading">
+                                    <div><h3>{{ requirement.label }}</h3><div class="tag-row"><span class="badge">{{ requirement.category.value }}</span><span class="badge badge-neutral">{{ requirement.importance.value }}</span></div></div>
+                                    <span class="badge verdict-{{ requirement.assessment.value|lower }}">{{ requirement.assessment.value }}</span>
+                                </div>
+                                <div class="evidence-grid">
+                                    <div><span class="field-label">Dans l’annonce</span><blockquote>{{ requirement.offerEvidence }}</blockquote></div>
+                                    <div><span class="field-label">Dans votre CV</span><blockquote>{{ requirement.cvEvidence ?? 'Aucune preuve explicite trouvée' }}</blockquote></div>
+                                </div>
+                                <p class="requirement-explanation">{{ requirement.explanation }}</p>
+                            </article>
+                        {% endfor %}
+                    </div>
+
+                    <div class="explanation-grid">
+                        <div class="insight insight-positive"><h3>Forces</h3><ul>{% for item in semanticAnalysis.strengths %}<li>{{ item }}</li>{% else %}<li>Aucune force certaine.</li>{% endfor %}</ul></div>
+                        <div class="insight insight-warning"><h3>Points de vigilance</h3><ul>{% for item in semanticAnalysis.concerns %}<li>{{ item }}</li>{% else %}<li>Aucun point de vigilance certain.</li>{% endfor %}</ul></div>
+                        <div class="insight insight-info"><h3>Questions à poser</h3><ul>{% for item in semanticAnalysis.questions %}<li>{{ item }}</li>{% else %}<li>Aucune question supplémentaire.</li>{% endfor %}</ul></div>
+                    </div>
+                {% else %}
+                    <p>L’analyse complète lit toutes les missions, exigences, responsabilités, qualités attendues et conditions de travail, puis les compare au texte du CV avec des preuves.</p>
+                {% endif %}
+            </section>
         </div>
 
         <aside class="offer-detail-sidebar">
