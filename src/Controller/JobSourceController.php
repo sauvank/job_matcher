@@ -45,6 +45,8 @@ final class JobSourceController extends AbstractController
         }
 
         $sources = $repository->findForProfile($profile);
+        $repository->recoverStuckSyncsForProfile($profile);
+        $sources = $repository->findForProfile($profile);
         if ($profile->getLocation() !== null && $sources !== []) {
             $addedFreelanceSources = $this->ensureFreelanceSources($profile, $sources, $profile->getLocation(), $searchService);
             if ($addedFreelanceSources > 0) {

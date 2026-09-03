@@ -29,6 +29,7 @@ final readonly class RefreshJobSourcesMessageHandler
         $queuedCount = 0;
 
         try {
+            $this->sourceRepository->recoverAllStuckSyncs();
             $sources = $this->sourceRepository->findEnabled();
 
             foreach ($sources as $source) {

@@ -12,6 +12,7 @@ use App\Matching\Application\Repository\JobMatchRepositoryInterface;
 use App\Matching\Entity\JobMatch;
 use App\Matching\Enum\JobApplicationStatus;
 use App\Matching\Enum\SemanticAnalysisStatus;
+use App\Matching\Translation\MatchingMessage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -176,6 +177,74 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
 
         /* @var list<JobMatch> */
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<JobMatch>
+     */
+    public function findPendingSemanticAnalyses(array $ids = []): array
+    {
+        return $ids === []
+            ? $this->findBy(['semanticAnalysisStatus' => SemanticAnalysisStatus::NOT_REQUESTED])
+            : $this->findBy(['id' => $ids]);
+    }
+
+    public function recoverStuckAnalysesForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+    {
+        $now = new \DateTimeImmutable();
+        $cutoff = $now->modify("-{$timeoutMinutes} minutes");
+
+        $stuckMatches = $this->createQueryBuilder('jobMatch')
+            ->innerJoin('jobMatch.jobOffer', 'jobOffer')
+            ->innerJoin('jobOffer.source', 'jobSource')
+            ->andWhere('jobMatch.candidateProfile = :profile')
+            ->andWhere('jobMatch.semanticAnalysisStatus IN (:pendingStatuses)')
+            ->andWhere('(jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :cutoff)')
+            ->setParameter('profile', $profile)
+            ->setParameter('pendingStatuses', [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING])
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getResult();
+
+        $count = 0;
+        foreach ($stuckMatches as $match) {
+            $match->failSemanticAnalysis(MatchingMessage::SEMANTIC_ANALYSIS_TIMEOUT);
+            ++$count;
+        }
+
+        if ($count > 0) {
+            $this->getEntityManager()->flush();
+        }
+
+        return $count;
+    }
+
+    public function recoverAllStuckAnalyses(int $timeoutMinutes = 10): int
+    {
+        $now = new \DateTimeImmutable();
+        $cutoff = $now->modify("-{$timeoutMinutes} minutes");
+
+        $stuckMatches = $this->createQueryBuilder('jobMatch')
+            ->andWhere('jobMatch.semanticAnalysisStatus IN (:pendingStatuses)')
+            ->andWhere('(jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :cutoff)')
+            ->setParameter('pendingStatuses', [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING])
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getResult();
+
+        $count = 0;
+        foreach ($stuckMatches as $match) {
+            $match->failSemanticAnalysis(MatchingMessage::SEMANTIC_ANALYSIS_TIMEOUT);
+            ++$count;
+        }
+
+        if ($count > 0) {
+            $this->getEntityManager()->flush();
+        }
+
+        return $count;
     }
 
     private function applyProfileFilters(QueryBuilder $queryBuilder, CandidateProfile $profile): void

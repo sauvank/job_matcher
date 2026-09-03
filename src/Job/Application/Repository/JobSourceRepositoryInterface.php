@@ -15,4 +15,8 @@ interface JobSourceRepositoryInterface
 
     /** @return list<JobSource> */
     public function findEnabled(): array;
+
+    public function recoverStuckSyncsForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int;
+
+    public function recoverAllStuckSyncs(int $timeoutMinutes = 10): int;
 }

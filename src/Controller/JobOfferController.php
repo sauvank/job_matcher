@@ -46,6 +46,7 @@ final class JobOfferController extends AbstractController
         }
 
         $profile = $account->getCandidateProfile();
+        $repository->recoverStuckAnalysesForProfile($profile);
         $matches = $view === 'latest'
             ? $repository->findLatestForProfile($profile)
             : $repository->findRankedForProfile($profile);
@@ -66,9 +67,11 @@ final class JobOfferController extends AbstractController
     public function show(
         JobMatch $match,
         #[CurrentUser] Account $account,
+        JobMatchRepository $repository,
         \App\Matching\Service\JobApplicationAssistantService $assistantService,
     ): Response {
         $this->assertOwnsMatch($account, $match);
+        $repository->recoverStuckAnalysesForProfile($account->getCandidateProfile());
         $semanticAnalysis = $match->getSemanticAnalysis();
         $parsedAnalysis = $semanticAnalysis === null ? null : SemanticJobAnalysis::fromArray($semanticAnalysis);
 

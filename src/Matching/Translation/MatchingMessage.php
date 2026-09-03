@@ -10,6 +10,7 @@ final class MatchingMessage
     public const APPLICATION_STATUS_UPDATED = 'matching.status.updated';
     public const SEMANTIC_ANALYSIS_QUEUED = 'matching.analysis.queued';
     public const SEMANTIC_ANALYSIS_FAILED = 'matching.analysis.failed';
+    public const SEMANTIC_ANALYSIS_TIMEOUT = 'matching.analysis.timeout';
     public const INVALID_SEMANTIC_ANALYSIS = 'matching.analysis.invalid';
     public const UNKNOWN_SEMANTIC_ANALYZER = 'matching.analysis.unknown_analyzer';
     public const MISSING_OPENAI_KEY = 'matching.analysis.missing_openai_key';

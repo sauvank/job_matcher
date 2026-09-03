@@ -107,6 +107,7 @@ matching:
     match_not_found: "La correspondance demandée est introuvable."
     queued: "L’analyse complète de l’annonce a été mise en attente."
     failed: "L’analyse complète de l’annonce a échoué."
+    timeout: "Délai d’analyse dépassé (interruption du traitement). Vous pouvez relancer l’analyse."
     invalid: "La réponse d’analyse de l’annonce est invalide."
     unknown_analyzer: "L’analyseur d’offres configuré est inconnu."
     missing_openai_key: "La clé OpenAI est absente."

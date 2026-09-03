@@ -44,6 +44,16 @@ final class RefreshJobSourcesMessageHandlerTest extends TestCase
             {
                 return $this->sources;
             }
+
+            public function recoverStuckSyncsForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
+
+            public function recoverAllStuckSyncs(int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(3))->method('flush');

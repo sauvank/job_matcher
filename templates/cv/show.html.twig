@@ -3,6 +3,8 @@
 {% block title %}Analyse du CV · Job Matcher{% endblock %}
 
 {% block body %}
+    {% set isProcessing = document.status.value in ['UPLOADED', 'EXTRACTING', 'ANALYZING'] %}
+    <turbo-frame id="cv-show-frame" target="_top" {% if isProcessing %}data-controller="poll" data-poll-interval-value="2000" data-poll-url-value="{{ path('app_cv_show', {id: document.id}) }}"{% endif %}>
     <div class="page-heading">
         <p class="eyebrow">Analyse du CV</p>
         <h1>{{ document.originalFilename }}</h1>
@@ -41,7 +43,6 @@
             <p>Le worker extrait le texte et prépare l'analyse. Rechargez cette page dans quelques instants.</p>
             <a class="button" href="{{ path('app_cv_show', {id: document.id}) }}">Actualiser</a>
         </section>
-        <script>window.setTimeout(() => window.Turbo ? window.Turbo.visit(window.location.href, {action: 'replace'}) : window.location.reload(), 2000);</script>
     {% elseif document.status.value == 'FAILED' %}
         <section class="card error-card">
             <h2>Analyse impossible</h2>
@@ -140,4 +141,5 @@
             </details>
         {% endif %}
     {% endif %}
+    </turbo-frame>
 {% endblock %}

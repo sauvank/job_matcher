@@ -7,6 +7,8 @@ namespace App\Job\Repository;
 use App\Candidate\Entity\CandidateProfile;
 use App\Job\Application\Repository\JobSourceRepositoryInterface;
 use App\Job\Entity\JobSource;
+use App\Job\Enum\JobSourceSyncStatus;
+use App\Job\Translation\JobMessage;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -51,5 +53,59 @@ final class JobSourceRepository extends ServiceEntityRepository implements JobSo
             'candidateProfile' => $profile,
             'cvDocument' => $profile->getActiveCvDocument(),
         ], ['createdAt' => 'DESC']);
+    }
+
+    public function recoverStuckSyncsForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+    {
+        $now = new \DateTimeImmutable();
+        $cutoff = $now->modify("-{$timeoutMinutes} minutes");
+
+        $stuckSources = $this->createQueryBuilder('source')
+            ->andWhere('source.candidateProfile = :profile')
+            ->andWhere('source.syncStatus IN (:pendingStatuses)')
+            ->andWhere('(source.lastSyncStartedAt IS NULL OR source.lastSyncStartedAt < :cutoff)')
+            ->setParameter('profile', $profile)
+            ->setParameter('pendingStatuses', [JobSourceSyncStatus::QUEUED, JobSourceSyncStatus::RUNNING])
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getResult();
+
+        $count = 0;
+        foreach ($stuckSources as $source) {
+            $source->failSync(JobMessage::SYNC_FAILED);
+            ++$count;
+        }
+
+        if ($count > 0) {
+            $this->getEntityManager()->flush();
+        }
+
+        return $count;
+    }
+
+    public function recoverAllStuckSyncs(int $timeoutMinutes = 10): int
+    {
+        $now = new \DateTimeImmutable();
+        $cutoff = $now->modify("-{$timeoutMinutes} minutes");
+
+        $stuckSources = $this->createQueryBuilder('source')
+            ->andWhere('source.syncStatus IN (:pendingStatuses)')
+            ->andWhere('(source.lastSyncStartedAt IS NULL OR source.lastSyncStartedAt < :cutoff)')
+            ->setParameter('pendingStatuses', [JobSourceSyncStatus::QUEUED, JobSourceSyncStatus::RUNNING])
+            ->setParameter('cutoff', $cutoff)
+            ->getQuery()
+            ->getResult();
+
+        $count = 0;
+        foreach ($stuckSources as $source) {
+            $source->failSync(JobMessage::SYNC_FAILED);
+            ++$count;
+        }
+
+        if ($count > 0) {
+            $this->getEntityManager()->flush();
+        }
+
+        return $count;
     }
 }

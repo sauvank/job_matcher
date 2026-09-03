@@ -4,6 +4,8 @@
 
 {% block body %}
     {% set offer = match.jobOffer %}
+    {% set isAnalyzing = match.semanticAnalysisStatus.value in ['QUEUED', 'RUNNING'] %}
+    <turbo-frame id="job-offer-show-frame" target="_top" {% if isAnalyzing %}data-controller="poll" data-poll-interval-value="3000" data-poll-url-value="{{ path('app_job_offer_show', {id: match.id}) }}"{% endif %}>
     {% set providerLabels = {
         'FAKE': 'Démonstration',
         'HELLOWORK': 'HelloWork',
@@ -42,7 +44,7 @@
                         <button type="submit" class="button secondary" title="Écarter cette offre et retourner à la liste">🚫 Ne m’intéresse pas</button>
                     </form>
                 {% endif %}
-                {% if match.semanticAnalysisStatus.value not in ['QUEUED', 'RUNNING'] %}
+                {% if match.semanticAnalysisStatus.value not in ['QUEUED', 'RUNNING'] or (match.semanticAnalysisStartedAt and (date().timestamp - match.semanticAnalysisStartedAt.timestamp) > 300) or match.semanticAnalysisStartedAt is null %}
                     <form method="post" action="{{ path('app_job_offer_analyze', {id: match.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('analyze-job-' ~ match.id) }}">
                         <button type="submit" class="button secondary">Relancer l’analyse</button>
@@ -118,7 +120,6 @@
                         <span>{{ match.semanticAnalysisStatus.value == 'QUEUED' ? 'Analyse en attente…' : 'Analyse du texte complet et du CV…' }}</span>
                         <progress max="100">Analyse en cours</progress>
                     </div>
-                    <script>window.setTimeout(() => window.Turbo ? window.Turbo.visit(window.location.href, {action: 'replace'}) : window.location.reload(), 2500);</script>
                 {% elseif match.semanticAnalysisStatus.value == 'FAILED' %}
                     <p class="text-error">{{ match.semanticError|trans }}</p>
                 {% elseif semanticAnalysis %}
@@ -285,4 +286,5 @@
             </section>
         </aside>
     </div>
+    </turbo-frame>
 {% endblock %}

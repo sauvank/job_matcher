@@ -48,6 +48,16 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             {
                 return array_values(array_filter($this->sources, static fn (JobSource $source): bool => $source->isEnabled()));
             }
+
+            public function recoverStuckSyncsForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
+
+            public function recoverAllStuckSyncs(int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects(self::exactly(12))
@@ -125,6 +135,16 @@ final class ConfigureCandidateJobSearchServiceTest extends TestCase
             public function findEnabled(): array
             {
                 return $this->source->isEnabled() ? [$this->source] : [];
+            }
+
+            public function recoverStuckSyncsForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
+
+            public function recoverAllStuckSyncs(int $timeoutMinutes = 10): int
+            {
+                return 0;
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);

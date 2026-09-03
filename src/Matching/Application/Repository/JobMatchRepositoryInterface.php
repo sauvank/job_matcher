@@ -28,4 +28,15 @@ interface JobMatchRepositoryInterface
 
     /** @return list<JobMatch> */
     public function findForKanban(CandidateProfile $profile, int $limit = 300): array;
+
+    /**
+     * @param list<int> $ids
+     *
+     * @return list<JobMatch>
+     */
+    public function findPendingSemanticAnalyses(array $ids = []): array;
+
+    public function recoverStuckAnalysesForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int;
+
+    public function recoverAllStuckAnalyses(int $timeoutMinutes = 10): int;
 }

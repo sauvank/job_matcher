@@ -53,6 +53,16 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             {
                 return $this->source->isEnabled() ? [$this->source] : [];
             }
+
+            public function recoverStuckSyncsForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
+
+            public function recoverAllStuckSyncs(int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
         };
         $offerRepository = new class implements JobOfferRepositoryInterface {
             public ?JobOffer $offer = null;
@@ -107,6 +117,21 @@ final class ImportJobSourceMessageHandlerTest extends TestCase
             public function findForKanban(CandidateProfile $profile, int $limit = 300): array
             {
                 return $this->match === null ? [] : [$this->match];
+            }
+
+            public function findPendingSemanticAnalyses(array $ids = []): array
+            {
+                return $this->match === null ? [] : [$this->match];
+            }
+
+            public function recoverStuckAnalysesForProfile(CandidateProfile $profile, int $timeoutMinutes = 10): int
+            {
+                return 0;
+            }
+
+            public function recoverAllStuckAnalyses(int $timeoutMinutes = 10): int
+            {
+                return 0;
             }
         };
         $entityManager = $this->createMock(EntityManagerInterface::class);

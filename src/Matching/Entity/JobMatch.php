@@ -70,6 +70,9 @@ final class JobMatch
     private ?\DateTimeImmutable $semanticAnalyzedAt = null;
 
     #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $semanticAnalysisStartedAt = null;
+
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $alertSentAt = null;
 
     #[ORM\Column]
@@ -263,6 +266,11 @@ final class JobMatch
         return $this->semanticAnalyzedAt;
     }
 
+    public function getSemanticAnalysisStartedAt(): ?\DateTimeImmutable
+    {
+        return $this->semanticAnalysisStartedAt;
+    }
+
     public function getAlertSentAt(): ?\DateTimeImmutable
     {
         return $this->alertSentAt;
@@ -337,6 +345,7 @@ final class JobMatch
     public function queueSemanticAnalysis(): void
     {
         $this->semanticAnalysisStatus = SemanticAnalysisStatus::QUEUED;
+        $this->semanticAnalysisStartedAt = new \DateTimeImmutable();
         $this->semanticError = null;
     }
 
@@ -349,12 +358,14 @@ final class JobMatch
     {
         if ($this->semanticAnalysisStatus === SemanticAnalysisStatus::QUEUED) {
             $this->semanticAnalysisStatus = SemanticAnalysisStatus::NOT_REQUESTED;
+            $this->semanticAnalysisStartedAt = null;
         }
     }
 
     public function startSemanticAnalysis(): void
     {
         $this->semanticAnalysisStatus = SemanticAnalysisStatus::RUNNING;
+        $this->semanticAnalysisStartedAt = new \DateTimeImmutable();
         $this->semanticError = null;
     }
 
@@ -366,11 +377,26 @@ final class JobMatch
         $this->semanticAnalysisStatus = SemanticAnalysisStatus::COMPLETED;
         $this->semanticError = null;
         $this->semanticAnalyzedAt = new \DateTimeImmutable();
+        $this->semanticAnalysisStartedAt = null;
     }
 
     public function failSemanticAnalysis(string $error): void
     {
         $this->semanticAnalysisStatus = SemanticAnalysisStatus::FAILED;
         $this->semanticError = $error;
+        $this->semanticAnalysisStartedAt = null;
+    }
+
+    public function isSemanticAnalysisStuck(\DateTimeImmutable $now, int $timeoutMinutes = 10): bool
+    {
+        if (!in_array($this->semanticAnalysisStatus, [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING], true)) {
+            return false;
+        }
+
+        if ($this->semanticAnalysisStartedAt === null) {
+            return true;
+        }
+
+        return $this->semanticAnalysisStartedAt < $now->modify("-{$timeoutMinutes} minutes");
     }
 }

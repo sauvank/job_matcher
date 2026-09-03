@@ -58,6 +58,30 @@ final class JobMatchTest extends TestCase
         self::assertNotNull($match->getStatusUpdatedAt());
     }
 
+    public function testSemanticAnalysisLifecycleAndStuckDetection(): void
+    {
+        $match = $this->createMatch();
+        self::assertFalse($match->isSemanticAnalysisStuck(new \DateTimeImmutable()));
+
+        $match->queueSemanticAnalysis();
+        self::assertSame(\App\Matching\Enum\SemanticAnalysisStatus::QUEUED, $match->getSemanticAnalysisStatus());
+        self::assertNotNull($match->getSemanticAnalysisStartedAt());
+        self::assertFalse($match->isSemanticAnalysisStuck(new \DateTimeImmutable(), 10));
+
+        $future = (new \DateTimeImmutable())->modify('+11 minutes');
+        self::assertTrue($match->isSemanticAnalysisStuck($future, 10));
+
+        $match->startSemanticAnalysis();
+        self::assertSame(\App\Matching\Enum\SemanticAnalysisStatus::RUNNING, $match->getSemanticAnalysisStatus());
+        self::assertNotNull($match->getSemanticAnalysisStartedAt());
+
+        $match->failSemanticAnalysis('Analyse échouée');
+        self::assertSame(\App\Matching\Enum\SemanticAnalysisStatus::FAILED, $match->getSemanticAnalysisStatus());
+        self::assertSame('Analyse échouée', $match->getSemanticError());
+        self::assertNull($match->getSemanticAnalysisStartedAt());
+        self::assertFalse($match->isSemanticAnalysisStuck($future, 10));
+    }
+
     private function createMatch(): JobMatch
     {
         $profile = new CandidateProfile();
