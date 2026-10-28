@@ -99,7 +99,7 @@ Le workflow utilise uniquement le `GITHUB_TOKEN` éphémère fourni par GitHub a
 
 ### Déploiement automatisé
 
-Un push sur `main` lance les contrôles qualité, publie les images PHP et nginx portant le SHA immuable du commit, puis prépare un déploiement vers l'environnement GitHub `production`. Aucun nom d'hôte, port, utilisateur ou chemin du serveur n'est inscrit dans le dépôt.
+Un push sur `main` lance les contrôles qualité, publie les images PHP et nginx portant le SHA immuable du commit, puis prépare un déploiement vers l'environnement GitHub `production`. Une relance manuelle est également disponible dans **Actions → CI → Run workflow**, à sélectionner sur `main` pour réparer une indisponibilité sans changement applicatif. Aucun nom d'hôte, port, utilisateur ou chemin du serveur n'est inscrit dans le dépôt.
 
 Créer l'environnement **Settings → Environments → production**, limiter ses branches de déploiement à `main`, ajouter une approbation obligatoire, puis y enregistrer ces secrets :
 

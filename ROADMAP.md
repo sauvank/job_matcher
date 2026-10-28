@@ -16,6 +16,10 @@ Ce document centralise l’ensemble des axes d'évolution de **Job Matcher**, co
 | **6. Alertes & Notifications** | 🟢 Opérationnel (Emails quotidiens) | Notifications instantanées Telegram / Webhook |
 | **7. Sécurité & Infrastructure** | 🟡 En cours (Sandbox & Auth OK) | Headers HTTP (CSP, HSTS) & Sauvegardes chiffrées |
 
+## Incident en cours
+
+- **Production en 503 (28/10/2026)** : Apache est actif, mais les conteneurs PHP et nginx sont à l’état Docker `Created`; le port `127.0.0.1:8081` ne répond pas. Le démon Docker fonctionne, le disque a 4,6 Go libres. Récupération via le workflow CI après ajout du déclenchement manuel ; ne pas démarrer les conteneurs directement sur le VPS.
+
 ---
 
 ## 🎯 1. Fonctionnalités Produit
