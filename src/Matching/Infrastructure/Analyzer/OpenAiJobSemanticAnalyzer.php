@@ -145,10 +145,11 @@ final readonly class OpenAiJobSemanticAnalyzer implements JobSemanticAnalyzerInt
     {
         $error = $payload['error'] ?? null;
         $code = is_array($error) && is_string($error['code'] ?? null) ? $error['code'] : null;
+        $type = is_array($error) && is_string($error['type'] ?? null) ? $error['type'] : null;
         if (in_array($statusCode, [401, 403], true)) {
             return new SemanticAnalysisException(MatchingMessage::OPENAI_AUTHENTICATION_FAILED, false);
         }
-        if ($statusCode === 429 && $code === 'insufficient_quota') {
+        if ($statusCode === 429 && self::isCreditExhausted($code, $type)) {
             return new SemanticAnalysisException(MatchingMessage::OPENAI_QUOTA_EXCEEDED, false);
         }
         if ($statusCode === 429) {
@@ -159,6 +160,11 @@ final readonly class OpenAiJobSemanticAnalyzer implements JobSemanticAnalyzerInt
         }
 
         return new SemanticAnalysisException(MatchingMessage::OPENAI_REQUEST_FAILED, false);
+    }
+
+    private static function isCreditExhausted(?string $code, ?string $type): bool
+    {
+        return in_array($code, ['insufficient_quota', 'credit_balance_exhausted'], true) || $type === 'insufficient_quota';
     }
 
     /** @return array<string, mixed> */

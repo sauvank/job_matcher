@@ -18,6 +18,7 @@ use App\Candidate\Entity\CvDocument;
 use App\Candidate\Enum\CvStatus;
 use App\Candidate\Infrastructure\Analyzer\FakeCvAnalyzer;
 use App\Candidate\Translation\CandidateMessage;
+use App\Matching\Service\AiCreditAlertNotifier;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -63,6 +64,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
             $entityManager,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
+            $this->createStub(AiCreditAlertNotifier::class),
         );
 
         $handler(new ProcessCvMessage(12));
@@ -113,6 +115,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
             $entityManager,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
+            $this->createStub(AiCreditAlertNotifier::class),
         );
 
         try {
@@ -160,6 +163,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
             $entityManager,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
+            $this->createStub(AiCreditAlertNotifier::class),
         );
 
         try {
@@ -206,6 +210,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
             $entityManager,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
+            $this->createStub(AiCreditAlertNotifier::class),
         );
 
         try {
@@ -251,6 +256,7 @@ final class ProcessCvMessageHandlerTest extends TestCase
             $entityManager,
             new LockFactory(new InMemoryStore()),
             new NullLogger(),
+            $this->createStub(AiCreditAlertNotifier::class),
         );
 
         try {

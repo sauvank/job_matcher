@@ -115,12 +115,13 @@ final readonly class OpenAiCvAnalyzer implements CvAnalyzerInterface
     {
         $error = $payload['error'] ?? null;
         $errorCode = is_array($error) && isset($error['code']) && is_string($error['code']) ? $error['code'] : null;
+        $errorType = is_array($error) && isset($error['type']) && is_string($error['type']) ? $error['type'] : null;
 
         if (in_array($statusCode, [401, 403], true)) {
             return new CvAnalysisException(CandidateMessage::OPENAI_AUTHENTICATION_FAILED, false);
         }
 
-        if ($statusCode === 429 && $errorCode === 'insufficient_quota') {
+        if ($statusCode === 429 && (in_array($errorCode, ['insufficient_quota', 'credit_balance_exhausted'], true) || $errorType === 'insufficient_quota')) {
             return new CvAnalysisException(CandidateMessage::OPENAI_QUOTA_EXCEEDED, false);
         }
 

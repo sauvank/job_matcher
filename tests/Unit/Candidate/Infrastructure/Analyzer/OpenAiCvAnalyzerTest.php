@@ -31,6 +31,22 @@ final class OpenAiCvAnalyzerTest extends TestCase
         self::assertSame(4, $analysis->yearsOfExperience);
     }
 
+    public function testItReportsAnExhaustedCreditBalanceWithoutRetrying(): void
+    {
+        $response = new MockResponse(
+            json_encode(['error' => ['type' => 'insufficient_quota', 'code' => 'credit_balance_exhausted']], JSON_THROW_ON_ERROR),
+            ['http_code' => 429],
+        );
+
+        try {
+            (new OpenAiCvAnalyzer(new MockHttpClient($response), 'test-key', 'test-model'))->analyze('CV de test');
+            self::fail('Une exception était attendue.');
+        } catch (CvAnalysisException $exception) {
+            self::assertSame(CandidateMessage::OPENAI_QUOTA_EXCEEDED, $exception->getMessage());
+            self::assertFalse($exception->retryable);
+        }
+    }
+
     public function testItReportsAnInsufficientQuotaWithoutRetrying(): void
     {
         $response = new MockResponse(

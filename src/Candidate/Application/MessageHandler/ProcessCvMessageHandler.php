@@ -14,6 +14,7 @@ use App\Candidate\Application\Security\CvMalwareScanException;
 use App\Candidate\Application\Security\CvMalwareScannerInterface;
 use App\Candidate\Enum\CvStatus;
 use App\Candidate\Translation\CandidateMessage;
+use App\Matching\Service\AiCreditAlertNotifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Lock\LockFactory;
@@ -31,6 +32,7 @@ final readonly class ProcessCvMessageHandler
         private EntityManagerInterface $entityManager,
         private LockFactory $lockFactory,
         private LoggerInterface $logger,
+        private AiCreditAlertNotifier $creditAlertNotifier,
     ) {
     }
 
@@ -99,6 +101,11 @@ final readonly class ProcessCvMessageHandler
                 'retryable' => $exception->retryable,
                 'exception' => $exception,
             ]);
+            if ($exception->getMessage() === CandidateMessage::OPENAI_QUOTA_EXCEEDED) {
+                $this->creditAlertNotifier->notifyCreditExhausted('OpenAI');
+            } elseif ($exception->getMessage() === CandidateMessage::GEMINI_QUOTA_EXCEEDED) {
+                $this->creditAlertNotifier->notifyCreditExhausted('Gemini');
+            }
 
             if (!$exception->retryable) {
                 throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);

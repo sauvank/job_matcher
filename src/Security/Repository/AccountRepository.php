@@ -106,4 +106,13 @@ class AccountRepository extends ServiceEntityRepository implements PasswordUpgra
             ->getQuery()
             ->getResult();
     }
+
+    /** @return list<Account> */
+    public function findAdmins(): array
+    {
+        return array_values(array_filter(
+            $this->findBy([], ['id' => 'ASC']),
+            static fn (Account $account): bool => $account->isAdmin(),
+        ));
+    }
 }

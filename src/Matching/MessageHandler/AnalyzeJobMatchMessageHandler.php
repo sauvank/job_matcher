@@ -9,6 +9,7 @@ use App\Matching\Application\Analyzer\SemanticAnalysisException;
 use App\Matching\Application\Repository\JobMatchRepositoryInterface;
 use App\Matching\Enum\SemanticAnalysisStatus;
 use App\Matching\Message\AnalyzeJobMatchMessage;
+use App\Matching\Service\AiCreditAlertNotifier;
 use App\Matching\Translation\MatchingMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -25,6 +26,7 @@ final readonly class AnalyzeJobMatchMessageHandler
         private EntityManagerInterface $entityManager,
         private LockFactory $lockFactory,
         private LoggerInterface $logger,
+        private AiCreditAlertNotifier $creditAlertNotifier,
     ) {
     }
 
@@ -61,6 +63,11 @@ final readonly class AnalyzeJobMatchMessageHandler
             $match->failSemanticAnalysis($exception->getMessage());
             $this->entityManager->flush();
             $this->logger->error($exception->getMessage(), ['jobMatchId' => $message->jobMatchId, 'retryable' => $exception->retryable]);
+            if ($exception->getMessage() === MatchingMessage::OPENAI_QUOTA_EXCEEDED) {
+                $this->creditAlertNotifier->notifyCreditExhausted('OpenAI');
+            } elseif ($exception->getMessage() === MatchingMessage::GEMINI_QUOTA_EXCEEDED) {
+                $this->creditAlertNotifier->notifyCreditExhausted('Gemini');
+            }
             if (!$exception->retryable) {
                 throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
             }

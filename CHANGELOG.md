@@ -1,5 +1,11 @@
 # Changelog — Job Matcher
 
+## 2026-11-17 — Alerte crédit IA épuisé
+
+- Constat prod : crédit OpenAI vide depuis le 9 novembre. OpenAI renvoie `429` avec `type: insufficient_quota` et `code: credit_balance_exhausted` ; l'ancien test sur `code === 'insufficient_quota'` le classait en `openai_rate_limited` et réessayait inutilement.
+- Les analyseurs OpenAI (offres et CV) reconnaissent les deux formes : erreur `openai_quota_exceeded`, non réessayée.
+- `AiCreditAlertNotifier` envoie un e-mail aux comptes `ROLE_ADMIN` lorsque le crédit OpenAI ou Gemini est épuisé, au plus une fois par 24 h et par fournisseur (verrou dans `cache.app`, Redis). Un échec SMTP n'interrompt pas l'analyse.
+
 ## 2026-11-17 — Offres HelloWork retirées
 
 - HelloWork laisse les annonces retirées en ligne avec un HTTP 200 et le bandeau « Cette offre d'emploi … n'est plus disponible », sans `JobPosting`. La vérification ne les détectait pas : le parseur échouait, l'annonce restait `UNKNOWN` et donc active (ex. offre prod 907, HelloWork 85249087).

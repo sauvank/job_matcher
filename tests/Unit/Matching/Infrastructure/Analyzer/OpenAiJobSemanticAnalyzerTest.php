@@ -9,13 +9,39 @@ use App\Job\DTO\NormalizedJobOffer;
 use App\Job\Entity\JobOffer;
 use App\Job\Entity\JobSource;
 use App\Job\Enum\JobProviderType;
+use App\Matching\Application\Analyzer\SemanticAnalysisException;
 use App\Matching\Infrastructure\Analyzer\OpenAiJobSemanticAnalyzer;
+use App\Matching\Translation\MatchingMessage;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class OpenAiJobSemanticAnalyzerTest extends TestCase
 {
+    /** @param array<string, string> $error */
+    #[DataProvider('rateLimitErrors')]
+    public function testItDistinguishesExhaustedCreditFromRateLimiting(array $error, string $expectedMessage, bool $retryable): void
+    {
+        $client = new MockHttpClient(new MockResponse(json_encode(['error' => $error], JSON_THROW_ON_ERROR), ['http_code' => 429]));
+
+        try {
+            (new OpenAiJobSemanticAnalyzer($client, 'test-key', 'test-model'))->analyze(new CandidateProfile(), $this->offer());
+            self::fail('Une exception était attendue.');
+        } catch (SemanticAnalysisException $exception) {
+            self::assertSame($expectedMessage, $exception->getMessage());
+            self::assertSame($retryable, $exception->retryable);
+        }
+    }
+
+    /** @return iterable<string, array{array<string, string>, string, bool}> */
+    public static function rateLimitErrors(): iterable
+    {
+        yield 'credit balance exhausted' => [['type' => 'insufficient_quota', 'code' => 'credit_balance_exhausted'], MatchingMessage::OPENAI_QUOTA_EXCEEDED, false];
+        yield 'legacy insufficient quota' => [['code' => 'insufficient_quota'], MatchingMessage::OPENAI_QUOTA_EXCEEDED, false];
+        yield 'rate limited' => [['type' => 'requests', 'code' => 'rate_limit_exceeded'], MatchingMessage::OPENAI_RATE_LIMITED, true];
+    }
+
     public function testItSendsTheFullContextAndParsesStructuredEvidence(): void
     {
         $output = json_encode([
