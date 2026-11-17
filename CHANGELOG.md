@@ -1,5 +1,10 @@
 # Changelog — Job Matcher
 
+## 2026-11-17 — Offres HelloWork retirées
+
+- HelloWork laisse les annonces retirées en ligne avec un HTTP 200 et le bandeau « Cette offre d'emploi … n'est plus disponible », sans `JobPosting`. La vérification ne les détectait pas : le parseur échouait, l'annonce restait `UNKNOWN` et donc active (ex. offre prod 907, HelloWork 85249087).
+- `HelloWorkJobPostingParser::isNoLongerAvailable()` reconnaît ce bandeau et `HelloWorkJobProvider::checkAvailability()` renvoie alors `EXPIRED`. Une page 200 illisible reste `UNKNOWN`.
+
 ## 2026-10-28 — Récupération de déploiement
 
 - Ajout d’un déclenchement manuel `workflow_dispatch` sur la CI ; la branche `main` repasse par QA, publication des images et déploiement protégé `production`.

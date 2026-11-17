@@ -57,7 +57,12 @@ final readonly class HelloWorkJobProvider implements JobProviderInterface
                 return JobOfferAvailability::UNKNOWN;
             }
 
-            $normalizedOffer = $this->parser->parseOffer($response->getContent(), $offer->getUrl());
+            $html = $response->getContent();
+            if ($this->parser->isNoLongerAvailable($html)) {
+                return JobOfferAvailability::EXPIRED;
+            }
+
+            $normalizedOffer = $this->parser->parseOffer($html, $offer->getUrl());
 
             return $normalizedOffer->validThrough !== null && $normalizedOffer->validThrough < new \DateTimeImmutable('today')
                 ? JobOfferAvailability::EXPIRED

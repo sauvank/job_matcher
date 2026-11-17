@@ -73,6 +73,18 @@ final class HelloWorkJobPostingParser
         );
     }
 
+    /**
+     * HelloWork keeps removed offers online with an HTTP 200 page and a
+     * "Cette offre d'emploi ... n'est plus disponible" banner.
+     */
+    public function isNoLongerAvailable(string $html): bool
+    {
+        $text = html_entity_decode(strip_tags($html), \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
+        $text = (string) preg_replace('~\s+~u', ' ', $text);
+
+        return preg_match("~Cette offre d['’]emploi.{0,200}?n['’]est plus disponible~iu", $text) === 1;
+    }
+
     /** @return array<string, mixed> */
     private function extractJobPosting(string $html): array
     {

@@ -39,6 +39,35 @@ final class HelloWorkJobProviderTest extends TestCase
         yield 'temporary server error' => [503, JobOfferAvailability::UNKNOWN];
     }
 
+    public function testItExpiresAnOfferWhenTheRemotePageSaysItIsNoLongerAvailable(): void
+    {
+        $html = <<<'HTML'
+            <html><body><div><span class="text-base">
+                Cette offre d'emploi
+                    <span>chez <a href="/fr-fr/entreprises/acme-1.html">Acme</a></span>
+                n'est plus disponible
+            </span></div><h1>Développeur PHP</h1></body></html>
+            HTML;
+        $provider = new HelloWorkJobProvider(
+            new MockHttpClient(new MockResponse($html, ['http_code' => 200])),
+            new HelloWorkJobPostingParser(),
+            10,
+        );
+
+        self::assertSame(JobOfferAvailability::EXPIRED, $provider->checkAvailability($this->offer()));
+    }
+
+    public function testAnUnreadableAvailablePageStaysUnknown(): void
+    {
+        $provider = new HelloWorkJobProvider(
+            new MockHttpClient(new MockResponse('<html><body>Maintenance</body></html>', ['http_code' => 200])),
+            new HelloWorkJobPostingParser(),
+            10,
+        );
+
+        self::assertSame(JobOfferAvailability::UNKNOWN, $provider->checkAvailability($this->offer()));
+    }
+
     private function offer(): JobOffer
     {
         return new JobOffer(
