@@ -1,5 +1,10 @@
 # Changelog — Job Matcher
 
+## 2026-11-17 — Analyses en file annulées à tort
+
+- La récupération des analyses bloquées (ouverture de `/jobs`, `--recover`) marquait `FAILED` toute analyse `QUEUED` depuis plus de 10 min ; lors d'une relance en lot, la fin de la file était donc annulée (26 sur 66 en prod).
+- `RUNNING` reste bloqué après 10 min ; `QUEUED` attend désormais `JobMatch::QUEUED_ANALYSIS_TIMEOUT_MINUTES` (120 min).
+
 ## 2026-11-17 — Alerte crédit IA épuisé
 
 - Constat prod : crédit OpenAI vide depuis le 9 novembre. OpenAI renvoie `429` avec `type: insufficient_quota` et `code: credit_balance_exhausted` ; l'ancien test sur `code === 'insufficient_quota'` le classait en `openai_rate_limited` et réessayait inutilement.

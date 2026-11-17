@@ -22,6 +22,7 @@ use App\Matching\Enum\JobApplicationStatus;
 use App\Matching\Enum\RequirementAssessment;
 use App\Matching\Enum\RequirementCategory;
 use App\Matching\Enum\RequirementImportance;
+use App\Matching\Enum\SemanticAnalysisStatus;
 use App\Matching\Repository\JobMatchRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -99,6 +100,55 @@ final class JobPagesControllerTest extends AuthenticatedWebTestCase
         self::assertSelectorTextContains('.page-heading', 'date de découverte la plus récente');
         self::assertSelectorTextContains('.view-tab.active', 'Dernières annonces trouvées');
         self::assertSelectorTextContains('.offer-meta', 'Trouvée le');
+    }
+
+    public function testStuckRecoveryKeepsQueuedAnalysesWaitingBehindABacklog(): void
+    {
+        $client = self::createClient();
+        $account = $this->loginOwner($client);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
+        $uniqueId = bin2hex(random_bytes(5));
+        $profile = $account->getCandidateProfile();
+        $source = new JobSource($profile, 'HelloWork — backlog', 'https://example.test/backlog/'.$uniqueId, JobProviderType::HELLOWORK);
+        $entityManager->persist($source);
+
+        $matches = [];
+        foreach (['queued', 'running'] as $state) {
+            $offer = new JobOffer($source, new NormalizedJobOffer(
+                externalId: $state.'-'.$uniqueId,
+                url: 'https://example.test/backlog/'.$uniqueId.'/'.$state,
+                title: 'Offre '.$state,
+                company: null,
+                location: null,
+                contractType: null,
+                minimumSalary: null,
+                maximumSalary: null,
+                remotePolicy: null,
+                yearsOfExperience: null,
+                description: null,
+                publishedAt: null,
+                validThrough: null,
+                rawPayload: [],
+            ));
+            $match = new JobMatch($profile, $offer, new MatchScore(50, 50, 50, 50, 50, 50, 50, 50, 50, [], [], [], []));
+            $match->queueSemanticAnalysis();
+            if ($state === 'running') {
+                $match->startSemanticAnalysis();
+            }
+            (new \ReflectionProperty(JobMatch::class, 'semanticAnalysisStartedAt'))->setValue($match, new \DateTimeImmutable('-30 minutes'));
+            $entityManager->persist($offer);
+            $entityManager->persist($match);
+            $matches[$state] = $match;
+        }
+        $entityManager->flush();
+
+        $repository = self::getContainer()->get(JobMatchRepository::class);
+        self::assertInstanceOf(JobMatchRepository::class, $repository);
+        self::assertSame(1, $repository->recoverStuckAnalysesForProfile($profile));
+
+        self::assertSame(SemanticAnalysisStatus::QUEUED, $matches['queued']->getSemanticAnalysisStatus());
+        self::assertSame(SemanticAnalysisStatus::FAILED, $matches['running']->getSemanticAnalysisStatus());
     }
 
     public function testJobOffersDisplayEsnBadgeAndExcludeEsnDropdownFilter(): void

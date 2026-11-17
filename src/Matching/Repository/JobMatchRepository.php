@@ -200,11 +200,12 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
             ->innerJoin('jobMatch.jobOffer', 'jobOffer')
             ->innerJoin('jobOffer.source', 'jobSource')
             ->andWhere('jobMatch.candidateProfile = :profile')
-            ->andWhere('jobMatch.semanticAnalysisStatus IN (:pendingStatuses)')
-            ->andWhere('(jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :cutoff)')
+            ->andWhere('(jobMatch.semanticAnalysisStatus = :runningStatus AND (jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :cutoff)) OR (jobMatch.semanticAnalysisStatus = :queuedStatus AND (jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :queuedCutoff))')
             ->setParameter('profile', $profile)
-            ->setParameter('pendingStatuses', [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING])
+            ->setParameter('runningStatus', SemanticAnalysisStatus::RUNNING)
+            ->setParameter('queuedStatus', SemanticAnalysisStatus::QUEUED)
             ->setParameter('cutoff', $cutoff)
+            ->setParameter('queuedCutoff', $now->modify(sprintf('-%d minutes', max($timeoutMinutes, JobMatch::QUEUED_ANALYSIS_TIMEOUT_MINUTES))))
             ->getQuery()
             ->getResult();
 
@@ -227,10 +228,11 @@ final class JobMatchRepository extends ServiceEntityRepository implements JobMat
         $cutoff = $now->modify("-{$timeoutMinutes} minutes");
 
         $stuckMatches = $this->createQueryBuilder('jobMatch')
-            ->andWhere('jobMatch.semanticAnalysisStatus IN (:pendingStatuses)')
-            ->andWhere('(jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :cutoff)')
-            ->setParameter('pendingStatuses', [SemanticAnalysisStatus::QUEUED, SemanticAnalysisStatus::RUNNING])
+            ->andWhere('(jobMatch.semanticAnalysisStatus = :runningStatus AND (jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :cutoff)) OR (jobMatch.semanticAnalysisStatus = :queuedStatus AND (jobMatch.semanticAnalysisStartedAt IS NULL OR jobMatch.semanticAnalysisStartedAt < :queuedCutoff))')
+            ->setParameter('runningStatus', SemanticAnalysisStatus::RUNNING)
+            ->setParameter('queuedStatus', SemanticAnalysisStatus::QUEUED)
             ->setParameter('cutoff', $cutoff)
+            ->setParameter('queuedCutoff', $now->modify(sprintf('-%d minutes', max($timeoutMinutes, JobMatch::QUEUED_ANALYSIS_TIMEOUT_MINUTES))))
             ->getQuery()
             ->getResult();
 

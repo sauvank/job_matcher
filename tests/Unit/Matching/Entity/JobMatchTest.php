@@ -69,11 +69,13 @@ final class JobMatchTest extends TestCase
         self::assertFalse($match->isSemanticAnalysisStuck(new \DateTimeImmutable(), 10));
 
         $future = (new \DateTimeImmutable())->modify('+11 minutes');
-        self::assertTrue($match->isSemanticAnalysisStuck($future, 10));
+        self::assertFalse($match->isSemanticAnalysisStuck($future, 10), 'A queued analysis may wait behind a worker backlog.');
+        self::assertTrue($match->isSemanticAnalysisStuck((new \DateTimeImmutable())->modify('+121 minutes'), 10));
 
         $match->startSemanticAnalysis();
         self::assertSame(\App\Matching\Enum\SemanticAnalysisStatus::RUNNING, $match->getSemanticAnalysisStatus());
         self::assertNotNull($match->getSemanticAnalysisStartedAt());
+        self::assertTrue($match->isSemanticAnalysisStuck($future, 10));
 
         $match->failSemanticAnalysis('Analyse échouée');
         self::assertSame(\App\Matching\Enum\SemanticAnalysisStatus::FAILED, $match->getSemanticAnalysisStatus());

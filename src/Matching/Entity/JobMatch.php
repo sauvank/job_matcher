@@ -22,6 +22,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_job_match_profile_semantic', columns: ['candidate_profile_id', 'semantic_score'])]
 final class JobMatch
 {
+    public const QUEUED_ANALYSIS_TIMEOUT_MINUTES = 120;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -395,6 +397,11 @@ final class JobMatch
 
         if ($this->semanticAnalysisStartedAt === null) {
             return true;
+        }
+
+        // A queued analysis may legitimately wait behind a large backlog in the worker queue.
+        if ($this->semanticAnalysisStatus === SemanticAnalysisStatus::QUEUED) {
+            $timeoutMinutes = max($timeoutMinutes, self::QUEUED_ANALYSIS_TIMEOUT_MINUTES);
         }
 
         return $this->semanticAnalysisStartedAt < $now->modify("-{$timeoutMinutes} minutes");
